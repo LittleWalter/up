@@ -64,7 +64,7 @@ export XDG_DATA_HOME="$HOME/.local/share" # Persistent data storage
 export XDG_CACHE_HOME="$HOME/.cache" # Non-essential files such as shell command history, log files, etc.
 ```
 
-If `XDG_CONFIG_HOME` is defined, may use:
+If `XDG_CONFIG_HOME` is defined, you may use:
 
 ```sh
 git clone https://github.com/LittleWalter/up $XDG_CONFIG_HOME/up
