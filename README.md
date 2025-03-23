@@ -54,26 +54,26 @@ Say adiós to typing `cd ..` repeatedly and streamline your workflow with `up`.
 
 Download the git repo to your preferred destination. 
 
-Following best practices, I recommend using the [XDG Base Directory Specification](https://specifications.freedesktop.org/basedir-spec/latest/) to reduce `HOME` directory clutter. Use either `XDG_CONFIG_HOME` or `XDG_DATA_HOME`, depending on where you like to keep shell scripts. (I imagine most people would place these into the former and consider these as configuration files.)
+To download the download the repo to `~/.config`:
 
-By default, `XDG_CONFIG_HOME` is `$HOME/.config` and `XDG_DATA_HOME` is `$HOME/.local/share`. However, these paths might not be explicitly defined in your shell configuration. Within your `.bashrc` or `.zshrc`, you may define:
+```sh
+git clone https://github.com/LittleWalter/up ~/.config/up
+```
+
+### 📝 Optional sidenote on `HOME` directory organization
+
+Following best practices, I recommend using the [XDG Base Directory Specification](https://specifications.freedesktop.org/basedir-spec/latest/) to reduce `HOME` directory clutter. Use either `XDG_CONFIG_HOME` or `XDG_DATA_HOME`, depending on where you like to keep shell scripts.
+
+I imagine most people would use `XDG_CONFIG_HOME` and consider these configuration files.
+
+By default, `XDG_CONFIG_HOME` is `$HOME/.config` and `XDG_DATA_HOME` is `$HOME/.local/share`. However, these paths might not be explicitly defined in your shell configuration; verify with `echo $XDG_CONFIG_HOME`.
+
+Within your `.bashrc` or `.zshrc`, or more appropriately `.zshenv`, you may define these as environment variables.
 
 ```sh
 export XDG_CONFIG_HOME="$HOME/.config" # Configuration files
 export XDG_DATA_HOME="$HOME/.local/share" # Persistent data storage
 export XDG_CACHE_HOME="$HOME/.cache" # Non-essential files such as shell command history, log files, etc.
-```
-
-If `XDG_CONFIG_HOME` is defined, you may use:
-
-```sh
-git clone https://github.com/LittleWalter/up $XDG_CONFIG_HOME/up
-```
-
-Otherwise, download the repo to `~/.config`:
-
-```sh
-git clone https://github.com/LittleWalter/up ~/.config/up
 ```
 
 ### Bash
@@ -267,7 +267,6 @@ Possible ideas to work on.
     * I'm not using [fish](https://fishshell.com/) as my primary shell.
 - [ ] Write a binary version of `up.bash` in a language like Go or Rust for universal shell compatibility. (Better idea?)
     * Only completion scripts for target shells would need to be created.
-    * TUI `up` history: jump back to previous paths
 
 ## 🤝 Contributing
 

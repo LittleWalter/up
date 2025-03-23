@@ -53,7 +53,7 @@ _up() {
             # like Japanese, Cyrillic, emojis, etc. If you only use 
             # Latin-based characters, this is fine for hitting tab to 
             # complete escaped sequences 
-	    #printf -v candidate '%q' "$basename"
+            #printf -v candidate '%q' "$basename"
             #COMPREPLY+=("$candidate")
 
             # Escape special ASCII symbols, including space; allow unicode
@@ -65,4 +65,4 @@ _up() {
 }
 
 # Attach completion function to `up`
-complete -o default -F _up up
+complete -o nospace -F _up up
