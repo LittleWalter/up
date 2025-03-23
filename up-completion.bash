@@ -52,8 +52,8 @@ _up() {
             # WARN: This approach causes problems w/ unicode characters 
             # like Japanese, Cyrillic, emojis, etc. If you only use 
             # Latin-based characters, this is fine for hitting tab to 
-            # complete escaped sequences
-			      #printf -v candidate '%q' "$basename"
+            # complete escaped sequences 
+	    #printf -v candidate '%q' "$basename"
             #COMPREPLY+=("$candidate")
 
             # Escape special ASCII symbols, including space; allow unicode
