@@ -1,40 +1,62 @@
 <h1>
-    <img src="assets/up_folder_icon.svg" alt="up folder icon" width="35px">
-    Navigate <code>up</code> the directory tree with ease!
+    <img src="assets/up_folder_icon.svg" alt="Icon representing directory navigation with up script" width="35px">
+    Navigate <code>up</code> the Directory Tree with Ease | Bash & Zsh Navigation Script
 </h1>
 
-`cd` is great for drilling down the directory tree with tab completion, but not as convenient going directly up.
+`up` is a Bash and Zsh-compatible script that simplifies directory navigation up the current path. Jump multiple levels, autocomplete subdirectory names, and handle Unicode paths with ease.
 
-We all know it can be a pain to use regularly use `cd ..` commands.
+`cd` is great for drilling down the directory tree with tab completion, but not as convenient going directly up. We all know it can be a pain to repeatedly use `cd ..`, `cd ../..`, `cd ../../..`, and so on. Use the `up` function instead!
 
 These Bash scripts offer a quick, flexible, and simple way to go up the directory tree of your current working directory. 
 
-Use the `up` function instead!
+![Animation showing the up script in action](assets/up_example_use_animation.gif)
 
-![up example use animation](assets/up_example_use_animation.gif)
+## 📜 Table of Contents
+- [Key Features](#-key-features)
+- [Installation](#-installation)
+- [Usage](#-usage)
+- [Testing](#-testing-in-bats)
+- [Limitations and Known Issues](#-limitations-and-known-issues)
+- [TODOs and Future Ideas](#-todos-and-future-ideas)
+- [Contributing](#-contributing)
+- [Credits](#credits)
 
-## ⭐️ Notable Features
+## ⭐️ Key Features
 
-1. Navigate up your current working directory by:
-    * Number of subdirectories, e.g., `up 2` jumps two levels, `up 3` jumps three levels, etc.
-    * Subdirectory name with Unicode support, e.g., Japanese, Cyrillic, emojis, etc.
-2. Tab completion of subdirectory names
-    * Auto-escaping special ASCII characters like space, `*`, `[`, `!`, etc.
-3. Verbose mode to display detailed directory change information
-    * Basic color output of `PWD`, number of dirs changed, and errors
-4. Robust exit status handling on errors 
-    * Useful for shell configurations that utilize exit codes like the [starship](https://starship.rs/) prompt 
-5. Covers edge cases; always use a trailing slash (`/`) to distinguish directory arguments
-    * Subdirectories with all-integers names such as `2/`, etc.
-    * Name of subdirectories as flags/options such as `--help/`, `verbose/`, etc.
-6. Handles `~` and `$HOME` to navigate to home directory via `up ~` regardless of current working directory
-7. Bash and Zsh compatibility
+1. **Simple Multi-Level Navigation**:
+    - Jump up multiple directory levels with a single command:
+        - `up` (jumps one level)
+        - `up 2` (jumps two levels)
+        - `up 3` (jumps three levels)
+
+2. **Powerful Tab Completion**:
+    - Jump directly to a subdirectory name.
+    - Supports Unicode directories (e.g., 日本語, emojis like 📂).
+    - Auto-escapes special ASCII characters like `*`, `[`, `]`, and spaces (e.g., `![special dir]/`).
+    - Quickly autocomplete subdirectory names by prefix.
+
+3. **Verbose Output for Clarity**:
+    - Use verbose mode (`-v`) to display detailed information about directory changes.
+    - Get insights like the number of levels jumped, old directory (`$OLDPWD`), and new directory (`$PWD`).
+    - Enable persistent verbose mode with `_UP_ALWAYS_VERBOSE=true`.
+
+4. **Handles Edge Cases Gracefully**:
+    - Navigate to `HOME` with `up ~` from any directory.
+    - Subdirectories named after flags (e.g., `--help/`) or containing integers (e.g., `2/`) are supported seamlessly.
+
+5. **Robust Error Handling**:
+    - Proper exit status codes returned on errors.
+    - Useful for shell configurations that utilize exit codes like the [starship](https://starship.rs/) prompt. 
+
+6. **Compatibility**:
+    - Fully compatible with both Bash and Zsh.
+    - Minimal dependencies ensure fast, efficient performance, and a simple installation.
 
 ## ⚙️ Installation
 
 Download the git repo to your preferred destination. 
 
-I recommend using the [XDG Base Directory Specification](https://specifications.freedesktop.org/basedir-spec/latest/) to reduce HOME directory clutter. Use either `XDG_CONFIG_HOME` or `XDG_DATA_HOME`, depending on where you like to keep shell scripts. (I imagine most people would place these into the former and consider these as configuration files.)
+Following best practices, I recommend using the [XDG Base Directory Specification](https://specifications.freedesktop.org/basedir-spec/latest/) to reduce HOME directory clutter. Use either `XDG_CONFIG_HOME` or `XDG_DATA_HOME`, depending on where you like to keep shell scripts. (I imagine most people would place these into the former and consider these as configuration files.)
 
 By default, `XDG_DATA_HOME` is `$HOME/.config` and `XDG_DATA_HOME` is `$HOME/.local/share`. However, these paths might not be explicitly defined in your shell configuration.
 
@@ -51,11 +73,21 @@ source ~/.config/up/up.bash # The `up` function
 source ~/.config/up/up-completion.bash # `up` completion
 ```
 
+Assuming your Bash config is at `~/.bashrc`, use this snippet to download and append the lines in one step:
+
+```sh
+git clone https://github.com/LittleWalter/up ~/.config/up
+echo 'source ~/.config/up/up.bash' >> ~/.bashrc
+echo 'source ~/.config/up/up-completion.bash' >> ~/.bashrc
+```
+
 ### Zsh
 
 Add to `.zshrc`.
 
-These scripts are backwards compatible with Zsh; the `autoload` lines enable autocompletion modules.
+Fully compatible with Zsh using `bashcompinit` for seamless integration.
+
+The `autoload` lines enable autocompletion modules.
 
 ```bash
 autoload -U +X compinit && compinit # Enable Zsh completion 
@@ -65,8 +97,14 @@ source ~/.config/up/up.bash # The `up` function
 source ~/.config/up/up-completion.bash # `up` completion
 ```
 
-```bash
-source ~/.config/up/basic_colors.bash
+Assuming your Zsh config is at `~/.zshrc`, use this snippet to download and append the lines in one step:
+
+```sh
+git clone https://github.com/LittleWalter/up ~/.config/up
+echo 'autoload -U +X compinit && compinit' >> ~/.zshrc
+echo 'autoload -U +X bashcompinit && bashcompinit' >> ~/.zshrc
+echo 'source ~/.config/up/up.bash' >> ~/.zshrc
+echo 'source ~/.config/up/up-completion.bash' >> ~/.zshrc
 ```
 
 ## ⌨️ Usage
@@ -199,12 +237,12 @@ $ bats up-completion_test.bats # Test the `_up` function for Bash completions
 
 ## ⚠️ Limitations and Known Issues
 
-Could be a skills issue: I'm not a Bash scripting expert.
+There may be skill-related limitations: I’m not a Bash scripting expert.
 
 * No color support for tab completion list
     * Could not get Zsh to use `LS_COLORS` via `zstyle` settings
 * Tab completion list not in order of `PWD`
-    * There's no guarantee of completion list order
+    * There’s no guarantee of the completion list order.
 
 ## ✅ TODOs and 💡Future Ideas
 
@@ -212,12 +250,20 @@ Possible ideas to work on.
 
 - [ ] Refactor `up.bash` to make it more readable
     * Easier to maintain or modify.
-    * As it stands, scripts the job done as far as I can tell and well commented.
+    * As it stands, the script gets the job done and is well-commented.
 - [ ] Write a fish-compatible version.
     * I'm not using [fish](https://fishshell.com/) as my primary shell.
 - [ ] Write a binary version of `up.bash` in a language like Go or Rust for universal shell compatibility. (Better idea?)
     * Only completion scripts for target shells would need to be created.
     * TUI `up` history: jump back to previous paths
+
+## 🤝 Contributing
+
+Contributions and suggestions are welcome! 
+
+For major changes, please open an issue to discuss what you’d like to improve. 
+
+Feel free to fork the repository, make your changes, and submit a pull request. Make sure to run the tests with `bats` to ensure everything works as expected.
 
 ## 🍿Credits
 

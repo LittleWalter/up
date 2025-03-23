@@ -12,11 +12,6 @@
 # up_by_int and up_by_subdir_name functional decomposition created for
 # readability.
 #
-# NOTE: Magic numbers for exit codes used for errors:
-# return 2 = invalid argument passed
-# return 3 = no operation a.k.a. no-op, i.e., no directory change
-# return 127 = inaccessible directory or `cd` command
-#
 # USAGE: up <FLAG> [integer | subdirectory name]
 #        up [optional: number of subdirectories]
 #        up <subdirectory name; must be exact>
