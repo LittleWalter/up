@@ -10,7 +10,7 @@ Say adiós to typing `cd ..` repeatedly and streamline your workflow with `up`.
 ![Animation showing the up script in action](assets/up_example_use_animation.gif)
 
 ## 📜 Table of Contents
-- [Key Features](#-key-features)
+- [Key Features](#-key-feature)
 - [Installation](#-installation)
 - [Usage](#-usage)
 - [Testing](#-testing-in-bats)
@@ -54,7 +54,7 @@ Say adiós to typing `cd ..` repeatedly and streamline your workflow with `up`.
 
 Download the git repo to your preferred destination. 
 
-To download the download the repo to `~/.config`:
+To download the repo to `~/.config`:
 
 ```sh
 git clone https://github.com/LittleWalter/up ~/.config/up
@@ -68,6 +68,8 @@ Add to `.bashrc` or `.bash_profile` on Apple macOS systems.
 source ~/.config/up/up.bash # The `up` function
 source ~/.config/up/up-completion.bash # `up` completion
 ```
+
+#### Quick Bash Installation
 
 Assuming your Bash config is at `~/.bashrc`, use this snippet to download and append the lines in one step:
 
@@ -92,6 +94,8 @@ autoload -U +X bashcompinit && bashcompinit # Enable Bash completion compatibili
 source ~/.config/up/up.bash # The `up` function
 source ~/.config/up/up-completion.bash # `up` completion
 ```
+
+#### Quick Zsh Installation
 
 Assuming your Zsh config is at `~/.zshrc`, use this snippet to download and append the lines in one step:
 
