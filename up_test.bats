@@ -152,12 +152,23 @@ teardown() {
 	[[ $PWD == "${BATS_TEST_TMPDIR}/dir1/-4" ]]
 }
 
-@test 'up should not change directory on unknown subdirectory name' {
+@test 'up should not change directory on unknown subdirectory name (\"missing_dir\")' {
 	local -r path=${BATS_TEST_TMPDIR}/dir1/dir2/dir3
 	mkdir -p "$path"
 	cd "$path"
 
 	run up missing_dir
+	
+	# Bad news is good news: assertion failure
+	[ $status -ne 0 ] 
+}
+
+@test 'up should not change directory on unknown subdirectory name but PWD contains the substring' {
+	local -r path=${BATS_TEST_TMPDIR}/dir1/substring_check/dir3
+	mkdir -p "$path"
+	cd "$path"
+
+	run up substring
 	
 	# Bad news is good news: assertion failure
 	[ $status -ne 0 ] 

@@ -196,12 +196,13 @@ up() {
       return 0
     fi
 
-    # General cases start here:
+    # General cases start here
+
     # Sanitize input: remove trailing slash and everything after; must be a single subdir
     local subdir_name="${subdir_name%/*}"
 
     # Handle invalid subdirectory case
-    if [[ ! "$PWD" == *"$subdir_name"* ]]; then
+    if ! [[ "$PWD" =~ "$subdir_name/" ]]; then
       echo -e "up: subdirectory ${RED}'$subdir_name'${NOCOLOR} does not exist in:\n$PWD"
       return ERR_BAD_ARG
     fi

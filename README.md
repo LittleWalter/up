@@ -60,22 +60,6 @@ To download the download the repo to `~/.config`:
 git clone https://github.com/LittleWalter/up ~/.config/up
 ```
 
-### 📝 Optional sidenote on `HOME` directory organization
-
-Following best practices, I recommend using the [XDG Base Directory Specification](https://specifications.freedesktop.org/basedir-spec/latest/) to reduce `HOME` directory clutter. Use either `XDG_CONFIG_HOME` or `XDG_DATA_HOME`, depending on where you like to keep shell scripts.
-
-I imagine most people would use `XDG_CONFIG_HOME` and consider these configuration files.
-
-By default, `XDG_CONFIG_HOME` is `$HOME/.config` and `XDG_DATA_HOME` is `$HOME/.local/share`. However, these paths might not be explicitly defined in your shell configuration; verify with `echo $XDG_CONFIG_HOME`.
-
-Within your `.bashrc` or `.zshrc`, or more appropriately `.zshenv`, you may define these as environment variables.
-
-```sh
-export XDG_CONFIG_HOME="$HOME/.config" # Configuration files
-export XDG_DATA_HOME="$HOME/.local/share" # Persistent data storage
-export XDG_CACHE_HOME="$HOME/.cache" # Non-essential files such as shell command history, log files, etc.
-```
-
 ### Bash
 
 Add to `.bashrc` or `.bash_profile` on Apple macOS systems.
@@ -95,11 +79,11 @@ echo 'source ~/.config/up/up-completion.bash' >> ~/.bashrc
 
 ### Zsh
 
-Add to `.zshrc`.
-
 Fully compatible with Zsh using `bashcompinit` for seamless integration.
 
 The `autoload` lines enable autocompletion modules.
+
+Add to `.zshrc`.
 
 ```bash
 autoload -U +X compinit && compinit # Enable Zsh completion 
@@ -117,6 +101,22 @@ echo 'autoload -U +X compinit && compinit' >> ~/.zshrc
 echo 'autoload -U +X bashcompinit && bashcompinit' >> ~/.zshrc
 echo 'source ~/.config/up/up.bash' >> ~/.zshrc
 echo 'source ~/.config/up/up-completion.bash' >> ~/.zshrc
+```
+
+### 📝 Optional sidenote on `HOME` directory organization
+
+Following best practices, I recommend using the [XDG Base Directory Specification](https://specifications.freedesktop.org/basedir-spec/latest/) to reduce `HOME` directory clutter. Use either `XDG_CONFIG_HOME` or `XDG_DATA_HOME`, depending on where you like to keep shell scripts.
+
+I imagine most people would use `XDG_CONFIG_HOME` and consider these configuration files.
+
+By default, `XDG_CONFIG_HOME` is `$HOME/.config` and `XDG_DATA_HOME` is `$HOME/.local/share`. However, these paths might not be explicitly defined in your shell configuration; verify with `echo $XDG_CONFIG_HOME`.
+
+Within your `.bashrc` or `.zshrc`, or more appropriately `.zshenv`, you may define these as environment variables.
+
+```sh
+export XDG_CONFIG_HOME="$HOME/.config" # Configuration files
+export XDG_DATA_HOME="$HOME/.local/share" # Persistent data storage
+export XDG_CACHE_HOME="$HOME/.cache" # Non-essential files such as shell command history, log files, etc.
 ```
 
 ## ⌨️ Usage
