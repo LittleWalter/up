@@ -3,11 +3,9 @@
     Navigate <code>up</code> the Directory Tree with Ease | Bash & Zsh Navigation Script
 </h1>
 
-`up` is a Bash and Zsh-compatible script that simplifies directory navigation up the current path. Jump multiple levels, autocomplete subdirectory names, and handle Unicode paths with ease.
+`up` is a Bash and Zsh-compatible script designed to simplify navigating up the directory tree. Quickly jump multiple levels, autocomplete subdirectory names, and even handle Unicode paths—all in a single command! 
 
-`cd` is great for drilling down the directory tree with tab completion, but not as convenient going directly up. We all know it can be a pain to repeatedly use `cd ..`, `cd ../..`, `cd ../../..`, and so on. Use the `up` function instead!
-
-These Bash scripts offer a quick, flexible, and simple way to go up the directory tree of your current working directory. 
+Say adiós to typing `cd ..` repeatedly and streamline your workflow with `up`.
 
 ![Animation showing the up script in action](assets/up_example_use_animation.gif)
 
@@ -30,9 +28,9 @@ These Bash scripts offer a quick, flexible, and simple way to go up the director
         - `up 3` (jumps three levels)
 
 2. **Powerful Tab Completion**:
-    - Jump directly to a subdirectory name.
+    - Jump directly to a subdirectory name (e.g. `up Pictures/`).
     - Supports Unicode directories (e.g., 日本語, emojis like 📂).
-    - Auto-escapes special ASCII characters like `*`, `[`, `]`, and spaces (e.g., `![special dir]/`).
+    - Auto-escapes special ASCII characters like `*`, `[`, `]`, and spaces (e.g., `\!\[special\ dir\]/`).
     - Quickly autocomplete subdirectory names by prefix.
 
 3. **Verbose Output for Clarity**:
@@ -259,11 +257,17 @@ Possible ideas to work on.
 
 ## 🤝 Contributing
 
-Contributions and suggestions are welcome! 
+Contributions and suggestions are welcome!
 
-For major changes, please open an issue to discuss what you’d like to improve. 
+If you’d like to contribute:
+1. Fork the repository.
+2. Make your changes in a feature branch.
+3. Open a pull request with your proposed changes.
 
-Feel free to fork the repository, make your changes, and submit a pull request. Make sure to run the tests with `bats` to ensure everything works as expected.
+For major changes, please open an issue to discuss what you’d like to improve.
+
+Before submitting a pull request, please:
+- Run the tests with `bats` to ensure everything works as expected.
 
 ## 🍿Credits
 
