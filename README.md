@@ -16,7 +16,7 @@ Use the `up` function instead!
 ## ⭐️ Notable Features
 
 1. Navigate up your current working directory by:
-    * Number of subdirectories, e.g., `up 2` jumps two levels, `up 3` to jumps three levels, etc.
+    * Number of subdirectories, e.g., `up 2` jumps two levels, `up 3` jumps three levels, etc.
     * Subdirectory name with Unicode support, e.g., Japanese, Cyrillic, emojis, etc.
 2. Tab completion of subdirectory names
     * Auto-escaping special ASCII characters like space, `*`, `[`, `!`, etc.
@@ -44,7 +44,7 @@ git clone https://github.com/LittleWalter/up ~/.config/up
 
 ### Bash
 
-Add to `.bashrc` or `.bashprofile` on Apple macOS systems.
+Add to `.bashrc` or `.bash_profile` on Apple macOS systems.
 
 ```bash
 source ~/.config/up/up.bash # The `up` function
