@@ -11,16 +11,16 @@
 #                            | ||  __/\__ \ |_ _| |_) | (_| \__ \ | | |
 #                         ____\__\___||___/\__(_)_.__/ \__,_|___/_| |_|
 #                        |_____|
-# Bash Automated Testing System (`bats`) is a testing framework 
+# Bash Automated Testing System (`bats`) is a testing framework
 # specifically designed for Bash scripts.
 #
-# This script tests the functionality of the `_up` Bash function; 
-# covers most scenarios including edge cases of subdirectories 
-# with integer-based names and verbose and help flags. Unicode and
-# special characters as directory names tested.
+# This script tests the functionality of the `_up` Bash function;
+# covers tab completion population of parent directory names including
+# the use of special ASCII symbols like `*`, `[`, and Unicode
+# characters.
 #
 # NOTE: All directory names in the completion list end with a slash (`/`)
-# 
+#
 # To run these tests, install `bats-core`, then:
 # cd </path/to/up-completion.bash>
 # bats up_test.bats
