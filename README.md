@@ -3,7 +3,7 @@
     Navigate <code>up</code> the Directory Tree with Ease | Bash & Zsh Navigation Script
 </h1>
 
-`up` is a Bash and Zsh-compatible script designed to simplify navigating up the directory tree. Quickly jump multiple levels, autocomplete subdirectory names, and even handle Unicode paths—all in a single command! 
+`up` is a Bash and Zsh-compatible script designed to simplify navigating up the directory tree to parent directories. Quickly jump multiple levels, autocomplete subdirectory names, and even handle Unicode paths—all in a simple command! 
 
 Say adiós to typing `cd ..` repeatedly and streamline your workflow with `up`.
 
@@ -22,14 +22,14 @@ Say adiós to typing `cd ..` repeatedly and streamline your workflow with `up`.
 ## ⭐ Key Features
 
 1. **Simple Multi-Level Navigation**:
-    - Jump up multiple directory levels with a single command:
+    - Jump up multiple directory levels by index:
         - `up` (jumps one level)
         - `up 2` (jumps two levels)
         - `up 3` (jumps three levels)
 
 2. **Powerful Tab Completion**:
-    - Jump directly to a subdirectory name (e.g. `up Pictures/`).
-    - Supports Unicode directories (e.g., 日本語, emojis like 📂).
+    - Jump directly to a parent subdirectory name (e.g. `up Pictures/`).
+    - Supports Unicode directories (e.g., `日本語/`, emojis like `📂/`).
     - Auto-escapes special ASCII characters like `*`, `[`, `]`, and spaces (e.g., `\!\[special\ dir\]/`).
     - Quickly autocomplete subdirectory names by prefix.
 
