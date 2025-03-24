@@ -6,14 +6,14 @@
 # | |_| | |_) | | ||  __/\__ \ |_ _| |_) | (_| | |_\__ \
 #  \__,_| .__/___\__\___||___/\__(_)_.__/ \__,_|\__|___/
 #       |_| |_____|
-# Bash Automated Testing System (`bats`) is a testing framework 
+# Bash Automated Testing System (`bats`) is a testing framework
 # specifically designed for Bash scripts.
 #
-# This script tests the functionality of the `up` Bash function; 
-# covers most scenarios including edge cases of subdirectories 
+# This script tests the functionality of the `up` Bash function;
+# covers most scenarios including edge cases of subdirectories
 # with integer-based names and verbose and help flags. Unicode and
 # special characters as directory names tested.
-# 
+#
 # To run these tests, install `bats-core`, then:
 # cd </path/to/up.bash>
 # bats up_test.bats
@@ -27,8 +27,8 @@ load ./up.bash
 
 setup() {
 	# Make sure Unicode characters are available to testing environment
-  export LANG=en_US.UTF-8
-  export LC_ALL=en_US.UTF-8
+	export LANG=en_US.UTF-8
+	export LC_ALL=en_US.UTF-8
 
 	# Disable color for testing
 	RED=""
@@ -38,14 +38,14 @@ setup() {
 }
 
 teardown() {
-  # Remove the temporary test directory
-  rm -rf "$BATS_TEST_TMPDIR"
+	# Remove the temporary test directory
+	rm -rf "$BATS_TEST_TMPDIR"
 }
 
 @test 'up should function under UTF-8 locale' {
-    setup
-    [[ $LANG == "en_US.UTF-8" ]]
-    [[ $LC_ALL == "en_US.UTF-8" ]]
+	setup
+	[[ $LANG == "en_US.UTF-8" ]]
+	[[ $LC_ALL == "en_US.UTF-8" ]]
 }
 
 # Standard tests #######################################################
@@ -198,53 +198,53 @@ teardown() {
 }
 
 @test 'up should handle Unicode characters in directory names' {
-  local -r path=${BATS_TEST_TMPDIR}/dir1/ディレクトリ/📁/dir3
-  mkdir -p "$path"
-  cd "$path"
+	local -r path=${BATS_TEST_TMPDIR}/dir1/ディレクトリ/📁/dir3
+	mkdir -p "$path"
+	cd "$path"
 
-  up ディレクトリ
+	up ディレクトリ
 
-  [[ $PWD == "${BATS_TEST_TMPDIR}/dir1/ディレクトリ" ]]
+	[[ $PWD == "${BATS_TEST_TMPDIR}/dir1/ディレクトリ" ]]
 }
 
 @test 'up should handle emoji-only directory names' {
-  local -r path=${BATS_TEST_TMPDIR}/😊/dir2/dir3
-  mkdir -p "$path"
-  cd "$path"
+	local -r path=${BATS_TEST_TMPDIR}/😊/dir2/dir3
+	mkdir -p "$path"
+	cd "$path"
 
-  up 😊
+	up 😊
 
-  [[ $PWD == "${BATS_TEST_TMPDIR}/😊" ]]
+	[[ $PWD == "${BATS_TEST_TMPDIR}/😊" ]]
 }
 
 @test 'up should handle mixed Unicode characters and spaces' {
-  local -r path="${BATS_TEST_TMPDIR}/dir1/你好 世界/dir3"  # Quote the entire path
-  mkdir -p "$path"
-  cd "$path"
+	local -r path="${BATS_TEST_TMPDIR}/dir1/好 世界/dir3"  # Quote the entire path
+	mkdir -p "$path"
+	cd "$path"
 
-  up "你好 世界"  # Quote the argument as well
+	up "好 世界"  # Quote the argument as well
 
-  [[ $PWD == "${BATS_TEST_TMPDIR}/dir1/你好 世界" ]]
+	[[ $PWD == "${BATS_TEST_TMPDIR}/dir1/好 世界" ]]
 }
 
 @test 'up should handle combining Unicode characters' {
-  local -r path=${BATS_TEST_TMPDIR}/dir1/àb̄çd̃ē/dir3
-  mkdir -p "$path"
-  cd "$path"
+	local -r path=${BATS_TEST_TMPDIR}/dir1/àb̄çd̃ē/dir3
+	mkdir -p "$path"
+	cd "$path"
 
-  up àb̄çd̃ē
+	up àb̄çd̃ē
 
-  [[ $PWD == "${BATS_TEST_TMPDIR}/dir1/àb̄çd̃ē" ]]
+	[[ $PWD == "${BATS_TEST_TMPDIR}/dir1/àb̄çd̃ē" ]]
 }
 
 @test 'up should handle Cyrillic characters in directory names' {
-  local -r path=${BATS_TEST_TMPDIR}/dir1/привет/dir3
-  mkdir -p "$path"
-  cd "$path"
+	local -r path=${BATS_TEST_TMPDIR}/dir1/привет/dir3
+	mkdir -p "$path"
+	cd "$path"
 
-  up привет
+	up привет
 
-  [[ $PWD == "${BATS_TEST_TMPDIR}/dir1/привет" ]]
+	[[ $PWD == "${BATS_TEST_TMPDIR}/dir1/привет" ]]
 }
 
 # Not-a-flag tests #####################################################
@@ -346,15 +346,15 @@ teardown() {
 	mkdir -p "$path"
 	cd "$path"
 
-  local original_home=$HOME
+	local original_home=$HOME
 	unset HOME
 
 	run up $HOME
 
-  [ $status -eq 0 ]
+	[ $status -eq 0 ]
 	[[ $PWD == "${BATS_TEST_TMPDIR}/dir1/dir2" ]]
 
-  export HOME=$original_home  # Restore the original value
+	export HOME=$original_home  # Restore the original value
 }
 
 # Verbose flag tests ###################################################
@@ -368,19 +368,19 @@ teardown() {
 
 	# Use grep to check for a regex match in the output of line 1
 	local test_output=
-  echo "$output" | grep -q "up: jumped 2 dirs$"
-  # Assert that grep succeeded
-  [ "$?" -eq 0 ]
+	echo "$output" | grep -q "up: jumped 2 dirs$"
+	# Assert that grep succeeded
+	[ "$?" -eq 0 ]
 
 	# Use grep to check for a regex match in the output of line 2
-  echo "$output" | grep -q "old: $path$"
-  # Assert that grep succeeded
-  [ "$?" -eq 0 ]
+	echo "$output" | grep -q "old: $path$"
+	# Assert that grep succeeded
+	[ "$?" -eq 0 ]
 
 	# Use grep to check for a regex match in the output of line 3
-  echo "$output" | grep -q "pwd: .*/dir1$"
-  # Assert that grep succeeded
-  [ "$?" -eq 0 ]
+	echo "$output" | grep -q "pwd: .*/dir1$"
+	# Assert that grep succeeded
+	[ "$?" -eq 0 ]
 }
 
 @test 'up should print verbose text passing --verbose flag and no arg' {
@@ -391,19 +391,19 @@ teardown() {
 	run up --verbose
 
 	# Use grep to check for a regex match in the output of line 1
-  echo "$output" | grep -q "up: jumped 1 dir$"
-  # Assert that grep succeeded
-  [ "$?" -eq 0 ]
+	echo "$output" | grep -q "up: jumped 1 dir$"
+	# Assert that grep succeeded
+	[ "$?" -eq 0 ]
 
 	# Use grep to check for a regex match in the output of line 2
-  echo "$output" | grep -q "old: $path$"
-  # Assert that grep succeeded
-  [ "$?" -eq 0 ]
+	echo "$output" | grep -q "old: $path$"
+	# Assert that grep succeeded
+	[ "$?" -eq 0 ]
 
 	# Use grep to check for a regex match in the output of line 3
-  echo "$output" | grep -q "pwd: .*/dir1/dir2$"
-  # Assert that grep succeeded
-  [ "$?" -eq 0 ]
+	echo "$output" | grep -q "pwd: .*/dir1/dir2$"
+	# Assert that grep succeeded
+	[ "$?" -eq 0 ]
 }
 
 @test 'up should print verbose text passing verbose flag with arg of dir2' {
@@ -415,19 +415,19 @@ teardown() {
 	echo "$output"
 
 	# Use grep to check for a regex match in the output of line 1
-  echo "$output" | grep -q "up: jumped 1 dir to nearest: dir2"
-  # Assert that grep succeeded
-  [ "$?" -eq 0 ]
+	echo "$output" | grep -q "up: jumped 1 dir to nearest: dir2"
+	# Assert that grep succeeded
+	[ "$?" -eq 0 ]
 
 	# Use grep to check for a regex match in the output of line 2
-  echo "$output" | grep -q "old: $path$"
-  # Assert that grep succeeded
-  [ "$?" -eq 0 ]
+	echo "$output" | grep -q "old: $path$"
+	# Assert that grep succeeded
+	[ "$?" -eq 0 ]
 
 	# Use grep to check for a regex match in the output of line 3
-  echo "$output" | grep -q "pwd: .*/dir1/dir2$"
-  # Assert that grep succeeded
-  [ "$?" -eq 0 ]
+	echo "$output" | grep -q "pwd: .*/dir1/dir2$"
+	# Assert that grep succeeded
+	[ "$?" -eq 0 ]
 }
 
 @test 'up should print verbose text passing verbose flag with arg of dir1' {
@@ -439,19 +439,19 @@ teardown() {
 	echo "$output"
 
 	# Use grep to check for a regex match in the output of line 1
-  echo "$output" | grep -q "up: jumped 2 dirs to nearest: dir1$"
-  # Assert that grep succeeded
-  [ "$?" -eq 0 ]
+	echo "$output" | grep -q "up: jumped 2 dirs to nearest: dir1$"
+	# Assert that grep succeeded
+	[ "$?" -eq 0 ]
 
 	# Use grep to check for a regex match in the output of line 2
-  echo "$output" | grep -q "old: $path$"
-  # Assert that grep succeeded
-  [ "$?" -eq 0 ]
+	echo "$output" | grep -q "old: $path$"
+	# Assert that grep succeeded
+	[ "$?" -eq 0 ]
 
 	# Use grep to check for a regex match in the output of line 3
-  echo "$output" | grep -q "pwd: .*/dir1$"
-  # Assert that grep succeeded
-  [ "$?" -eq 0 ]
+	echo "$output" | grep -q "pwd: .*/dir1$"
+	# Assert that grep succeeded
+	[ "$?" -eq 0 ]
 }
 
 # Help flag tests ######################################################
@@ -464,9 +464,9 @@ teardown() {
 	run up --help
 
 	# Use grep to check for a regex match in the output of line 1
-  echo "$output" | grep -q "up: jump the directory tree instead of using \`cd ..\`!"
-  # Assert that grep succeeded
-  [ "$?" -eq 0 ]
+	echo "$output" | grep -q "up: jump the directory tree instead of using \`cd ..\`!"
+	# Assert that grep succeeded
+	[ "$?" -eq 0 ]
 }
 
 @test 'up should print help text when passing -h flag' {
@@ -477,9 +477,9 @@ teardown() {
 	run up -h
 
 	# Use grep to check for a regex match in the output of line 1
-  echo "$output" | grep -q "up: jump the directory tree instead of using \`cd ..\`!"
-  # Assert that grep succeeded
-  [ "$?" -eq 0 ]
+	echo "$output" | grep -q "up: jump the directory tree instead of using \`cd ..\`!"
+	# Assert that grep succeeded
+	[ "$?" -eq 0 ]
 }
 
 @test 'up should print help text when passing help flag' {
@@ -490,8 +490,8 @@ teardown() {
 	run up help
 
 	# Use grep to check for a regex match in the output of line 1
-  echo "$output" | grep -q "up: jump the directory tree instead of using \`cd ..\`!"
-  # Assert that grep succeeded
-  [ "$?" -eq 0 ]
+	echo "$output" | grep -q "up: jump the directory tree instead of using \`cd ..\`!"
+	# Assert that grep succeeded
+	[ "$?" -eq 0 ]
 }
 

@@ -34,13 +34,13 @@ load up-completion.bash
 
 setup() {
 	# Make sure Unicode characters are available to testing environment
-  export LANG=en_US.UTF-8
-  export LC_ALL=en_US.UTF-8
+	export LANG=en_US.UTF-8
+	export LC_ALL=en_US.UTF-8
 }
 
 teardown() {
-  # Remove the temporary test directory
-  rm -rf "$BATS_TEST_TMPDIR"
+	# Remove the temporary test directory
+	rm -rf "$BATS_TEST_TMPDIR"
 }
 
 assert_contains() {
@@ -48,21 +48,21 @@ assert_contains() {
 	shift
 
 	for e; do
-    if [[ "$e" == "$expected" ]]; then
-        return 0
-    fi
+		if [[ "$e" == "$expected" ]]; then
+			return 0
+		fi
 	done
 	
-  # Debugging output to troubleshoot issues
+	# Debugging output to troubleshoot issues
 	echo "Expected: $expected"
 	echo "Actual: $@"
 	return 1
 }
 
 @test '_up should function under UTF-8 locale' {
-    setup
-    [[ $LANG == "en_US.UTF-8" ]]
-    [[ $LC_ALL == "en_US.UTF-8" ]]
+	setup
+	[[ $LANG == "en_US.UTF-8" ]]
+	[[ $LC_ALL == "en_US.UTF-8" ]]
 }
 
 @test '_up should autocomplete the list of parent directory names when given no arguments' {
@@ -130,112 +130,112 @@ assert_contains() {
 }
 
 @test '_up should autocomplete parent directory containing Unicode characters in directory names' {
-  local -r path=${BATS_TEST_TMPDIR}/dir1/📁/ディレクトリ/dir3
-  mkdir -p "$path"
-  cd "$path"
+	local -r path=${BATS_TEST_TMPDIR}/dir1/📁/ディレクトリ/dir3
+	mkdir -p "$path"
+	cd "$path"
 
-  # Set up completion environment
-  COMP_WORDS=(up)
-  COMP_CWORD=1
+	# Set up completion environment
+	COMP_WORDS=(up)
+	COMP_CWORD=1
 
-  # Call the _up function
-  _up
+	# Call the _up function
+	_up
 
-  # Debugging output (optional, to troubleshoot issues)
-  echo "COMPREPLY: ${COMPREPLY[*]}"
+	# Debugging output (optional, to troubleshoot issues)
+	echo "COMPREPLY: ${COMPREPLY[*]}"
 
-  # Check for expected autocompletions
-  assert_contains "dir1/" "${COMPREPLY[@]}"
-  assert_contains "📁/" "${COMPREPLY[@]}"
-  # Ensure this test works for Unicode
-  assert_contains "ディレクトリ/" "${COMPREPLY[@]}"
+	# Check for expected autocompletions
+	assert_contains "dir1/" "${COMPREPLY[@]}"
+	assert_contains "📁/" "${COMPREPLY[@]}"
+	# Ensure this test works for Unicode
+	assert_contains "ディレクトリ/" "${COMPREPLY[@]}"
 }
 
 @test '_up should handle emoji-only directory names' {
-  local -r path=${BATS_TEST_TMPDIR}/😊/dir2/dir3
-  mkdir -p "$path"
-  cd "$path"
+	local -r path=${BATS_TEST_TMPDIR}/😊/dir2/dir3
+	mkdir -p "$path"
+	cd "$path"
 
-  # Set up completion environment
-  COMP_WORDS=(up)
-  COMP_CWORD=1
+	# Set up completion environment
+	COMP_WORDS=(up)
+	COMP_CWORD=1
 
-  # Call the _up function
-  _up
+	# Call the _up function
+	_up
 
-  # Debugging output (optional, to troubleshoot issues)
-  echo "COMPREPLY: ${COMPREPLY[*]}"
+	# Debugging output (optional, to troubleshoot issues)
+	echo "COMPREPLY: ${COMPREPLY[*]}"
 
-  assert_contains "😊/" "${COMPREPLY[@]}"
+	assert_contains "😊/" "${COMPREPLY[@]}"
 }
 
 @test '_up should handle mixed Unicode characters and spaces in directory names' {
-  local -r path="${BATS_TEST_TMPDIR}/dir1/好 世界/dir3"  # Quote the entire path
-  mkdir -p "$path"
-  cd "$path"
+	local -r path="${BATS_TEST_TMPDIR}/dir1/好 世界/dir3"  # Quote the entire path
+	mkdir -p "$path"
+	cd "$path"
 
-  # Set up completion environment
-  COMP_WORDS=(up)
-  COMP_CWORD=1
+	# Set up completion environment
+	COMP_WORDS=(up)
+	COMP_CWORD=1
 
-  # Call the _up function
-  _up
+	# Call the _up function
+	_up
 
-  # Debugging output (optional, to troubleshoot issues)
-  echo "COMPREPLY: ${COMPREPLY[*]}"
+	# Debugging output (optional, to troubleshoot issues)
+	echo "COMPREPLY: ${COMPREPLY[*]}"
 
-  assert_contains "好\ 世界/" "${COMPREPLY[@]}"
+	assert_contains "好\ 世界/" "${COMPREPLY[@]}"
 }
 
 @test '_up should handle combining Unicode characters in directory names' {
-  local -r path=${BATS_TEST_TMPDIR}/dir1/àb̄çd̃ē/dir3
-  mkdir -p "$path"
-  cd "$path"
+	local -r path=${BATS_TEST_TMPDIR}/dir1/àb̄çd̃ē/dir3
+	mkdir -p "$path"
+	cd "$path"
 
-  # Set up completion environment
-  COMP_WORDS=(up)
-  COMP_CWORD=1
+	# Set up completion environment
+	COMP_WORDS=(up)
+	COMP_CWORD=1
 
-  # Call the _up function
-  _up
+	# Call the _up function
+	_up
 
-  # Debugging output (optional, to troubleshoot issues)
-  echo "COMPREPLY: ${COMPREPLY[*]}"
+	# Debugging output (optional, to troubleshoot issues)
+	echo "COMPREPLY: ${COMPREPLY[*]}"
 
-  assert_contains "àb̄çd̃ē/" "${COMPREPLY[@]}"
+	assert_contains "àb̄çd̃ē/" "${COMPREPLY[@]}"
 }
 
 @test '_up should handle Cyrillic characters in directory names' {
-  local -r path=${BATS_TEST_TMPDIR}/dir1/привет/dir3
-  mkdir -p "$path"
-  cd "$path"
+	local -r path=${BATS_TEST_TMPDIR}/dir1/привет/dir3
+	mkdir -p "$path"
+	cd "$path"
 
-  # Set up completion environment
-  COMP_WORDS=(up)
-  COMP_CWORD=1
+	# Set up completion environment
+	COMP_WORDS=(up)
+	COMP_CWORD=1
 
-  # Call the _up function
-  _up
+	# Call the _up function
+	_up
 
-  # Debugging output (optional, to troubleshoot issues)
-  echo "COMPREPLY: ${COMPREPLY[*]}"
+	# Debugging output (optional, to troubleshoot issues)
+	echo "COMPREPLY: ${COMPREPLY[*]}"
 
-  assert_contains "привет/" "${COMPREPLY[@]}"
+	assert_contains "привет/" "${COMPREPLY[@]}"
 }
 
 @test '_up should handle deeply nested directories with Unicode characters' {
-    local -r path="${BATS_TEST_TMPDIR}/😎/ディレクトリ/dir1/[dir2]/📂/orange julius/dir3"
-    mkdir -p "$path"
-    cd "$path"
+	local -r path="${BATS_TEST_TMPDIR}/😎/ディレクトリ/dir1/[dir2]/📂/orange julius/dir3"
+	mkdir -p "$path"
+	cd "$path"
 
-    COMP_WORDS=(up)
-    COMP_CWORD=1
-    _up
+	COMP_WORDS=(up)
+	COMP_CWORD=1
+	_up
 
-    assert_contains "dir1/" "${COMPREPLY[@]}"
-    assert_contains "\[dir2\]/" "${COMPREPLY[@]}"
-    assert_contains "📂/" "${COMPREPLY[@]}"
-		assert_contains "orange\ julius/" "${COMPREPLY[@]}"
+	assert_contains "dir1/" "${COMPREPLY[@]}"
+	assert_contains "\[dir2\]/" "${COMPREPLY[@]}"
+	assert_contains "📂/" "${COMPREPLY[@]}"
+	assert_contains "orange\ julius/" "${COMPREPLY[@]}"
 }
 
 @test '_up should autocomplete hidden directories (dot paths)' {
@@ -254,48 +254,48 @@ assert_contains() {
 }
 
 @test '_up should autocomplete parent directories with special characters' {
-    local -r path="${BATS_TEST_TMPDIR}/dir1/dir[2]*/dir3"
-    mkdir -p "$path"
-    cd "$path"
+	local -r path="${BATS_TEST_TMPDIR}/dir1/dir[2]*/dir3"
+	mkdir -p "$path"
+	cd "$path"
 
-    COMP_WORDS=(up dir\[)
-    COMP_CWORD=1
-    _up
+	COMP_WORDS=(up dir\[)
+	COMP_CWORD=1
+	_up
 
-    assert_contains "dir\[2\]\*/" "${COMPREPLY[@]}"
+	assert_contains "dir\[2\]\*/" "${COMPREPLY[@]}"
 }
 
 @test '_up should handle directory names starting with special characters' {
-    local -r path="${BATS_TEST_TMPDIR}/!special&dir*/dir2/taco_bell"
-    mkdir -p "$path"
-    cd "$path"
+	local -r path="${BATS_TEST_TMPDIR}/!special&dir*/dir2/taco_bell"
+	mkdir -p "$path"
+	cd "$path"
 
-    COMP_WORD=(up \!)
-    COMP_CWORD=1
-    _up
+	COMP_WORD=(up \!)
+	COMP_CWORD=1
+	_up
 
-    assert_contains "\!special\&dir\*/" "${COMPREPLY[@]}"
+	assert_contains "\!special\&dir\*/" "${COMPREPLY[@]}"
 }
 
 @test '_up should handle extremely long directory paths (200+ subdirectories)' {
-    local base_path=${BATS_TEST_TMPDIR}
-		cd "$base_path"
+	local base_path=${BATS_TEST_TMPDIR}
+	cd "$base_path"
 
-    # Incrementally create a path of 201 directories
-    for i in $(seq 1 201); do
-        next_path="dir$i/"
-        mkdir "$next_path"
-				cd "$next_path"
-    done
+	# Incrementally create a path of 201 directories
+	for i in $(seq 1 201); do
+		next_path="dir$i/"
+		mkdir "$next_path"
+		cd "$next_path"
+	done
 
-    COMP_WORDS=(up)
-    COMP_CWORD=1
+	COMP_WORDS=(up)
+	COMP_CWORD=1
 
-		# Jump to the 200th directory: "dir200/"
-    _up
+	# Jump to the 200th directory: "dir200/"
+	_up
 
-    # Check all directories in the path
-    for i in $(seq 1 200); do
-        assert_contains "dir$i/" "${COMPREPLY[@]}"
-    done
+	# Check all directories in the path
+	for i in $(seq 1 200); do
+		assert_contains "dir$i/" "${COMPREPLY[@]}"
+	done
 }

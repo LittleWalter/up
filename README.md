@@ -28,7 +28,7 @@ Say adiós to typing `cd ..` repeatedly and streamline your workflow with `up`.
         - `up 3` (jumps three levels)
 
 2. **Powerful Tab Completion**:
-    - Jump directly to a parent subdirectory name (e.g. `up Pictures/`).
+    - Jump directly to a parent directory name (e.g. `up Pictures/`).
     - Supports Unicode directories (e.g., `日本語/`, emojis like `📂/`).
     - Auto-escapes special ASCII characters like `*`, `[`, `]`, and spaces (e.g., `\!\[special\ dir\]/`).
     - Quickly autocomplete subdirectory names by prefix.
@@ -62,7 +62,7 @@ git clone https://github.com/LittleWalter/up ~/.config/up
 
 ### Bash
 
-Add to `.bashrc` or `.bash_profile` on Apple macOS systems.
+Add to `.bashrc` or `.bash_profile` on Apple macOS systems:
 
 ```bash
 source ~/.config/up/up.bash # The `up` function
@@ -85,7 +85,7 @@ Fully compatible with Zsh using `bashcompinit` for seamless integration.
 
 The `autoload` lines enable autocompletion modules.
 
-Add to `.zshrc`.
+Add to `.zshrc`:
 
 ```bash
 autoload -U +X compinit && compinit # Enable Zsh completion 
@@ -323,11 +323,11 @@ I later found [this simple `up` Bash script](https://github.com/helpermethod/up/
 
 ```bash
 up() {
-	(($# == 0)) && cd .. && return
-	[[ $1 == / ]] && cd / && return
+  (($# == 0)) && cd .. && return
+  [[ $1 == / ]] && cd / && return
 
-	# shellcheck disable=SC2164
-	cd "${PWD%"${PWD##*/"$1"/}"}"
+  # shellcheck disable=SC2164
+  cd "${PWD%"${PWD##*/"$1"/}"}"
 }
 ```
 
