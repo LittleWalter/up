@@ -10,16 +10,16 @@ Say adiós to typing `cd ..` repeatedly and streamline your workflow with `up`.
 ![Animation showing the up script in action](assets/up_example_use_animation.gif)
 
 ## 📜 Table of Contents
-- [Key Features](#-key-feature)
+- [Key Features](#-key-features)
 - [Installation](#-installation)
 - [Usage](#-usage)
-- [Testing](#-testing-in-bats)
-- [Limitations and Known Issues](#-limitations-and-known-issues)
+- [Testing](#-testing-in-bats-bash-automated-testing-system)
+- [Bugs, Limitations, and Known Issues](#-bugs-limitations-and-known-issues)
 - [TODOs and Future Ideas](#-todos-and-future-ideas)
 - [Contributing](#-contributing)
 - [Credits](#credits)
 
-## ⭐️ Key Features
+## ⭐ Key Features
 
 1. **Simple Multi-Level Navigation**:
     - Jump up multiple directory levels with a single command:
@@ -50,7 +50,7 @@ Say adiós to typing `cd ..` repeatedly and streamline your workflow with `up`.
     - Fully compatible with both Bash and Zsh.
     - Minimal dependencies ensure fast, efficient performance, and a simple installation.
 
-## ⚙️ Installation
+## ⚙ Installation
 
 Download the git repo to your preferred destination. 
 
@@ -123,7 +123,7 @@ export XDG_DATA_HOME="$HOME/.local/share" # Persistent data storage
 export XDG_CACHE_HOME="$HOME/.cache" # Non-essential files such as shell command history, log files, etc.
 ```
 
-## ⌨️ Usage
+## ⌨ Usage
 
 For example usage, assume `pwd` command returns:
 
@@ -251,7 +251,7 @@ $ bats up_test.bats # Test the `up` function
 $ bats up-completion_test.bats # Test the `_up` function for Bash completions
 ```
 
-## ⚠️ Limitations and Known Issues
+## 🐞 Bugs, Limitations, and Known Issues
 
 There may be skill-related limitations: I’m not a Bash scripting expert.
 
