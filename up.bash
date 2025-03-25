@@ -243,7 +243,7 @@ up::cd_by_subdir_name() {
 			return ERR_NO_CHANGE
 		fi
 		if ! cd "$HOME"; then
-			up::print_msg "up: failed to navigate to HOME: ${ERR_STYLE}$HOME${RESET}"
+			up::print_msg "failed to navigate to HOME: ${ERR_STYLE}$HOME${RESET}"
 			return ERR_CD_ACCESS
 		fi
 		# Verbose mode output on successful dir change
