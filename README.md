@@ -268,7 +268,7 @@ If your terminal emulator supports the full RGB spectrum, you may define style v
 #       Background = "\033[48;2;<r>;<g>;<b>m"
 export _UP_DIR_CHANGE_STYLE="\033[38;2;249;226;175m" # Yellow
 export _UP_ERR_STYLE="\033[48;2;243;160;168m\033[38;2;30;30;46m" # Red background, "Crust" foreground
-export _UP_OLDPWD_STYLE="\033[38;2;88;91;112m" # "Surface 2"
+export _UP_OLDPWD_STYLE="\033[38;2;88;91;112m" # "Surface2"
 export _UP_PWD_STYLE="\033[38;2;166;227;161m" # Green
 ```
 ![up example using the Catppuccin Mocha theme for style output](assets/up_catppuccin_mocha_theme_example.jpg "Style example: Catppuccin Mocha theme in WezTerm")

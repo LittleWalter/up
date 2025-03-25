@@ -263,8 +263,8 @@ up::cd_by_subdir_name() {
 	# Sanitize input: remove trailing slash and everything after; must be a single subdir
 	local subdir_name="${subdir_name%/*}"
 
-	# Handle invalid subdirectory case
-	if ! [[ "$PWD" =~ "$subdir_name/" ]]; then
+	# Handle invalid subdirectory case: the subdir must be sandwiched between slashes
+	if ! [[ "$PWD" =~ "/$subdir_name/" ]]; then
 		up::print_msg "subdirectory ${ERR_STYLE}'$subdir_name'${RESET} does not exist in:"
 		up::print_pwd
 		return ERR_BAD_ARG
@@ -320,3 +320,4 @@ up() {
 		up::cd_by_subdir_name "$change_dir_arg"
 	fi
 }
+

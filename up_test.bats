@@ -165,6 +165,21 @@ teardown() {
 	[ $status -ne 0 ]
 }
 
+@test 'up should not change directory on unknown subdirectory name (\"pink\") when it has similar trailing chars as another' {
+	local -r path=${BATS_TEST_TMPDIR}/dir1/mr_pink/dir3
+	mkdir -p "$path"
+	cd "$path"
+
+	run up pink
+
+	# Debugging: print output on failure
+	echo "$output"
+
+
+	# Bad news is good news: assertion failure
+	[ $status -ne 0 ]
+}
+
 @test 'up should not change directory on unknown subdirectory name but PWD contains the substring' {
 	local -r path=${BATS_TEST_TMPDIR}/dir1/substring_check/dir3
 	mkdir -p "$path"
