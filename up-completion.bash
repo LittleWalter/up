@@ -1,3 +1,4 @@
+#-----------------------------------------------------------------------
 # _   _ _ __
 #| | | | '_ \ _____
 #| |_| | |_) |_____|
@@ -21,6 +22,7 @@
 # autoload -U +X bashcompinit && bashcompinit
 # source ~/path/to/up.bash
 # source ~/path/to/up-completion.bash
+#-----------------------------------------------------------------------
 _up() {
 	local -r current_word=${COMP_WORDS[COMP_CWORD]}
 

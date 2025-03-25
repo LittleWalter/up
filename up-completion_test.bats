@@ -30,7 +30,7 @@
 # REF: https://github.com/bats-core/bats-core
 #-----------------------------------------------------------------------
 
-load up-completion.bash
+load ./up-completion.bash
 
 setup() {
 	# Make sure Unicode characters are available to testing environment
@@ -52,7 +52,7 @@ assert_contains() {
 			return 0
 		fi
 	done
-	
+
 	# Debugging output to troubleshoot issues
 	echo "Expected: $expected"
 	echo "Actual: $@"

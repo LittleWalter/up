@@ -30,11 +30,13 @@ setup() {
 	export LANG=en_US.UTF-8
 	export LC_ALL=en_US.UTF-8
 
-	# Disable color for testing
-	RED=""
-	ORANGE=""
-	LIGHTGREEN=""
-	NOCOLOR=""
+	# Disable color and other styling for testing purposes
+	LABEL_STYLE=""
+	ERR_STYLE=""
+	DIR_CHANGE_STYLE=""
+	PWD_STYLE=""
+	OLDPWD_STYLE=""
+	RESET=""
 }
 
 teardown() {
@@ -158,9 +160,9 @@ teardown() {
 	cd "$path"
 
 	run up missing_dir
-	
+
 	# Bad news is good news: assertion failure
-	[ $status -ne 0 ] 
+	[ $status -ne 0 ]
 }
 
 @test 'up should not change directory on unknown subdirectory name but PWD contains the substring' {
@@ -169,9 +171,9 @@ teardown() {
 	cd "$path"
 
 	run up substring
-	
+
 	# Bad news is good news: assertion failure
-	[ $status -ne 0 ] 
+	[ $status -ne 0 ]
 }
 
 # Character-related tests ##############################################
@@ -198,13 +200,13 @@ teardown() {
 }
 
 @test 'up should handle Unicode characters in directory names' {
-	local -r path=${BATS_TEST_TMPDIR}/dir1/ディレクトリ/📁/dir3
+	local -r path=${BATS_TEST_TMPDIR}/dir1/ダン·メイソン/📁/dir3
 	mkdir -p "$path"
 	cd "$path"
 
-	up ディレクトリ
+	up ダン·メイソン
 
-	[[ $PWD == "${BATS_TEST_TMPDIR}/dir1/ディレクトリ" ]]
+	[[ $PWD == "${BATS_TEST_TMPDIR}/dir1/ダン·メイソン" ]]
 }
 
 @test 'up should handle emoji-only directory names' {
@@ -338,6 +340,9 @@ teardown() {
 
 	up $HOME
 
+	# Debugging: print output on failure
+	echo "$output"
+
 	[[ $PWD == $HOME ]]
 }
 
@@ -366,6 +371,9 @@ teardown() {
 
 	run up -v 2
 
+	# Debugging: print output on failure
+	echo "$output"
+
 	# Use grep to check for a regex match in the output of line 1
 	local test_output=
 	echo "$output" | grep -q "up: jumped 2 dirs$"
@@ -390,6 +398,9 @@ teardown() {
 
 	run up --verbose
 
+	# Debugging: print output on failure
+	echo "$output"
+
 	# Use grep to check for a regex match in the output of line 1
 	echo "$output" | grep -q "up: jumped 1 dir$"
 	# Assert that grep succeeded
@@ -412,6 +423,8 @@ teardown() {
 	cd "$path"
 
 	run up verbose dir2
+
+	# Debugging: print output on failure
 	echo "$output"
 
 	# Use grep to check for a regex match in the output of line 1
@@ -436,6 +449,8 @@ teardown() {
 	cd "$path"
 
 	run up verbose dir1
+
+	# Debugging: print output on failure
 	echo "$output"
 
 	# Use grep to check for a regex match in the output of line 1
@@ -463,8 +478,11 @@ teardown() {
 
 	run up --help
 
+	# Debugging: print output on failure
+	echo "$output"
+
 	# Use grep to check for a regex match in the output of line 1
-	echo "$output" | grep -q "up: jump the directory tree instead of using \`cd ..\`!"
+	echo "$output" | grep -q "Jump the directory tree instead of using \`cd ..\`!"
 	# Assert that grep succeeded
 	[ "$?" -eq 0 ]
 }
@@ -476,8 +494,11 @@ teardown() {
 
 	run up -h
 
+	# Debugging: print output on failure
+	echo "$output"
+
 	# Use grep to check for a regex match in the output of line 1
-	echo "$output" | grep -q "up: jump the directory tree instead of using \`cd ..\`!"
+	echo "$output" | grep -q "Jump the directory tree instead of using \`cd ..\`!"
 	# Assert that grep succeeded
 	[ "$?" -eq 0 ]
 }
@@ -489,9 +510,11 @@ teardown() {
 
 	run up help
 
+	# Debugging: print output on failure
+	echo "$output"
+
 	# Use grep to check for a regex match in the output of line 1
-	echo "$output" | grep -q "up: jump the directory tree instead of using \`cd ..\`!"
+	echo "$output" | grep -q "Jump the directory tree instead of using \`cd ..\`!"
 	# Assert that grep succeeded
 	[ "$?" -eq 0 ]
 }
-
