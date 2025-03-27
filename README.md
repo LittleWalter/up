@@ -3,9 +3,14 @@
     Navigate <code>up</code> the Directory Tree with Ease | Bash & Zsh Navigation Script
 </h1>
 
-`up` is a Bash and Zsh-compatible script designed to simplify navigating up the directory tree to parent directories. Quickly jump multiple levels, autocomplete subdirectory names, and even handle Unicode paths—all in a simple command!
+`up` is a Bash and Zsh script that takes the hassle out of navigating to parent directories. Effortlessly jump multiple levels, autocomplete subdirectory names, or harness powerful regex-based matching for precise and flexible navigation—all in a single, intuitive command!
 
-Say adiós to typing `cd ..` repeatedly and streamline your workflow with `up`.
+Easily handle:
+- **Tab Completion**: Quickly autocomplete parent or subdirectory names
+- **Regex Patterns**: Find directories that start, end, or partially match your search, with options for case-insensitive matching.
+- **Unicode Paths**: Works with directories containing non-Latin characters like `フォルダ/`, `🚀/`, `नमस्ते/`, or `مرحبا/`.
+
+Kiss tedious `cd ..` chains goodbye!
 
 ![Animation showing the up script in action](assets/up_example_use_animation.gif "See `up` in action!")
 
@@ -28,29 +33,38 @@ Say adiós to typing `cd ..` repeatedly and streamline your workflow with `up`.
         - `up 3` (jumps three levels)
 
 2. **Powerful Tab Completion**:
-    - Jump directly to a parent directory name (e.g. `up Pictures/`).
+    - Jump directly to a parent directory name (e.g., `up Pictures/`).
     - Supports Unicode directories (e.g., `ダン·メイソン/`, `日本語/`, `привет/`, emojis like `📂/`).
     - Auto-escapes special ASCII characters like `*`, `[`, `]`, and spaces (e.g., `\!\[special\ dir\]/`).
     - Quickly autocomplete subdirectory names by prefix.
 
-3. **Verbose Output for Clarity**:
+3. **Flexible Regex-Based Navigation**:
+    - Use regex to match and jump to specific subdirectories:
+        - **Exact Match**: Use `-x` or rely on the default behavior.
+        - **Starts With**: Use `-s` to match subdirectories that start with a given pattern.
+        - **Ends With**: Use `-e` for subdirectories ending with a regex pattern.
+        - **General Match**: Use `-r` to match any part of the subdirectory name.
+    - Combine with `-i` (or set `_UP_ALWAYS_IGNORE_CASE=true`) for case-insensitive matching, perfect for diverse naming conventions.
+    - Default to regex behavior by exporting `_UP_REGEX_DEFAULT=true`.
+
+4. **Verbose Output for Clarity**:
     - Use verbose mode (`-v`) to display detailed information about directory changes.
-    - Get insights like the number of levels jumped, old directory (`$OLDPWD`), and new directory (`$PWD`).
+    - Gain insights like the number of levels jumped, old directory (`$OLDPWD`), and new directory (`$PWD`).
     - Enable persistent verbose mode with `_UP_ALWAYS_VERBOSE=true`.
-    - Change display output colors with `_UP_PWD_STYLE`, `_UP_ERR_STYLE`, etc., to match your theme.
-        * Disable output styling with `_UP_NO_STYLES=true`.
+    - Customize display output colors with `_UP_PWD_STYLE`, `_UP_ERR_STYLE`, and more to match your theme.
+        * Disable output styling entirely with `_UP_NO_STYLES=true`.
 
-4. **Handles Edge Cases Gracefully**:
+5. **Handles Edge Cases Gracefully**:
     - Navigate to `HOME` with `up ~` from any directory.
-    - Subdirectories named after flags (e.g., `--help/`) or containing integers (e.g., `2/`) are supported seamlessly.
+    - Seamlessly handle subdirectories named after flags (e.g., `--help/`) or numeric names (e.g., `2/`).
 
-5. **Robust Error Handling**:
-    - Proper exit status codes returned on errors.
-    - Useful for shell configurations that utilize exit codes like the [starship](https://starship.rs/) prompt.
+6. **Robust Error Handling**:
+    - Proper exit status codes for reliable use in scripts or shell prompts like [starship](https://starship.rs/).
+    - Informative error messages styled with `_UP_ERR_STYLE` for better clarity.
 
-6. **Compatibility**:
+7. **Compatibility and Performance**:
     - Fully compatible with both Bash and Zsh.
-    - Minimal dependencies ensure fast, efficient performance, and a simple instalation.
+    - Designed with minimal dependencies for fast, efficient performance and simple installation.
 
 ## ⚙ Installation
 
@@ -165,7 +179,7 @@ $ up <tab>
 /            Pictures/    Volumes/     WD_SSD_1TB/  wallpapers/
 ```
 
-#### Autocomplete Subdirectory Names with Prefix
+#### Autocomplete Subdirectory Name with Prefix
 
 To autocomplete the only subdirectory that starts with `Pic`:
 
@@ -173,13 +187,51 @@ To autocomplete the only subdirectory that starts with `Pic`:
 $ up Pic<tab>
 $ up Pictures/
 ```
+#### Jump to a Subdirectory Name with Regex
+
+Leverage regular expression flags for flexible directory navigation:
+
+- **`-i` / `--ignore-case`**: Perform case-insensitive regex jumps.
+- **`-s` / `--starts-with`**: Jump to the nearest subdirectory that starts with a given regex pattern.
+    - Automatically prefixes your regex with `^` for matching at the start.
+- **`-e` / `--ends-with`**: Jump to the nearest subdirectory that ends with a given regex pattern.
+    - Appends your regex with `$` for matching at the end.
+- **`-r` / `--regex`**: Jump to the nearest subdirectory that matches any part of your regex.
+- **`-x` / `--exact`**: Jump to an exact subdirectory name match (default behavior).
+    - Useful when `_UP_REGEX_DEFAULT=true` is exported for regex-based navigation by default.
+
+Example: To jump to the closest directory containing `SSD` within `/Volumes/WD_SSD_1TB/Pictures/wallpapers/apple`:
+
+```sh
+$ up -r SSD
+$ pwd
+/Volumes/WD_SSD_1TB
+```
+
+#### `_UP_REGEX_DEFAULT` Environment Variable
+
+Prefer regex-based navigation every time without the need for explicit flags? Add the following line to your `.bashrc`, `.zshrc`, or `.zshenv`:
+
+
+```sh
+export _UP_REGEX_DEFAULT=true
+```
+
+Use the `-x` flag for exact matches to temporarily disable this behavior.
+
+```sh
+$ pwd
+/Volumes/WD_SSD_1TB/Pictures/wallpapers/apple
+$ up -x Volumes
+$ pwd
+/Volumes
+```
 
 ### Display Help
 
 ![up --help screenshot](assets/up_help_screenshot.jpg "`up --help` has detailed usage information")
 
 ```sh
-$ up help
 $ up -h
 $ up --help
 ```
@@ -191,7 +243,6 @@ Just like the `cd` command, `up` will generally not output text upon successful 
 To display extra information such as `$OLDPWD` and `$PWD` after calling `up`:
 
 ```sh
-$ up verbose [integer or subdirectory name]
 $ up -v [integer or subdirectory name]
 $ up --verbose [integer or subdirectory name]
 ```
@@ -212,9 +263,9 @@ old: /Volumes/WD_SSD_1TB/Pictures/wallpapers/apple
 pwd: /Volumes/WD_SSD_1TB/Pictures
 ```
 
-#### `_UP_ALWAYS_VERBOSE` environment variable
+#### `_UP_ALWAYS_VERBOSE` Environment Variable
 
-Set the optional environment flag to always display verbose mode in your `.bashrc`, `.zshrc`, or `.zshenv`.
+Prefer verbose mode every time without polluting your aliases? Add the following line to your `.bashrc`, `.zshrc`, or `.zshenv`:
 
 ```bash
 export _UP_ALWAYS_VERBOSE=true
@@ -249,6 +300,8 @@ Set ANSI escape sequences in your shell configuration file (i.e., `.bashrc`, `.z
     - Default: Light Gray (`\033[0;37m`)
 * `_UP_PWD_STYLE` for your current working directory.
     - Default: Light Green (`\033[0;32m`)
+* `_UP_REGEX_STYLE` for regular expression patterns, e.g., `'^big_kahuna_.urger$'`.
+    - Default: Cyan (`\033[0;36m`)
 
 Default values represent standard ANSI colors, which work reliably across most terminal emulators.
 
@@ -270,6 +323,7 @@ export _UP_DIR_CHANGE_STYLE="\033[38;2;249;226;175m" # Yellow
 export _UP_ERR_STYLE="\033[48;2;243;160;168m\033[38;2;30;30;46m" # Red background, "Crust" foreground
 export _UP_OLDPWD_STYLE="\033[38;2;88;91;112m" # "Surface2"
 export _UP_PWD_STYLE="\033[38;2;166;227;161m" # Green
+export _UP_REGEX_STYLE="\033[38;2;116;199;236m" # Sapphire
 ```
 ![up example using the Catppuccin Mocha theme for style output](assets/up_catppuccin_mocha_theme_example.jpg "Style example: Catppuccin Mocha theme in WezTerm")
 
@@ -284,6 +338,8 @@ export _UP_NO_STYLES=true
 ## 🔬 Testing in Bats (Bash Automated Testing System)
 
 Tests are written for [`bats-core`](https://github.com/bats-core/bats-core), a test framework for Bash.
+
+Tested with **Bash 3.2.57(1)-release** and **Zsh 5.9**.
 
 Refer to the [official documentation of Bats](https://bats-core.readthedocs.io/en/stable/installation.html) for installation information.
 
@@ -317,7 +373,8 @@ Possible ideas to work on.
 
 - [x] Refactor `up.bash` to make it more readable and maintainable.
     * More refinements later.
-- [ ] Add more styling examples in this `README.md`, e.g., Dracula.
+- [ ] Add `bats` tests for `up.bash` related to regex flags.
+- [ ] Add more styling examples in this `README.md`, e.g., Dracula, gruvbox.
 - [ ] Write a fish-compatible version.
     * I'm not using [fish](https://fishshell.com/) as my primary shell.
 - [ ] Write a binary version of `up.bash` in a language like Go or Rust for universal shell compatibility. (Better idea?)

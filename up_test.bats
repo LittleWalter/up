@@ -147,7 +147,7 @@ teardown() {
 	mkdir -p "$path"
 	cd "$path"
 
-	up -4
+	up -4/
 
 	# It should not be possible to "jump negative directories", rather
 	# -4 should be considered the directory "-4/"
@@ -432,12 +432,12 @@ teardown() {
 	[ "$?" -eq 0 ]
 }
 
-@test 'up should print verbose text passing verbose flag with arg of dir2' {
+@test 'up should print verbose text passing --verbose flag with arg of dir2' {
 	local -r path=${BATS_TEST_TMPDIR}/dir1/dir2/dir3
 	mkdir -p "$path"
 	cd "$path"
 
-	run up verbose dir2
+	run up --verbose dir2
 
 	# Debugging: print output on failure
 	echo "$output"
@@ -458,12 +458,12 @@ teardown() {
 	[ "$?" -eq 0 ]
 }
 
-@test 'up should print verbose text passing verbose flag with arg of dir1' {
+@test 'up should print verbose text passing --verbose flag with arg of dir1' {
 	local -r path=${BATS_TEST_TMPDIR}/dir1/dir2/dir3
 	mkdir -p "$path"
 	cd "$path"
 
-	run up verbose dir1
+	run up --verbose dir1
 
 	# Debugging: print output on failure
 	echo "$output"
@@ -497,7 +497,7 @@ teardown() {
 	echo "$output"
 
 	# Use grep to check for a regex match in the output of line 1
-	echo "$output" | grep -q "Jump the directory tree instead of using \`cd ..\`!"
+	echo "$output" | grep -q "Jump the directory tree instead of using \`cd ..\` chains!"
 	# Assert that grep succeeded
 	[ "$?" -eq 0 ]
 }
@@ -513,23 +513,7 @@ teardown() {
 	echo "$output"
 
 	# Use grep to check for a regex match in the output of line 1
-	echo "$output" | grep -q "Jump the directory tree instead of using \`cd ..\`!"
-	# Assert that grep succeeded
-	[ "$?" -eq 0 ]
-}
-
-@test 'up should print help text when passing help flag' {
-	local -r path=${BATS_TEST_TMPDIR}/dir1/dir2/dir3
-	mkdir -p "$path"
-	cd "$path"
-
-	run up help
-
-	# Debugging: print output on failure
-	echo "$output"
-
-	# Use grep to check for a regex match in the output of line 1
-	echo "$output" | grep -q "Jump the directory tree instead of using \`cd ..\`!"
+	echo "$output" | grep -q "Jump the directory tree instead of using \`cd ..\` chains!"
 	# Assert that grep succeeded
 	[ "$?" -eq 0 ]
 }
