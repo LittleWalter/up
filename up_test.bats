@@ -10,7 +10,7 @@
 # specifically designed for Bash scripts.
 #
 # This script tests the functionality of the `up` Bash function;
-# covers most scenarios including edge cases of subdirectories
+# covers most scenarios including edge cases of directories
 # with integer-based names and verbose and help flags. Unicode and
 # special characters as directory names tested.
 #
@@ -102,7 +102,7 @@ teardown() {
 	[[ $PWD == "${BATS_TEST_TMPDIR}/dir1" ]]
 }
 
-@test 'up should jump to subdirectory 1/ (int with trailing slash)' {
+@test 'up should jump to directory 1/ (int with trailing slash)' {
 	local -r path=${BATS_TEST_TMPDIR}/1/dir2/dir3
 	mkdir -p "$path"
 	cd "$path"
@@ -112,7 +112,7 @@ teardown() {
 	[[ $PWD == "${BATS_TEST_TMPDIR}/1" ]]
 }
 
-@test 'up should jump to subdirectory name of dir1 (no trailing slash)' {
+@test 'up should jump to directory name of dir1 (no trailing slash)' {
 	local -r path=${BATS_TEST_TMPDIR}/dir1/dir2/dir3
 	mkdir -p "$path"
 	cd "$path"
@@ -122,7 +122,7 @@ teardown() {
 	[[ $PWD == "${BATS_TEST_TMPDIR}/dir1" ]]
 }
 
-@test 'up should jump to subdirectory name of dir1/ (with trailing slash)' {
+@test 'up should jump to directory name of dir1/ (with trailing slash)' {
 	local -r path=${BATS_TEST_TMPDIR}/dir1/dir2/dir3
 	mkdir -p "$path"
 	cd "$path"
@@ -132,7 +132,7 @@ teardown() {
 	[[ $PWD == "${BATS_TEST_TMPDIR}/dir1" ]]
 }
 
-@test 'up should jump to subdirectory name of dir2/' {
+@test 'up should jump to directory name of dir2/' {
 	local -r path=${BATS_TEST_TMPDIR}/dir1/dir2/dir3
 	mkdir -p "$path"
 	cd "$path"
@@ -142,7 +142,7 @@ teardown() {
 	[[ $PWD == "${BATS_TEST_TMPDIR}/dir1/dir2" ]]
 }
 
-@test 'up should jump to subdirectory name of a negative integer' {
+@test 'up should jump to directory name of a negative integer' {
 	local -r path=${BATS_TEST_TMPDIR}/dir1/-4/dir2/dir3
 	mkdir -p "$path"
 	cd "$path"
@@ -154,7 +154,7 @@ teardown() {
 	[[ $PWD == "${BATS_TEST_TMPDIR}/dir1/-4" ]]
 }
 
-@test 'up should not change directory on unknown subdirectory name (\"missing_dir\")' {
+@test 'up should not change directory on unknown directory name (\"missing_dir\")' {
 	local -r path=${BATS_TEST_TMPDIR}/dir1/dir2/dir3
 	mkdir -p "$path"
 	cd "$path"
@@ -165,7 +165,7 @@ teardown() {
 	[ $status -ne 0 ]
 }
 
-@test 'up should not change directory on unknown subdirectory name (\"pink\") when it has similar trailing chars as another' {
+@test 'up should not change directory on unknown directory name (\"pink\") when it has similar trailing chars as another' {
 	local -r path=${BATS_TEST_TMPDIR}/dir1/mr_pink/dir3
 	mkdir -p "$path"
 	cd "$path"
@@ -180,7 +180,7 @@ teardown() {
 	[ $status -ne 0 ]
 }
 
-@test 'up should not change directory on unknown subdirectory name but PWD contains the substring' {
+@test 'up should not change directory on unknown directory name but PWD contains the substring' {
 	local -r path=${BATS_TEST_TMPDIR}/dir1/substring_check/dir3
 	mkdir -p "$path"
 	cd "$path"
@@ -193,7 +193,7 @@ teardown() {
 
 # Character-related tests ##############################################
 
-@test 'up should jump to subdirectory with whitespace name of \"big kahuna burger\"' {
+@test 'up should jump to directory with whitespace name of \"big kahuna burger\"' {
 	local -r path=${BATS_TEST_TMPDIR}/dir1/big\ kahuna\ burger/dir2/dir3
 	mkdir -p "$path"
 	cd "$path"
@@ -203,7 +203,7 @@ teardown() {
 	[[ $PWD == "${BATS_TEST_TMPDIR}/dir1/big kahuna burger" ]]
 }
 
-@test 'up should jump to subdirectory with special ASCII characters of \"[burger*king&|]\"' {
+@test 'up should jump to directory with special ASCII characters of \"[burger*king&|]\"' {
 	local -r path="${BATS_TEST_TMPDIR}/dir1/[burger*king&|]/dir2/dir3"
 	mkdir -p "$path"
 	cd "$path"
@@ -266,7 +266,7 @@ teardown() {
 
 # Not-a-flag tests #####################################################
 
-@test 'up should jump to subdirectory named \"--verbose/\" (flag)' {
+@test 'up should jump to directory named \"--verbose/\" (flag)' {
 	local -r path=${BATS_TEST_TMPDIR}/--verbose/big\ kahuna\ burger/dir2/dir3
 	mkdir -p "$path"
 	cd "$path"
@@ -276,7 +276,7 @@ teardown() {
 	[[ $PWD == "${BATS_TEST_TMPDIR}/--verbose" ]]
 }
 
-@test 'up should jump to subdirectory named \"verbose/\" (flag)' {
+@test 'up should jump to directory named \"verbose/\" (flag)' {
 	local -r path=${BATS_TEST_TMPDIR}/verbose/big\ kahuna\ burger/dir2/dir3
 	mkdir -p "$path"
 	cd "$path"
@@ -286,7 +286,7 @@ teardown() {
 	[[ $PWD == "${BATS_TEST_TMPDIR}/verbose" ]]
 }
 
-@test 'up should jump to subdirectory named \"-v/\" (flag)' {
+@test 'up should jump to directory named \"-v/\" (flag)' {
 	local -r path=${BATS_TEST_TMPDIR}/-v/big\ kahuna\ burger/dir2/dir3
 	mkdir -p "$path"
 	cd "$path"
@@ -296,7 +296,7 @@ teardown() {
 	[[ $PWD == "${BATS_TEST_TMPDIR}/-v" ]]
 }
 
-@test 'up should jump to subdirectory named \"help/\" (flag)' {
+@test 'up should jump to directory named \"help/\" (flag)' {
 	local -r path=${BATS_TEST_TMPDIR}/help/big\ kahuna\ burger/dir2/dir3
 	mkdir -p "$path"
 	cd "$path"
@@ -306,7 +306,7 @@ teardown() {
 	[[ $PWD == "${BATS_TEST_TMPDIR}/help" ]]
 }
 
-@test 'up should jump to subdirectory named \"--help/\" (flag)' {
+@test 'up should jump to directory named \"--help/\" (flag)' {
 	local -r path=${BATS_TEST_TMPDIR}/--help/big\ kahuna\ burger/dir2/dir3
 	mkdir -p "$path"
 	cd "$path"
@@ -316,7 +316,7 @@ teardown() {
 	[[ $PWD == "${BATS_TEST_TMPDIR}/--help" ]]
 }
 
-@test 'up should jump to subdirectory named \"-h/\" (flag)' {
+@test 'up should jump to directory named \"-h/\" (flag)' {
 	local -r path=${BATS_TEST_TMPDIR}/-h/big\ kahuna\ burger/dir2/dir3
 	mkdir -p "$path"
 	cd "$path"

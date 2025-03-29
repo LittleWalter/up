@@ -15,7 +15,7 @@
 # specifically designed for Bash scripts.
 #
 # This script tests the functionality of the `_up` Bash function;
-# covers tab completion population of parent directory names including
+# covers tab completion population of ancestor directory names including
 # the use of special ASCII symbols like `*`, `[`, and Unicode
 # characters.
 #
@@ -65,7 +65,7 @@ assert_contains() {
 	[[ $LC_ALL == "en_US.UTF-8" ]]
 }
 
-@test '_up should autocomplete the list of parent directory names when given no arguments' {
+@test '_up should autocomplete the list of ancestor directory names when given no arguments' {
 	local -r path=${BATS_TEST_TMPDIR}/big/kahuna/burger
 	mkdir -p "$path"
 	cd "$path"
@@ -277,7 +277,7 @@ assert_contains() {
 	assert_contains "\!special\&dir\*/" "${COMPREPLY[@]}"
 }
 
-@test '_up should handle extremely long directory paths (200+ subdirectories)' {
+@test '_up should handle extremely long directory paths (200+ directories)' {
 	local base_path=${BATS_TEST_TMPDIR}
 	cd "$base_path"
 

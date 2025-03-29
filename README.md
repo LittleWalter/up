@@ -3,11 +3,11 @@
     Navigate <code>up</code> the Directory Tree with Ease | Bash & Zsh Navigation Script
 </h1>
 
-`up` is a Bash and Zsh script that takes the hassle out of navigating to parent directories. Effortlessly jump multiple levels, autocomplete subdirectory names, or harness powerful regex-based matching for precise and flexible navigation—all in a single, intuitive command!
+`up` is a Bash and Zsh script that takes the hassle out of navigating to parent and ancestor directories. Effortlessly jump multiple levels, autocomplete directory names, or harness powerful regex-based matching for precise and flexible navigation—all in a single, intuitive command!
 
 Easily handle:
-- **Tab Completion**: Quickly autocomplete parent or subdirectory names
-- **Regex Patterns**: Find directories that start, end, or partially match your search, with options for case-insensitive matching.
+- **Tab Completion**: Quickly autocomplete directory names.
+- **Regex Patterns**: Jump to directories that start, end, or partially match your search, with options for case-insensitive matching.
 - **Unicode Paths**: Works with directories containing non-Latin characters like `フォルダ/`, `🚀/`, `नमस्ते/`, or `مرحبا/`.
 
 Kiss tedious `cd ..` chains goodbye!
@@ -19,8 +19,6 @@ Kiss tedious `cd ..` chains goodbye!
 - [Installation](#-installation)
 - [Usage](#-usage)
 - [Testing](#-testing-in-bats-bash-automated-testing-system)
-- [Known Issues](#-known-issues)
-- [TODOs and Future Ideas](#-todos-and-future-ideas)
 - [Contributing](#-contributing)
 - [Credits](#credits)
 
@@ -32,57 +30,46 @@ Kiss tedious `cd ..` chains goodbye!
         - `up 2` (jumps two levels)
         - `up 3` (jumps three levels)
 
-2. **Powerful Tab Completion**:
-    - Jump directly to a parent directory name (e.g., `up Pictures/`).
+2. **Intuitive Tab Completion**:
+    - Autocomplete parent and ancestor directory names with auto-escape (e.g., `\!\[special\ dir\]/`).
     - Supports Unicode directories (e.g., `ダン·メイソン/`, `日本語/`, `привет/`, emojis like `📂/`).
-    - Auto-escapes special ASCII characters like `*`, `[`, `]`, and spaces (e.g., `\!\[special\ dir\]/`).
-    - Quickly autocomplete subdirectory names by prefix.
 
-3. **Flexible Regex-Based Navigation**:
-    - Use regex to match and jump to specific subdirectories:
-        - **Exact Match**: Use `-x` or rely on the default behavior.
-        - **Starts With**: Use `-s` to match subdirectories that start with a given pattern.
-        - **Ends With**: Use `-e` for subdirectories ending with a regex pattern.
-        - **General Match**: Use `-r` to match any part of the subdirectory name.
-    - Combine with `-i` (or set `_UP_ALWAYS_IGNORE_CASE=true`) for case-insensitive matching, perfect for diverse naming conventions.
-    - Default to regex behavior by exporting `_UP_REGEX_DEFAULT=true`.
+3. **Regex-Based Navigation**
+    - Use `-r` for general matches, `-s` for "starts with," `-e` for "ends with," or `-x` for exact matches.
+    - Combine with `-i` for case-insensitivity or export `_UP_REGEX_DEFAULT=true` for default regex behavior.
 
-4. **Verbose Output for Clarity**:
-    - Use verbose mode (`-v`) to display detailed information about directory changes.
-    - Gain insights like the number of levels jumped, old directory (`$OLDPWD`), and new directory (`$PWD`).
-    - Enable persistent verbose mode with `_UP_ALWAYS_VERBOSE=true`.
-    - Customize display output colors with `_UP_PWD_STYLE`, `_UP_ERR_STYLE`, and more to match your theme.
-        * Disable output styling entirely with `_UP_NO_STYLES=true`.
+4. **Detailed Feedback**
+    - View directory change details with `-v` or enable persistent verbosity with `_UP_ALWAYS_VERBOSE=true`.
+    - Customize output colors with style variables or disable them with `_UP_NO_STYLES=true`.
 
-5. **Handles Edge Cases Gracefully**:
-    - Navigate to `HOME` with `up ~` from any directory.
-    - Seamlessly handle subdirectories named after flags (e.g., `--help/`) or numeric names (e.g., `2/`).
+5. **History Features**
+    - Track recently visited directories and jump to them using `ph` or `-f` (`fzf`).
+        - Use `up_passthru` to capture directory changes from `cd`, `zoxide`, `jump`, etc.
+    - List history in order of recency with `-l`.
+    - Clear history entirely using `-c`.
 
-6. **Robust Error Handling**:
-    - Proper exit status codes for reliable use in scripts or shell prompts like [starship](https://starship.rs/).
-    - Informative error messages styled with `_UP_ERR_STYLE` for better clarity.
+6. **Error Handling**:
+    - Provides proper exit codes and styled error messages (`_UP_ERR_STYLE`) for clarity; useful for scripts or shell prompts like [starship](https://starship.rs/).
 
-7. **Compatibility and Performance**:
-    - Fully compatible with both Bash and Zsh.
-    - Designed with minimal dependencies for fast, efficient performance and simple installation.
+7. **Compatibility**
+    - Works with Bash and Zsh. Minimal dependencies for fast performance.
+    - Optional fuzzy finder integration via [`fzf`](https://github.com/junegunn/fzf) with a [`tree`](https://oldmanprogrammer.net/source.php?dir=projects/tree) preview.
 
 ## ⚙ Installation
 
-Download the git repo to your preferred destination.
+### Bash
 
-To download the repo to `~/.config`:
+Download the git repo to your preferred destination. For example:
 
 ```sh
-git clone https://github.com/LittleWalter/up ~/.config/up
+git clone https://github.com/LittleWalter/up ~/.local/share/shell/up
 ```
-
-### Bash
 
 Add to `.bashrc` or `.bash_profile` on Apple macOS systems:
 
 ```bash
-source ~/.config/up/up.bash # The `up` function
-source ~/.config/up/up-completion.bash # `up` completion
+source ~/.local/share/shell/up/up.bash # The `up` function
+source ~/.local/share/shell/up/up-completion.bash # `up` completion
 ```
 
 #### Quick Bash Installation
@@ -90,14 +77,20 @@ source ~/.config/up/up-completion.bash # `up` completion
 Assuming your Bash config is at `~/.bashrc`, use this snippet to download and append the lines in one step:
 
 ```sh
-git clone https://github.com/LittleWalter/up ~/.config/up
-echo 'source ~/.config/up/up.bash' >> ~/.bashrc
-echo 'source ~/.config/up/up-completion.bash' >> ~/.bashrc
+git clone https://github.com/LittleWalter/up ~/.local/share/shell/up
+echo 'source ~/.local/share/shell/up/up.bash' >> ~/.bashrc
+echo 'source ~/.local/share/shell/up/up-completion.bash' >> ~/.bashrc
 ```
 
 ### Zsh
 
-Fully compatible with Zsh using `bashcompinit` for seamless integration.
+Download the git repo to your preferred destination. For example:
+
+```sh
+git clone https://github.com/LittleWalter/up ~/.local/share/shell/up
+```
+
+These scripts are fully compatible with Zsh using `bashcompinit` for seamless integration.
 
 The `autoload` lines enable autocompletion modules.
 
@@ -107,8 +100,8 @@ Add to `.zshrc`:
 autoload -U +X compinit && compinit # Enable Zsh completion 
 autoload -U +X bashcompinit && bashcompinit # Enable Bash completion compatibility
 
-source ~/.config/up/up.bash # The `up` function
-source ~/.config/up/up-completion.bash # `up` completion
+source ~/.local/share/shell/up/up.bash # The `up` function
+source ~/.local/share/shell/up/up-completion.bash # `up` completion
 ```
 
 #### Quick Zsh Installation
@@ -116,22 +109,22 @@ source ~/.config/up/up-completion.bash # `up` completion
 Assuming your Zsh config is at `~/.zshrc`, use this snippet to download and append the lines in one step:
 
 ```sh
-git clone https://github.com/LittleWalter/up ~/.config/up
+git clone https://github.com/LittleWalter/up ~/.local/share/zsh/up
 echo 'autoload -U +X compinit && compinit' >> ~/.zshrc
 echo 'autoload -U +X bashcompinit && bashcompinit' >> ~/.zshrc
-echo 'source ~/.config/up/up.bash' >> ~/.zshrc
-echo 'source ~/.config/up/up-completion.bash' >> ~/.zshrc
+echo 'source ~/.local/share/shell/up/up.bash' >> ~/.zshrc
+echo 'source ~/.local/share/shell/up/up-completion.bash' >> ~/.zshrc
 ```
 
-### 📝 Optional Sidenote on `HOME` Directory Organization
+### 📝 Sidenote on `HOME` Directory Organization
 
-Following best practices, I recommend using the [XDG Base Directory Specification](https://specifications.freedesktop.org/basedir-spec/latest/) to reduce `HOME` directory clutter. Use either `XDG_CONFIG_HOME` or `XDG_DATA_HOME`, depending on where you like to keep shell scripts.
-
-I imagine most people would use `XDG_CONFIG_HOME` and consider these configuration files.
+Following best practices, I recommend using the [XDG Base Directory Specification](https://specifications.freedesktop.org/basedir-spec/latest/) to reduce `HOME` directory clutter.
 
 By default, `XDG_CONFIG_HOME` is `$HOME/.config` and `XDG_DATA_HOME` is `$HOME/.local/share`. However, these paths might not be explicitly defined in your shell configuration; verify with `echo $XDG_CONFIG_HOME`.
 
-Within your `.bashrc` or `.zshrc`, or more appropriately `.zshenv`, you may define these as environment variables.
+For this project, somewhere within `XDG_DATA_HOME` makes sense.
+
+Within your `.bashrc` or `.zshrc`, or more appropriately `.zshenv`, you may define these as environment variables:
 
 ```sh
 export XDG_CONFIG_HOME="$HOME/.config" # Configuration files
@@ -148,13 +141,15 @@ $ pwd
 /Volumes/WD_SSD_1TB/Pictures/wallpapers/apple
 ```
 
-### Jump to the nth Subdirectory
+### Jump to the nth Ancestor Directory
 
 ```sh
 $ up <optional: integer>
 ```
 
-#### Jump 1 Subdirectory
+#### Jump 1 Directory
+
+To simple jump to the parent directory:
 
 ```sh
 $ up
@@ -162,7 +157,7 @@ $ pwd
 /Volumes/WD_SSD_1TB/Pictures/wallpapers
 ```
 
-#### Jump 3 Subdirectories
+#### Jump 3 Directories
 
 ```sh
 $ up 3
@@ -170,7 +165,7 @@ $ pwd
 /Volumes/WD_SSD_1TB
 ```
 
-### Jump to a Subdirectory Name
+### Jump to a Directory Name
 
 #### Display the Autocomplete List
 
@@ -179,25 +174,25 @@ $ up <tab>
 /            Pictures/    Volumes/     WD_SSD_1TB/  wallpapers/
 ```
 
-#### Autocomplete Subdirectory Name with Prefix
+#### Autocomplete Directory Name with Prefix
 
-To autocomplete the only subdirectory that starts with `Pic`:
+To autocomplete the only directory that starts with `Pic`:
 
 ```sh
 $ up Pic<tab>
 $ up Pictures/
 ```
-#### Jump to a Subdirectory Name with Regex
+#### Jump to a Directory Name with Regex
 
 Leverage regular expression flags for flexible directory navigation:
 
-- **`-i` / `--ignore-case`**: Perform case-insensitive regex jumps.
-- **`-s` / `--starts-with`**: Jump to the nearest subdirectory that starts with a given regex pattern.
+- **`-i` / `--ignore-case`**: Perform case-insensitive regex jumps with the `-s`, `-e`, and `-r` flags.
+- **`-s` / `--starts-with`**: Jump to the nearest directory that starts with a given regex pattern.
     - Automatically prefixes your regex with `^` for matching at the start.
-- **`-e` / `--ends-with`**: Jump to the nearest subdirectory that ends with a given regex pattern.
+- **`-e` / `--ends-with`**: Jump to the nearest directory that ends with a given regex pattern.
     - Appends your regex with `$` for matching at the end.
-- **`-r` / `--regex`**: Jump to the nearest subdirectory that matches any part of your regex.
-- **`-x` / `--exact`**: Jump to an exact subdirectory name match (default behavior).
+- **`-r` / `--regex`**: Jump to the nearest directory that matches any part of your regex.
+- **`-x` / `--exact`**: Jump to an exact directory name match (default behavior).
     - Useful when `_UP_REGEX_DEFAULT=true` is exported for regex-based navigation by default.
 
 Example: To jump to the closest directory containing `SSD` within `/Volumes/WD_SSD_1TB/Pictures/wallpapers/apple`:
@@ -207,6 +202,25 @@ $ up -r SSD
 $ pwd
 /Volumes/WD_SSD_1TB
 ```
+Example: To jump to the same location ignoring case:
+
+```sh
+$ up -ri ssd
+$ pwd
+/Volumes/WD_SSD_1TB
+```
+
+##### Alias Tip
+
+Simplify your workflow by setting up an alias for case-insensitive regex jumps. Add this line to your `.bashrc` or `.zshrc` to enable it:
+
+```sh
+alias u='up -ri'
+```
+
+Once added, you'll only need to type `u <regex>` to leverage case-insensitive regex jumps with the default up behavior intact.
+
+(Use `command -v u` to see if `u` is not already in use.)
 
 #### `_UP_REGEX_DEFAULT` Environment Variable
 
@@ -243,8 +257,8 @@ Just like the `cd` command, `up` will generally not output text upon successful 
 To display extra information such as `$OLDPWD` and `$PWD` after calling `up`:
 
 ```sh
-$ up -v [integer or subdirectory name]
-$ up --verbose [integer or subdirectory name]
+$ up -v [integer or directory name]
+$ up --verbose [integer or directory name]
 ```
 
 #### Verbose Mode Examples
@@ -271,13 +285,13 @@ Prefer verbose mode every time without polluting your aliases? Add the following
 export _UP_ALWAYS_VERBOSE=true
 ```
 
-### Navigate to `HOME` directory
+### Navigate to `HOME` Path
 
-For the sake of completeness, navigating back to `HOME` path is included.
+For the sake of completeness, navigating to your `HOME` path is included.
 
-`HOME` is the only valid full path `up` allows; all other arguments must be a single subdirectory name.
+`HOME` is the only valid full path `up` allows; all other arguments must be a single directory name.
 
-You don't have to be in a `HOME` subdirectory for this to work.
+You don't have to be in a `HOME` directory for this to work.
 
 ```sh
 $ up ~
@@ -358,28 +372,6 @@ $ bats up_test.bats # Test the `up` function
 $ bats up-completion_test.bats # Test the `_up` function for Bash completions
 ```
 
-## 🐞 Known Issues
-
-There may be skill-related limitations: I’m not a Bash scripting expert.
-
-* No color support for tab completion list
-    * I could not get Zsh to use `LS_COLORS` via `zstyle` settings.
-* Tab completion list not in order of `PWD`
-    * There’s no guarantee of the completion list order.
-
-## ✅ TODOs and 💡Future Ideas
-
-Possible ideas to work on.
-
-- [x] Refactor `up.bash` to make it more readable and maintainable.
-    * More refinements later.
-- [ ] Add `bats` tests for `up.bash` related to regex flags.
-- [ ] Add more styling examples in this `README.md`, e.g., Dracula, gruvbox.
-- [ ] Write a fish-compatible version.
-    * I'm not using [fish](https://fishshell.com/) as my primary shell.
-- [ ] Write a binary version of `up.bash` in a language like Go or Rust for universal shell compatibility. (Better idea?)
-    * Only completion scripts for target shells would need to be created.
-
 ## 🤝 Contributing
 
 Contributions and suggestions are welcome!
@@ -427,7 +419,7 @@ This minimalist function works well for navigating up by the number of directori
 
 ### [Oliver Weiler's `up` Bash Scripts (helpermethod on GitHub)](https://github.com/helpermethod/up)
 
-I later found [this simple `up` Bash script](https://github.com/helpermethod/up/blob/main/up) to navigate by subdirectory name, complete with tab completion and [bats](https://bats-core.readthedocs.io/en/stable/index.html) scripts. 
+I later found [this simple `up` Bash script](https://github.com/helpermethod/up/blob/main/up) to navigate by directory name, complete with tab completion and [bats](https://bats-core.readthedocs.io/en/stable/index.html) scripts. 
 
 ```bash
 up() {

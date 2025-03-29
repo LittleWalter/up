@@ -23,19 +23,35 @@
 # source ~/path/to/up.bash
 # source ~/path/to/up-completion.bash
 #-----------------------------------------------------------------------
-_up() {
-	local -r current_word=${COMP_WORDS[COMP_CWORD]}
 
+EXIT_SUCCESS=0
+EXIT_FAILURE=1
+
+_up::is_sed_available() {
+	if command -v sed &>/dev/null; then
+		return $EXIT_SUCCESS
+	else
+		return $EXIT_FAILURE
+	fi
+}
+
+_up::normalize_pwd() {
+	# Replace multiple slashes with a single slash
+	local normalized_pwd=${PWD//\/\//\/}
+	# Remove leading slash
+	echo ${normalized_pwd:1}
+}
+
+_up() {
 	# Edge case: root directory
 	if [[ $PWD == "/" ]]; then
 		COMPREPLY=("/")
 		return
 	fi
 
-	# Normalize PWD to replace multiple slashes with a single slash
-	# This catches rare edge cases of accidentally malformed paths
-	local normalized_pwd=${PWD//\/\//\/} 
-	local -r pwd_without_leading_slash=${normalized_pwd:1}
+	local -r sed_accessible=$(_up::is_sed_available)
+	local -r current_word=${COMP_WORDS[COMP_CWORD]}
+	local -r pwd_without_leading_slash=$(_up::normalize_pwd)
 
 	local basenames=()
 	# Extract base directory names from $PWD and append slash
@@ -50,21 +66,21 @@ _up() {
 	local candidate
 	for basename in "${basenames[@]}"; do
 		if [[ $basename == "$current_word"* ]]; then
-			# Escape special characters in the candidate
-			# WARN: This approach causes problems w/ unicode characters
-			# like Japanese, Cyrillic, emojis, etc. If you only use
-			# Latin-based characters, this is fine for hitting tab to
-			# complete escaped sequences
-			#printf -v candidate '%q' "$basename"
-			#COMPREPLY+=("$candidate")
 
-			# Escape special ASCII symbols, including space; allow unicode
-			# characters to pass thru unescaped
-			candidate=$(printf '%s' "$basename" | sed -E 's/([][{}()<>*?|&^$!~`"\\[:space:]])/\\\1/g')
+			# Escape ASCII special characters automatically
+			if $sed_accessible; then
+				# Allow Unicode characters to pass thru unescaped
+				candidate=$(printf '%s' "$basename" | sed -E 's/([][{}()<>*?|&^$!~`"\\[:space:]])/\\\1/g')
+			else # Fallback escaping
+				# WARN: This approach causes problems w/ Unicode characters
+				# like Japanese, Cyrillic, emojis, etc.
+				printf -v candidate '%q' "$basename"
+			fi
+
 			COMPREPLY+=("$candidate")
 		fi
 	done
 }
 
-# Attach completion function to `up`
+# Attach completion function to `up` w/o space
 complete -o nospace -F _up up
