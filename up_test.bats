@@ -31,12 +31,7 @@ setup() {
 	export LC_ALL=en_US.UTF-8
 
 	# Disable color and other styling for testing purposes
-	LABEL_STYLE=""
-	ERR_STYLE=""
-	DIR_CHANGE_STYLE=""
-	PWD_STYLE=""
-	OLDPWD_STYLE=""
-	RESET=""
+	up::reset_styling
 }
 
 teardown() {

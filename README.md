@@ -20,17 +20,16 @@ Kiss tedious `cd ..` chains goodbye!
 - [Usage](#-usage)
 - [Testing](#-testing-in-bats-bash-automated-testing-system)
 - [Contributing](#-contributing)
-- [Credits](#credits)
 
 ## ⭐ Key Features
 
-1. **Simple Multi-Level Navigation**:
+1. **Simple Multi-Level Navigation**
     - Jump up multiple directory levels by index:
         - `up` (jumps one level)
         - `up 2` (jumps two levels)
         - `up 3` (jumps three levels)
 
-2. **Intuitive Tab Completion**:
+2. **Intuitive Tab Completion**
     - Autocomplete parent and ancestor directory names with auto-escape (e.g., `\!\[special\ dir\]/`).
     - Supports Unicode directories (e.g., `ダン·メイソン/`, `日本語/`, `привет/`, emojis like `📂/`).
 
@@ -44,11 +43,11 @@ Kiss tedious `cd ..` chains goodbye!
 
 5. **History Features**
     - Track recently visited directories and jump to them using `ph` or `-f` (`fzf`).
-        - Use `up_passthru` to capture directory changes from `cd`, `zoxide`, `jump`, etc.
+        - Use `up_passthru` to capture directory changes from `cd`, [`zoxide`](https://github.com/ajeetdsouza/zoxide), [`jump`](https://github.com/gsamokovarov/jump), etc.
     - List history in order of recency with `-l`.
     - Clear history entirely using `-c`.
 
-6. **Error Handling**:
+6. **Error Handling**
     - Provides proper exit codes and styled error messages (`_UP_ERR_STYLE`) for clarity; useful for scripts or shell prompts like [starship](https://starship.rs/).
 
 7. **Compatibility**
@@ -109,7 +108,7 @@ source ~/.local/share/shell/up/up-completion.bash # `up` completion
 Assuming your Zsh config is at `~/.zshrc`, use this snippet to download and append the lines in one step:
 
 ```sh
-git clone https://github.com/LittleWalter/up ~/.local/share/zsh/up
+git clone https://github.com/LittleWalter/up ~/.local/share/shell/up
 echo 'autoload -U +X compinit && compinit' >> ~/.zshrc
 echo 'autoload -U +X bashcompinit && bashcompinit' >> ~/.zshrc
 echo 'source ~/.local/share/shell/up/up.bash' >> ~/.zshrc
@@ -241,6 +240,145 @@ $ pwd
 /Volumes
 ```
 
+### Use [`fzf` (Fuzzy Finder)](https://github.com/junegunn/fzf) to Inspect and Jump Ancestor Directories
+
+To use an optional interactive fuzzy finder on your current working directory, use the `-f` / `--fzf` flags.
+
+```sh
+$ up -f
+$ up --fzf
+```
+
+#### Customizing `fzf` Options
+
+To customize the display of `fzf`, export the `_UP_FZF_PWDOPTS` environment varible within your `.bashrc` or `.zshrc`.
+
+For example,
+
+```sh
+# Define array-based fzf options
+_UP_FZF_PWDOPTS=(
+    --height=50%
+    --layout=reverse
+    --prompt="Select: "
+    --preview="ls -A {}"
+    --bind="ctrl-p:toggle-preview"
+)
+export _UP_FZF_PWDOPTS
+```
+
+The default options are:
+
+```sh
+FZF_PWDOPTS_DEFAULT=(
+	--height=50%
+	--layout=reverse
+	--prompt=" Path: "
+	--header="󰌑 cd |  ^P ( ^J/ ^K)"
+	--preview="tree -C {}"
+	--bind="ctrl-p:toggle-preview"
+	--bind="ctrl-j:preview-page-down,ctrl-k:preview-page-up"
+)
+```
+
+The [Nerd Fonts](https://github.com/ryanoasis/nerd-fonts) for [icons](https://www.nerdfonts.com/) might not render in this Markdown file.
+
+The preview window utilizes [`tree`](https://github.com/Old-Man-Programmer/tree).
+
+The header notes that `Ctrl-P` toggles the preview window and `Ctrl-J` / `Ctrl-K` for page down/up in it.
+
+The line `--layout=reverse` will display `fzf` below the prompt line; `--height=50%` uses half of the available terminal emulator window.
+
+For inspiration, check out this [detailed `fzf` guide](https://thevaluable.dev/practical-guide-fzf-example/).
+
+### Path History Navigation
+
+By default, the path history file is located at `~/.cache/up_history.log`.
+
+Export the `_UP_HISTFILE` to your preferred path in your `.bashrc` or `.zshrc`.
+
+Likewise, the maximum history size in lines can be set with `_UP_HISTSIZE`.
+
+While the history file is ordered by oldest to newest, path histories are listed by most recent.
+
+```sh
+$ up -l
+$ up --list-hist
+```
+
+To jump to an index, use the `-j` / `--jump-hist` flags:
+
+```sh
+$ up -j 34 # jump to the 34th most recent tracked path
+```
+
+Display the size of the history with `-S` / `--size`:
+
+```sh
+$ up --size
+up: history size: [=================...] 88% (221/250)
+```
+
+Clear the history with `-c` / `--clear`:
+
+```sh
+$ up -c
+up: history file cleared: /home/mrpink/.cache/up_history.log
+```
+
+#### Use `fzf` (Fuzzy Finder) to Inspect and Jump Path History
+
+```sh
+$ up -F
+$ up --fzf-hist
+```
+
+To customize the display of `fzf`, export the `_UP_FZF_HISTOPTS` environment varible within your `.bashrc` or `.zshrc`.
+
+```sh
+# Define array-based fzf options
+_UP_FZF_HISTOPTS=(
+    --height=50%
+    --layout=reverse
+    --prompt="Select: "
+    --preview="ls -A {}"
+    --bind="ctrl-p:toggle-preview"
+)
+export _UP_FZF_HISTOPTS
+```
+The default options are similar to `--fzf`:
+
+```sh
+FZF_HISTOPTS_DEFAULT=(
+	--height=50%
+	--layout=reverse
+	--prompt="󰜊 Path: "
+	--header="󰌑 cd |  ^P ( ^J/ ^K)"
+	--preview="tree -C {}"
+	--bind="ctrl-p:toggle-preview"
+	--preview-window=hidden
+	--bind="ctrl-j:preview-page-down,ctrl-k:preview-page-up"
+)
+```
+The preview window is hidden by default so the path names are not obstructed. Hit `Ctrl-P` to toggle the preview window.
+
+#### `up_passthru` Helper Function
+
+By default, `up` only tracks its own path history.
+
+To capture and track global path histories, use the `up_passthru` helper function by adding aliases to your `.bashrc` and `.zshrc`.
+
+```bash
+alias cd='up_passthru cd'  # cd
+alias z='up_passthru z'    # zoxide
+```
+
+#### `ph` (Path History) Wrapper Function
+
+`ph` is a wrapper for `up` that focuses on path history navigation.
+
+If you are tracking your path history using `up_passthru`, this is a more intuitive interface.
+
 ### Display Help
 
 ![up --help screenshot](assets/up_help_screenshot.jpg "`up --help` has detailed usage information")
@@ -285,19 +423,23 @@ Prefer verbose mode every time without polluting your aliases? Add the following
 export _UP_ALWAYS_VERBOSE=true
 ```
 
-### Navigate to `HOME` Path
+### Navigate to `HOME` and Previous Paths
 
-For the sake of completeness, navigating to your `HOME` path is included.
+For the sake of completeness, navigating to your `HOME` and previous paths are included.
 
 `HOME` is the only valid full path `up` allows; all other arguments must be a single directory name.
 
 You don't have to be in a `HOME` directory for this to work.
 
 ```sh
+$ pwd
+/Volumes/WD_SSD_1TB/Pictures/wallpapers/apple
 $ up ~
-$ up $HOME
-$ up /home/mwallace # Unix-like example
-$ up /Users/vvega   # macOS example
+$ pwd
+/home/mwallace
+$ up -
+$ pwd
+/Volumes/WD_SSD_1TB/Pictures/wallpapers/apple
 ```
 
 ### Output Style Environment Variables
@@ -353,7 +495,7 @@ export _UP_NO_STYLES=true
 
 Tests are written for [`bats-core`](https://github.com/bats-core/bats-core), a test framework for Bash.
 
-Tested with **Bash 3.2.57(1)-release** and **Zsh 5.9**.
+Tested with **Bash 3.2.57(1)-release** and **Zsh 5.9** with `bash -n` to check for syntax errors.
 
 Refer to the [official documentation of Bats](https://bats-core.readthedocs.io/en/stable/installation.html) for installation information.
 
@@ -385,56 +527,3 @@ For major changes, please open an issue to discuss what you’d like to improve.
 
 Before submitting a pull request, please:
 - Run the tests with `bats` to ensure everything works as expected.
-
-## 🍿Credits
-
-Thanks to the original script writers and public shell configs!
-
-### [Derek Taylor's Dotfiles (dwt1 on GitLab)](https://gitlab.com/dwt1/dotfiles)
-
-Originally, I used Derek Taylor's `up` function unmodified within his [`.zshrc`](https://gitlab.com/dwt1/dotfiles/-/blob/master/.zshrc?ref_type=heads):
-
-```bash
-up () {
-  local d=""
-  local limit="$1"
-
-  # Default to limit of 1
-  if [ -z "$limit" ] || [ "$limit" -le 0 ]; then
-    limit=1
-  fi
-
-  for ((i=1;i<=limit;i++)); do
-    d="../$d"
-  done
-
-  # perform cd. Show error if cd fails
-  if ! cd "$d"; then
-    echo "Couldn't go up $limit dirs.";
-  fi
-}
-```
-
-This minimalist function works well for navigating up by the number of directories.
-
-### [Oliver Weiler's `up` Bash Scripts (helpermethod on GitHub)](https://github.com/helpermethod/up)
-
-I later found [this simple `up` Bash script](https://github.com/helpermethod/up/blob/main/up) to navigate by directory name, complete with tab completion and [bats](https://bats-core.readthedocs.io/en/stable/index.html) scripts. 
-
-```bash
-up() {
-  (($# == 0)) && cd .. && return
-  [[ $1 == / ]] && cd / && return
-
-  # shellcheck disable=SC2164
-  cd "${PWD%"${PWD##*/"$1"/}"}"
-}
-```
-
-My modifications are a result of combining the functionalities of these two `up` functions. 
-
-It's also just another excuse to fiddle with my Zsh config and do some light Bash scripting. ☺️
-
-### [Jonathan Suh's Terminal Colors for Bash (jonsuh on GitHub)](https://gist.github.com/jonsuh/3c89c004888dfc7352be)
-
-Instead of writing ANSI escape codes manually, use this simple list of 15 colors and a reset value in your shell config.

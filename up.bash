@@ -33,8 +33,35 @@ fi
 LOG_SIZE_DEFAULT=250
 LOG_SIZE=${_UP_HISTSIZE:-$LOG_SIZE_DEFAULT}
 
-# Set styling constants: colors displayed for `up`, mostly for verbose mode
-if ${_UP_NO_STYLES:-false}; then
+# `fzf` (interactive fuzzy finder)
+# Options for history log
+FZF_HISTOPTS_DEFAULT=(
+	--height=50%
+	--layout=reverse
+	--prompt="󰜊 Path: "
+	--header="󰌑 cd |  ^P ( ^J/ ^K)"
+	--preview="tree -C {}"
+	--bind="ctrl-p:toggle-preview"
+	--preview-window=hidden
+	--bind="ctrl-j:preview-page-down,ctrl-k:preview-page-up"
+)
+FZF_HISTOPTS=("${_UP_FZF_HISTOPTS[@]:-${FZF_HISTOPTS_DEFAULT[@]}}")
+
+# Options for PWD ancestors
+FZF_PWDOPTS_DEFAULT=(
+	--height=50%
+	--layout=reverse
+	--prompt=" Path: "
+	--header="󰌑 cd |  ^P ( ^J/ ^K)"
+	--preview="tree -C {}"
+	--bind="ctrl-p:toggle-preview"
+	--bind="ctrl-j:preview-page-down,ctrl-k:preview-page-up"
+)
+FZF_PWDOPTS=("${_UP_FZF_PWDOPTS[@]:-${FZF_PWDOPTS_DEFAULT[@]}}")
+
+up::reset_styling() {
+	BOLD=""
+	UNDERLINE=""
 	LABEL_STYLE=""
 	DIR_CHANGE_STYLE=""
 	ERR_STYLE=""
@@ -42,9 +69,16 @@ if ${_UP_NO_STYLES:-false}; then
 	PWD_STYLE=""
 	REGEX_STYLE=""
 	RESET=""
+}
+
+# Set styling constants: colors displayed for `up`, mostly for verbose mode
+if ${_UP_NO_STYLES:-false}; then
+	up::reset_styling
 else
 	# REF: For fallback color definitions see https://gist.github.com/jonsuh/3c89c004888dfc7352be
-	LABEL_STYLE="\033[4m\033[1m" # Underline
+	BOLD="\033[1m"
+	UNDERLINE="\033[4m"
+	LABEL_STYLE="${BOLD}${UNDERLINE}"
 	DIR_CHANGE_STYLE="${_UP_DIR_CHANGE_STYLE:-${ORANGE:-\033[0;33m}}"
 	ERR_STYLE="${_UP_ERR_STYLE:-${RED:-\033[0;31m}}"
 	OLDPWD_STYLE="${_UP_OLDPWD_STYLE:-${LIGHTGRAY:-\033[1;37m}}"
@@ -95,10 +129,11 @@ EOF
 EOF
 	up::print_help_label "FLAGS"
 	cat <<EOF
+  -F, --fzf-hist     Opens \`fzf\` (fuzzy finder) for history, if available
   -S, --size         Displays the current history size
   -c, --clear        Clears all history entries
   -e, --ends-with    Jumps to nearest directory regex ending with
-  -f, --fzf          Opens \`fzf\` (fuzzy finder) for history, if available
+  -f, --fzf          Opens \`fzf\` (fuzzy finder) for paths of PWD, if available
   -h, --help         Print help
   -i, --ignore-case  Enables case-insensitivity for regex matching
   -j, --jump-hist    Jumps to a path in history by its most recent index
@@ -127,21 +162,22 @@ EOF
 EOF
 	up::print_help_label "ENVIRONMENT VARIABLES"
 	cat <<EOF
-  _UP_ALWAYS_IGNORE_CASE  Enable case-insensitive regex by defaul (set to \`true\`)
-  _UP_ALWAYS_VERBOSE      Always print change directory information (set to \`true\`)
-  _UP_DIR_CHANGE_STYLE    Specify ANSI styling for the number of directories jumped
-  _UP_ERR_STYLE           Specify ANSI styling for error message output
+  _UP_ALWAYS_IGNORE_CASE  Enable case-insensitive regex by default (Default: false)
+  _UP_ALWAYS_VERBOSE      Always print change directory information (Default: false)
+  _UP_DIR_CHANGE_STYLE    Set ANSI styling for the number of directories jumped
+  _UP_ERR_STYLE           Set ANSI styling for error message output
+  _UP_FZF_HISTOPTS        Set \`fzf\` options for history (as an array)
+  _UP_FZF_PWDOPTS         Set \`fzf\` options for current working directory (as an array)
   _UP_HISTFILE            Path to the history file (set as: $LOG_FILE)
   _UP_HISTSIZE            Maximum number of history entries (set as: $LOG_SIZE)
-  _UP_NO_STYLES           Disable output styling entirely (set to \`true\`)
-  _UP_OLDPWD_STYLE        Specify ANSI styling for previous directory (OLDPWD)
-  _UP_PWD_STYLE           Specify ANSI styling for the current directory (PWD)
-  _UP_REGEX_DEFAULT       Use regex as the default instead of exact matches (set to \`true\`)
-  _UP_REGEX_STYLE         Specify ANSI styling of regex patterns
+  _UP_NO_STYLES           Disable all output styling (Default: false)
+  _UP_OLDPWD_STYLE        Set ANSI styling for the previous directory (OLDPWD)
+  _UP_PWD_STYLE           Set ANSI styling for the current directory (PWD)
+  _UP_REGEX_DEFAULT       Use regex as default instead of exact matches (Default: false)
+  _UP_REGEX_STYLE         Set ANSI styling for regex patterns
 EOF
 	up::print_help_label "RELATED COMMANDS"
 	cat <<EOF
-
   \`ph\`: A wrapper function for up, focusing on path history navigation.
 
   \`up_passthru\`: A background helper function that captures directory
@@ -187,7 +223,7 @@ up::get_dirs_changed_string() {
 }
 
 # Helper: Prints a given $1 value as a string
-# USE: Message format should somewhat mimic core CLI tools like `cd`, `ls`, etc.
+# TIP: Message format should somewhat mimic core CLI tools like `cd`, `ls`, etc.
 up::print_msg() {
 	if [ -n "$1" ]; then
 		echo -e "up: $1"
@@ -231,8 +267,23 @@ up::print_verbose() {
 # $1=<prejump_path>
 up::validate_and_log_history() {
 	local -r prejump_path="$1"
-	if [[ "$PWD" != "$prejump_path" ]]; then
-		up::log_history "$PWD"
+	local -r log_entry="$PWD"
+
+	if [[ "$log_entry" != "$prejump_path" ]]; then
+		# WARN: Potential race conditions for log file on multiple shell instances
+		# IDEA: Code is a rudimentary locking simulation, try `flock` and `lockf`?
+		# Might be overkill for non-critical path history logging
+		local -r lock_file="/tmp/up_history.lock"
+		# Acquire the lock using a unique identifier (e.g., PID)
+		if echo "$$" >"$lock_file" 2>/dev/null; then
+			# Perform logging
+			up::log_history "$log_entry"
+			# Cleanup: Overwrite the lock file or leave it as is
+			echo "Lock released by PID $$" >"$lock_file"
+		else
+			# Failed to acquire lock; $lock_file is in use by same PID?
+			return $ERR_ACCESS
+		fi
 	else
 		return $ERR_NO_CHANGE
 	fi
@@ -240,9 +291,9 @@ up::validate_and_log_history() {
 
 # Add a line to the history log w/ time and date: $1=<path to log>
 up::log_history() {
-	local -r dir="$1"
+	local -r log_entry="$1"
 	local -r timestamp="$(date '+%Y-%m-%d %H:%M:%S')"
-	echo "$timestamp $dir" >> "$LOG_FILE"
+	echo "$timestamp $log_entry" >> "$LOG_FILE"
 	# Trim log file
 	tail -n $LOG_SIZE "$LOG_FILE" > "$LOG_FILE.tmp" && mv "$LOG_FILE.tmp" "$LOG_FILE"
 }
@@ -252,7 +303,11 @@ up::clear_history() {
 	local -r count=$(up::history_count)
 	if [[ -f "$LOG_FILE" ]] && [[ "$count" -gt 0 ]]; then
 		: > "$LOG_FILE" # Truncate to clear
-		up::print_msg "history file cleared: $LOG_FILE"
+		if [[ "$(up::history_count)" -eq 0 ]]; then
+			up::print_msg "history file cleared: $LOG_FILE"
+		else
+			up::print_msg "history file not cleared!"
+		fi
 	else
 		up::print_msg "no history to clear..."
 	fi
@@ -312,7 +367,7 @@ up::show_history() {
 
 # History log file is in chronological order (oldest to newest), so we
 # must get the reverse index since `up::jump_from_history` outputs
-# bottom up (i.e., most recent dir)
+# bottom up (i.e., most recent path)
 # $1=<index>
 up::reverse_history_index() {
 	local index="$1"
@@ -323,7 +378,7 @@ up::reverse_history_index() {
 
 # Jump to a history path in LOG_FILE: $1=<history line number>
 up::jump_from_history() {
-	local index="$1"
+	local -r index="$1"
 	local -r prejump_path="$PWD"
 
 	# Validate index input as integer value
@@ -331,8 +386,6 @@ up::jump_from_history() {
 		up::print_msg "not a valid history index: ${ERR_STYLE}'$index'${RESET}"
 		return $ERR_BAD_ARG
 	fi
-
-	index=$(up::reverse_history_index "$index")
 
 	# Get the total number of lines in the log file
 	local -r total_lines=$(up::history_count)
@@ -343,8 +396,10 @@ up::jump_from_history() {
 		return $ERR_BAD_ARG
 	fi
 
+	local -r reversed_index=$(up::reverse_history_index "$index")
+
 	# Extract the directory path from the history file
-	local dir="$(sed "${index}q;d" "$LOG_FILE" | awk '{print $3 " " $4 " " $5}')"
+	local dir="$(sed "${reversed_index}q;d" "$LOG_FILE" | awk '{print $3 " " $4 " " $5}')"
 
 	# Ensure that only valid directory paths are handled
 	dir=$(echo "$dir" | sed -e 's/^ *//;s/ *$//') # Trim extra whitespace
@@ -355,10 +410,10 @@ up::jump_from_history() {
 	# Check if the directory exists, then jump to it
 	elif [[ -d "$dir" ]]; then
 		cd "$dir" || up::print_msg "failed to jump to ${ERR_STYLE}$dir${RESET}"
-		up::log_history "$dir"
-		if $verbose_mode; then
-			local -r msg="jumped to ${DIR_CHANGE_STYLE}index $index${RESET} in history log"
-			up::print_verbose VERBOSE_DEFAULT $prejump_path $msg
+		up::validate_and_log_history "$prejump_path"
+		if [[ $verbose_mode == true ]]; then
+			local -r msg="jumped to ${DIR_CHANGE_STYLE}index $index${RESET} in history (line $reversed_index)"
+			up::print_verbose VERBOSE_DEFAULT "$prejump_path" "$msg"
 		fi
 	else
 		up::print_msg "directory does not exist: ${ERR_STYLE}$dir${RESET}"
@@ -368,6 +423,7 @@ up::jump_from_history() {
 
 # Filter paths in the history log using fzf and change into the selected directory
 up::filter_history_with_fzf() {
+	local -r prejump_path="$PWD"
 	if ! command -v fzf &>/dev/null; then
 		up::print_msg "\`fzf\` command not found: check installation of fuzzy finder"
 		return $ERR_ACCESS
@@ -376,24 +432,27 @@ up::filter_history_with_fzf() {
 		return 0
 	fi
 	if [[ -f "$LOG_FILE" ]]; then
-		local -r selected_path=$(tac "$LOG_FILE" | awk '{$1=$2=""; print substr($0, 3)}' | fzf --height=50% --layout=reverse --prompt="Path: " --header='󰌑 cd |  ^P ( ^J/ ^K)' --preview='tree -C {}' --bind='ctrl-p:toggle-preview' --preview-window=hidden --bind='ctrl-j:preview-page-down,ctrl-k:preview-page-up')
+		local -r selected_path=$(tac "$LOG_FILE" | awk '{$1=$2=""; print substr($0, 3)}' | fzf "${FZF_PWDOPTS[@]}")
 		if [[ "$selected_path" == "$PWD" ]]; then
-			up::print_msg "already in: $selected_path"
+			up::print_msg "fzf: already in: ${PWD_STYLE}$selected_path${RESET}"
 			return $ERR_NO_CHANGE
 		elif [[ -n "$selected_path" ]]; then
 			if [[ -d "$selected_path" ]]; then
-				cd "$selected_path" || up::print_msg "failed to change directory to: ${ERR_STYLE}$selected_path${RESET}"
-				up::print_msg "changed directory to: ${PWD_STYLE}$selected_path${RESET}"
-				up::log_history "$PWD"
+				cd "$selected_path" || up::print_msg "fzf: failed to change directory to: ${ERR_STYLE}$selected_path${RESET}"
+				if [[ "$verbose_mode" == true ]]; then
+					local -r msg="fzf: changed directory in history"
+					up::print_verbose VERBOSE_DEFAULT "$prejump_path" "$msg"
+				fi
+				up::validate_and_log_history "$prejump_path"
 			else
-				up::print_msg "not a valid directory: ${ERR_STYLE}$selected_path${RESET}"
+				up::print_msg "fzf: not a valid directory: ${ERR_STYLE}$selected_path${RESET}"
 				return $ERR_BAD_ARG
 			fi
 		else
-			up::print_msg "no path selected"
+			up::print_msg "fzf: no path selected in history"
 		fi
 	else
-		up::print_msg "no history file available to filter"
+		up::print_msg "fzf: no history file available to filter"
 		return $ERR_BAD_ARG
 	fi
 }
@@ -412,10 +471,12 @@ up::validate_jump_index() {
 # Helper: Create the `../../../etc.` string to use with `cd`
 up::construct_dotted_path() {
 	local -r jump_index="$1"
-	local dotted_path=""
-	for ((i=1; i<=jump_index; i++)); do
-		dotted_path="../$dotted_path"
-	done
+	local -r maximum_index=$(($(up::get_num_of_slashes "$PWD") + 1))
+	if [ "$jump_index" -gt "$maximum_index" ]; then
+		local -r dotted_path=$(printf "../%.0s" $(seq 1 "$maximum_index"))
+	else
+		local -r dotted_path=$(printf "../%.0s" $(seq 1 "$jump_index"))
+	fi
 	echo "$dotted_path"
 }
 
@@ -438,11 +499,11 @@ up::cd_by_int() {
 		up::print_msg "did not jump ${ERR_STYLE}$jump_index $dir_pluralized${RESET}, already on root..."
 		return $ERR_NO_CHANGE # technically not an error, but helpful to indicate to user of no change
 	else
-		up::log_history "$PWD"
+		up::validate_and_log_history "$prejump_path"
 	fi
 
 	# Verbose mode output on successful dir change
-	if $verbose_mode; then
+	if [[ "$verbose_mode" == true ]]; then
 		local dir_string=$(up::get_dirs_changed_string)
 		local msg="jumped ${DIR_CHANGE_STYLE}$dir_string${RESET}"
 		up::print_verbose VERBOSE_DEFAULT "$prejump_path" "$msg"
@@ -468,11 +529,11 @@ up::cd_by_dir_exact() {
 		up::print_msg "failed to navigate to directory: ${ERR_STYLE}'$dir_name'${RESET}"
 		return $ERR_ACCESS
 	else
-		up::log_history "$PWD"
+		up::validate_and_log_history "$prejump_path"
 	fi
 
 	# Verbose mode output on successful dir change
-	if $verbose_mode; then
+	if [[ "$verbose_mode" == true ]]; then
 		local dir_string=$(up::get_dirs_changed_string)
 		local msg="jumped ${DIR_CHANGE_STYLE}$dir_string${RESET} to nearest: ${PWD_STYLE}$dir_name${RESET}"
 		up::print_verbose VERBOSE_DEFAULT "$prejump_path" "$msg"
@@ -539,7 +600,7 @@ up::cd_by_dir_regex() {
 
 			if cd "$target_path"; then
 				# Verbose mode output on successful directory change
-				if $verbose_mode; then
+				if [[ "$verbose_mode" == true ]]; then
 					local dir_string=$(up::get_dirs_changed_string)
 					local msg="jumped ${DIR_CHANGE_STYLE}$dir_string${RESET} to nearest regex: ${REGEX_STYLE}'$dir_regex'${RESET}"
 					if $ignore_case; then
@@ -547,7 +608,7 @@ up::cd_by_dir_regex() {
 					fi
 					up::print_verbose DEFAULT "$prejump_path" "$msg"
 				fi
-				up::log_history "$PWD"
+				up::validate_and_log_history "$prejump_path"
 				return 0
 			else
 				up::print_msg "failed to navigate to regex: ${ERR_STYLE}'$dir_regex'${RESET}"
@@ -578,10 +639,10 @@ up::cd_by_dir_name() {
 			up::print_msg "failed to navigate to root"
 			return $ERR_ACCESS
 		else
-			up::log_history "$PWD"
+			up::validate_and_log_history "$prejump_path"
 		fi
 		# Verbose mode output on successful dir change
-		if $verbose_mode; then
+		if [[ "$verbose_mode" == true ]]; then
 			local dir_string=$(up::get_dirs_changed_string)
 			local msg="jumped ${DIR_CHANGE_STYLE}$dir_string${RESET} to root: ${PWD_STYLE}$PWD${RESET}"
 			up::print_verbose VERBOSE_TWO_LINES $prejump_path $msg
@@ -599,10 +660,10 @@ up::cd_by_dir_name() {
 			up::print_msg "failed to navigate to HOME: ${ERR_STYLE}$HOME${RESET}"
 			return $ERR_ACCESS
 		else
-			up::log_history "$PWD"
+			up::validate_and_log_history "$prejump_path"
 		fi
 		# Verbose mode output on successful dir change
-		if $verbose_mode; then
+		if [[ "$verbose_mode" == true ]]; then
 			local -r msg="changed to HOME: ${PWD_STYLE}$PWD${RESET}"
 			if [[ "$prejump_path" == "$HOME"* ]]; then
 				local -r dir_string=$(up::get_dirs_changed_string)
@@ -634,6 +695,53 @@ up::cd_by_dir_name() {
 	esac
 }
 
+# Filter paths in PWD using fzf and change into the selected directory
+up::filter_ancestors_with_fzf() {
+	# Verify that fzf is installed
+	if ! command -v fzf &>/dev/null; then
+		up::print_msg "\`fzf\` not found: check installation of fuzzy finder"
+		return ERR_ACCESS
+	fi
+
+	# Constuct array of ancestor full paths
+	local pwd="$PWD"
+	local paths=()
+	while [[ "$pwd" != "/" ]]; do
+		paths+=("$pwd")
+		pwd=$(dirname "$pwd") # Go up one level
+	done
+	paths+=("/") # Add root directory
+
+	# Use fzf for interactive fuzzy selection
+	local -r selected_path=$(printf "%s\n" "${paths[@]}" | fzf "${FZF_PWDOPTS[@]}")
+
+	# Handle case where no selection is made
+	if [[ -z "$selected_path" ]]; then
+		up::print_msg "fzf: no ancestor path selected"
+		return 0
+	fi
+
+	# Change into the selected ancestor path
+	if [[ -d "$selected_path" ]]; then
+		local -r prejump_path="$PWD"
+		if [[ "$selected_path" != "$prejump_path" ]]; then
+			cd "$selected_path"
+			local -r cd_exit_status=$(up::validate_and_log_history "$prejump_path")
+			if [[ "$cd_exit_status" -eq 0 ]] && [[ "$verbose_mode" == true ]]; then
+				local -r dir_string=$(up::get_dirs_changed_string)
+				local -r msg="fzf: jumped ${DIR_CHANGE_STYLE}$dir_string${RESET}"
+				up::print_verbose VERBOSE_DEFAULT "$prejump_path" "$msg"
+			fi
+		else
+			up::print_msg "fzf: did not jump up tree"
+			return ERR_NO_CHANGE
+		fi
+	else
+		up::print_msg "fzf: invalid ancestor path: ${ERR_STYLE}$selected_path${RESET}"
+		return ERR_ACCESS
+	fi
+}
+
 ### `up <int|dir name|regex>` ##########################################
 
 up() {
@@ -661,7 +769,8 @@ up() {
 
 	# Process flags
 	if ! [[ "$1" =~ /$ ]]; then # directory args always end in slash
-		[[ "$1" == "-" ]] && cd - && up::log_history "$PWD" && return 0
+		local prejump_path="$PWD"
+		[[ "$1" == "-" ]] && cd - && up::validate_and_log_history "$prejump_path" && return 0
 		while [[ "$1" =~ ^- ]]; do
 			case "$1" in
 				-h|--help)
@@ -670,7 +779,7 @@ up() {
 					;;
 				-l|--list-hist)
 					up::show_history
-					return 0 # Don't bother shifting args, just exit
+					return 0
 					;;
 				-c|--clear)
 					up::clear_history
@@ -686,6 +795,10 @@ up() {
 					return $?
 					;;
 				-f|--fzf)
+					up::filter_ancestors_with_fzf
+					return $?
+					;;
+				-F|--fzf-hist)
 					up::filter_history_with_fzf
 					return $?
 					;;
@@ -744,6 +857,10 @@ up() {
 								return $?
 								;;
 							f)
+								up::filter_ancestors_with_fzf
+								return $?
+								;;
+							F)
 								up::filter_history_with_fzf
 								return $?
 								;;
@@ -883,7 +1000,6 @@ EOF
 	cat <<EOF
   ph         Opens interactive \`fzf\`, if available
   ph --fzf   Same as example above but using optional flag
-  ph 2       Jumps to previous path in history
   ph 5       Jumps the 5th most recent path in history
   ph -j 17   Jumps to 17th most recent using optional flag
   ph --list  Lists the history of paths with pagination
@@ -895,41 +1011,96 @@ EOF
 EOF
 }
 
-# `ph` (path history) is a convenience wrapper for path 
-# history-related functionality of `up`
+# `ph` (path history) is a convenience wrapper for history-related
+# functionality of `up`; esp. useful for pairing w/ `up_passthru` for global
+# path history
 ph() {
+	local verbose_mode=false
 	# Process flags
-	if [[ "$1" =~ ^(-h|--help)$ ]]; then
-		up::print_ph_help
-		return 0
-	fi
-	if [[ "$1" =~ ^(-l|--list)$ ]]; then
-		up --list-hist # Print contents of LOG_FILE
-		return $?
-	fi
-	if [[ "$1" =~ ^(-s|--size)$ ]]; then
-		up::print_history_size
-		return 0
-	fi
-	if [[ "$1" =~ ^(-f|--fzf)$ ]]; then # Optional flag kept for consistency
-		up --fzf
-		return $?
-	fi
-	if [[ "$1" =~ ^(-c|--clear)$ ]]; then
-		up --clear # Clear out history file contents
-		return 0
-	fi
-	if [[ "$1" =~ ^(-j|--jump)$ ]]; then # Optional flag kept for consistency
-		shift # Consume flag
-		up --jump-hist "$1"
-		return $?
-	fi
+	while [[ "$1" =~ ^- ]]; do
+		case "$1" in
+			-h|--help)
+				up::print_ph_help
+				return 0 # Don't bother shifting args, just exit
+				;;
+			-l|--list)
+				up --list-hist # Print contents of LOG_FILE
+				return $?
+				;;
+			-c|--clear)
+				up::clear_history
+				return 0
+				;;
+			-s|--size)
+				up::print_history_size
+				return 0
+				;;
+			-j|--jump)
+				shift # Next arg must be line number in history log file
+				up::jump_from_history "$1"
+				return $?
+				;;
+			-f|--fzf)
+				up::filter_history_with_fzf
+				return $?
+				;;
+			-v|--verbose)
+				verbose_mode=true
+				shift # Consume flag
+				;;
+			-*)
+				# Loop through combined single-character flags
+				local combined_flags="${1:1}" # Remove leading tack "-"
+				local i=0
+				while [ $i -lt ${#combined_flags} ]; do
+					char=$(echo "$combined_flags" | cut -c $((i + 1)))
+					case "$char" in
+						h) # Help nested in the shortened flags
+							up::print_ph_help
+							return 0
+							;;
+						l)
+							up::show_history
+							return 0
+							;;
+						c)
+							up::clear_history
+							return 0
+							;;
+						j)
+							shift
+							up::jump_from_history "$1"
+							return $?
+							;;
+						f)
+							up::filter_history_with_fzf
+							return $?
+							;;
+						s)
+							up::print_history_size
+							return 0
+							;;
+						v)
+							verbose_mode=true
+							;;
+						*)
+							up::print_msg "ph: unknown flag: ${ERR_STYLE}-$char"${RESET}
+							return $ERR_BAD_ARG
+							;;
+					esac
+					i=$((i + 1))
+				done
+				shift
+				change_dir_arg="${1:-1}"
+			;;
+		esac
+	done
 
 	# Jump to specified history index (by most recent), or launch fuzzy finder
 	if [ -n "$1" ]; then
-		up --jump-hist "$1"
+		up -j "$1"
 	else
-		up --fzf
+		up -F
 	fi
 }
 
