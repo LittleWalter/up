@@ -3,7 +3,7 @@
 #  _   _ _ __  | |__   __ _ ___| |__
 # | | | | '_ \ | '_ \ / _` / __| '_ \
 # | |_| | |_) || |_) | (_| \__ \ | | |
-#  \__,_| .__(_)_.__/ \__,_|___/_| |_|
+#  \__,_| .__(_)_.__/ \__,_|___/_| |_| For Bash & Zsh
 #       |_|
 # up: an alternative way to quickly change directories upward!
 #
@@ -14,8 +14,6 @@
 #        up <directory name; default: exact match>
 #        up 0/ (integer w/ slash to jump to int-named dir)
 #
-# REF: https://gitlab.com/dwt1/dotfiles/-/blob/master/.zshrc
-#      https://github.com/helpermethod/up/blob/main/up
 #-----------------------------------------------------------------------
 
 ### Constant definitions: Avoid magic values! ##########################
@@ -24,8 +22,10 @@ VERSION="1.0.0"
 
 LOG_FILE="${_UP_HISTFILE:-${XDG_CACHE_HOME:-$HOME/.cache}/up_history.log}"
 
+HIST_ENABLED=${_UP_ENABLE_HIST:-false}
+
 # Create the log file if it doesn't exist
-if [ ! -f "$LOG_FILE" ]; then
+if [[ ! -f "$LOG_FILE" ]] && [[ "$HIST_ENABLED" == true ]]; then
 	mkdir -p "$(dirname "$LOG_FILE")"  # Create the directory if it doesn't exist
 	touch "$LOG_FILE"
 fi
@@ -39,7 +39,7 @@ FZF_HISTOPTS_DEFAULT=(
 	--height=50%
 	--layout=reverse
 	--prompt="󰜊 Path: "
-	--header="󰌑 cd |  ^P ( ^J/ ^K)"
+	--header="󰌑 cd   ^P ( ^J/ ^K)   Missing Paths Omitted"
 	--preview="tree -C {}"
 	--bind="ctrl-p:toggle-preview"
 	--preview-window=hidden
@@ -52,7 +52,7 @@ FZF_PWDOPTS_DEFAULT=(
 	--height=50%
 	--layout=reverse
 	--prompt=" Path: "
-	--header="󰌑 cd |  ^P ( ^J/ ^K)"
+	--header="󰌑 cd   ^P ( ^J/ ^K)"
 	--preview="tree -C {}"
 	--bind="ctrl-p:toggle-preview"
 	--bind="ctrl-j:preview-page-down,ctrl-k:preview-page-up"
@@ -130,6 +130,7 @@ EOF
 	up::print_help_label "FLAGS"
 	cat <<EOF
   -F, --fzf-hist     Opens \`fzf\` (fuzzy finder) for history, if available
+  -H, --hist-status  Checks history logging status
   -S, --size         Displays the current history size
   -c, --clear        Clears all history entries
   -e, --ends-with    Jumps to nearest directory regex ending with
@@ -165,6 +166,7 @@ EOF
   _UP_ALWAYS_IGNORE_CASE  Enable case-insensitive regex by default (Default: false)
   _UP_ALWAYS_VERBOSE      Always print change directory information (Default: false)
   _UP_DIR_CHANGE_STYLE    Set ANSI styling for the number of directories jumped
+  _UP_ENABLE_HIST         Enable history file (Default: false)
   _UP_ERR_STYLE           Set ANSI styling for error message output
   _UP_FZF_HISTOPTS        Set \`fzf\` options for history (as an array)
   _UP_FZF_PWDOPTS         Set \`fzf\` options for current working directory (as an array)
@@ -263,9 +265,17 @@ up::print_verbose() {
 
 ### Function definitions: `up` History #################################
 
+# Prints the history logging status
+up::print_history_status() {
+	[[ "$HIST_ENABLED" == true ]] && up::print_msg "history enabled at: $LOG_FILE (max size $LOG_SIZE)" && return 0
+	up::print_msg "history disabled; set \`export _UP_ENABLE_HIST=true\` in shell config"
+}
+
 # Checks to see if path changed before adding line to history
 # $1=<prejump_path>
 up::validate_and_log_history() {
+	[[ "$HIST_ENABLED" != true ]] && return 0
+
 	local -r prejump_path="$1"
 	local -r log_entry="$PWD"
 
@@ -311,11 +321,13 @@ up::clear_history() {
 	else
 		up::print_msg "no history to clear..."
 	fi
+	[[ "$HIST_ENABLED" == false ]] && up::print_history_status
 }
 
 # Number of entries (lines) in the history log file
 up::history_count() {
-	echo $(wc -l < "$LOG_FILE")
+	[[ -f "$LOG_FILE" ]] && echo $(wc -l < "$LOG_FILE") && return 0
+	echo "0" # history file doesn't exist
 }
 
 # Print current size of history log w/ horizonal bar, percentage, and count/LOG_SIZE
@@ -330,6 +342,7 @@ up::print_history_size() {
 	local -r bar="[${DIR_CHANGE_STYLE}$completed_bar${RESET}$incomplete_bar]"
 
 	up::print_msg "history size: ${bar} $((current * 100 / max))% (${DIR_CHANGE_STYLE}${current}${RESET}/${max})"
+	[[ "$HIST_ENABLED" == false ]] && up::print_history_status
 }
 
 # Print the history log file w/ pagination
@@ -337,6 +350,7 @@ up::show_history() {
 	local -r count=$(up::history_count)
 	if [ "$count" -eq 0 ]; then
 		up::print_msg "no history entries..."
+		[[ "$HIST_ENABLED" == false ]] && up::print_history_status
 	elif [[ -f "$LOG_FILE" ]]; then
 		# Display a numbered list of history entries in reverse order
 		local -r base_history_command='up::print_help_label "PATH HISTORY"; nl -b a <(tac "$LOG_FILE")'
@@ -354,12 +368,14 @@ up::show_history() {
 						eval "$base_history_command" | "$paginator"
 						;;
 				esac
+				[[ "$HIST_ENABLED" == false ]] && { echo ""; up::print_history_status; }
 				return
 			fi
 		done
 
 		# Fallback: No paginator available
 		eval "$base_history_command"
+		[[ "$HIST_ENABLED" == false ]] && { echo ""; up::print_history_status; }
 	else
 		up::print_msg "no history file available..."
 	fi
@@ -421,9 +437,12 @@ up::jump_from_history() {
 	fi
 }
 
-# Filter paths in the history log using fzf and change into the selected directory
+# Filter existing paths in the history log using fzf and change into the selected directory
 up::filter_history_with_fzf() {
 	local -r prejump_path="$PWD"
+
+	[[ "$HIST_ENABLED" == false ]] && up::print_history_status
+
 	if ! command -v fzf &>/dev/null; then
 		up::print_msg "\`fzf\` command not found: check installation of fuzzy finder"
 		return $ERR_ACCESS
@@ -431,8 +450,22 @@ up::filter_history_with_fzf() {
 		up::print_msg "no history entries..."
 		return 0
 	fi
+
 	if [[ -f "$LOG_FILE" ]]; then
-		local -r selected_path=$(tac "$LOG_FILE" | awk '{$1=$2=""; print substr($0, 3)}' | fzf "${FZF_PWDOPTS[@]}")
+		# Filter out missing paths from the history file
+		local valid_paths=$(tac "$LOG_FILE" | awk '{$1=$2=""; print substr($0, 3)}' | while read -r path; do
+			[[ -d "$path" ]] && echo "$path"
+		done)
+
+		# Check if there are valid paths to filter
+		if [[ -z "$valid_paths" ]]; then
+			up::print_msg "paths in history file no longer exist..."
+			return 0
+		fi
+
+		# Run fzf with valid paths
+		local selected_path=$(echo "$valid_paths" | fzf "${FZF_HISTOPTS[@]}")
+
 		if [[ "$selected_path" == "$PWD" ]]; then
 			up::print_msg "fzf: already in: ${PWD_STYLE}$selected_path${RESET}"
 			return $ERR_NO_CHANGE
@@ -789,6 +822,10 @@ up() {
 					up::print_history_size
 					return 0
 					;;
+				-H|--hist-status)
+					up::print_history_status
+					return 0
+					;;
 				-j|--jump-hist)
 					shift # Next arg must be line number in history log file
 					up::jump_from_history "$1"
@@ -868,6 +905,10 @@ up() {
 								up::print_history_size
 								return 0
 								;;
+							H)
+								up::print_history_status
+								return 0
+								;;
 							v)
 								verbose_mode=true
 								;;
@@ -926,7 +967,8 @@ up_passthru <FLAGS|command name>
 EOF
 	up::print_help_label "FLAGS"
 	cat <<EOF
-  -h, --help  Print help
+  -H, --hist-status  Checks history logging status
+  -h, --help         Print help
 EOF
 	up::print_help_label "EXAMPLES"
 	cat <<EOF
@@ -936,10 +978,11 @@ EOF
   For zoxide support, add:
   alias z='up_passthru z'
 EOF
-	up::print_help_label "RELATED ENVIRONMENT VARIABLES"
+	up::print_help_label "ENVIRONMENT VARIABLES"
 	cat <<EOF
-  _UP_HISTFILE  Path to the history file (set as: $LOG_FILE)
-  _UP_HISTSIZE  Maximum number of history entries (set as: $LOG_SIZE)
+  _UP_ENABLE_HIST   Enable history file (Default: false)
+  _UP_HISTFILE      Path to the history file (set as: $LOG_FILE)
+  _UP_HISTSIZE      Maximum number of history entries (set as: $LOG_SIZE)
 EOF
 }
 
@@ -951,6 +994,10 @@ up_passthru() {
 	# Process flags or print help if no args passed
 	if [[ "$1" =~ ^(-h|--help)$ ]] || [[ "$#" -eq 0 ]]; then
 		up::print_passthru_help
+		return 0
+	fi
+	if [[ "$1" =~ ^(-H|--hist-status)$ ]]; then
+		up::print_history_status
 		return 0
 	fi
 
@@ -980,7 +1027,7 @@ up::print_ph_help() {
 	cat <<EOF
 \`ph\` acts as a wrapper around \`up\`, focusing on path history navigation.
 Use this function for streamlined directory jumps based on previous paths.
-This function is especially useful in conjunction with \`up_passthru\` to
+This function is particularly useful in conjunction with \`up_passthru\` to
 track global path history.
 EOF
 	up::print_help_label "USAGE"
@@ -989,25 +1036,29 @@ ph <FLAG> [jump index]
 EOF
 	up::print_help_label "FLAGS"
 	cat <<EOF
-  -c, --clear  Clears all history entries
-  -f, --fzf    Opens \`fzf\` (fuzzy finder) for history, if available
-  -h, --help   Print help
-  -j, --jump   Jumps to a path in history by its most recent index
-  -l, --list   Lists the history of paths w/ pagination, ordered by recency
-  -s, --size   Displays the current history size
+  -H, --hist-status  Checks history logging status
+  -c, --clear        Clears all history entries
+  -f, --fzf          Opens \`fzf\` (fuzzy finder) for history, if available
+  -h, --help         Print help
+  -j, --jump         Jumps to a path in history by its most recent index
+  -l, --list         Lists the history of paths w/ pagination, ordered by recency
+  -s, --size         Displays the current history size
+  -v, --verbose      Prints additional change directory information
 EOF
 	up::print_help_label "EXAMPLES"
 	cat <<EOF
   ph         Opens interactive \`fzf\`, if available
   ph --fzf   Same as example above but using optional flag
   ph 5       Jumps the 5th most recent path in history
-  ph -j 17   Jumps to 17th most recent using optional flag
+  ph -j 17   Jumps to 17th most recent path using optional flag
   ph --list  Lists the history of paths with pagination
 EOF
 	up::print_help_label "RELATED ENVIRONMENT VARIABLES"
 	cat <<EOF
-  _UP_HISTFILE  Path to the history file (set as: $LOG_FILE)
-  _UP_HISTSIZE  Maximum number of history entries (set as: $LOG_SIZE)
+  _UP_ENABLE_HIST   Enable history file (Default: false)
+  _UP_FZF_HISTOPTS  Set \`fzf\` options for history (as an array)
+  _UP_HISTFILE      Path to the history file (set as: $LOG_FILE)
+  _UP_HISTSIZE      Maximum number of history entries (set as: $LOG_SIZE)
 EOF
 }
 
@@ -1015,7 +1066,7 @@ EOF
 # functionality of `up`; esp. useful for pairing w/ `up_passthru` for global
 # path history
 ph() {
-	local verbose_mode=false
+	local verbose_mode=${_UP_ALWAYS_VERBOSE:-false}
 	# Process flags
 	while [[ "$1" =~ ^- ]]; do
 		case "$1" in
@@ -1033,6 +1084,10 @@ ph() {
 				;;
 			-s|--size)
 				up::print_history_size
+				return 0
+				;;
+			-H|--hist-status)
+				up::print_history_status
 				return 0
 				;;
 			-j|--jump)
@@ -1080,6 +1135,10 @@ ph() {
 							up::print_history_size
 							return 0
 							;;
+						-H|--hist-status)
+							up::print_history_status
+							return 0
+							;;
 						v)
 							verbose_mode=true
 							;;
@@ -1091,7 +1150,6 @@ ph() {
 					i=$((i + 1))
 				done
 				shift
-				change_dir_arg="${1:-1}"
 			;;
 		esac
 	done

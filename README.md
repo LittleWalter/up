@@ -41,11 +41,11 @@ Kiss tedious `cd ..` chains goodbye!
     - View directory change details with `-v` or enable persistent verbosity with `_UP_ALWAYS_VERBOSE=true`.
     - Customize output colors with style variables or disable them with `_UP_NO_STYLES=true`.
 
-5. **History Features**
-    - Track recently visited directories and jump to them using `ph` or `-f` (`fzf`).
+5. **History Features (Optional)**
+    - Track recently visited directories and jump to them using `ph` (path history) or `-F` (`fzf`) by exporting `_UP_ENABLE_HIST`.
         - Use `up_passthru` to capture directory changes from `cd`, [`zoxide`](https://github.com/ajeetdsouza/zoxide), [`jump`](https://github.com/gsamokovarov/jump), etc.
     - List history in order of recency with `-l`.
-    - Clear history entirely using `-c`.
+    - Clear history using `-c`.
 
 6. **Error Handling**
     - Provides proper exit codes and styled error messages (`_UP_ERR_STYLE`) for clarity; useful for scripts or shell prompts like [starship](https://starship.rs/).
@@ -211,7 +211,7 @@ $ pwd
 
 ##### Alias Tip
 
-Simplify your workflow by setting up an alias for case-insensitive regex jumps. Add this line to your `.bashrc` or `.zshrc` to enable it:
+Simplify your workflow by setting up an alias for case-insensitive regex jumps. Add this line to `.bashrc` or `.zshrc` to enable it:
 
 ```sh
 alias u='up -ri'
@@ -223,7 +223,7 @@ Once added, you'll only need to type `u <regex>` to leverage case-insensitive re
 
 #### `_UP_REGEX_DEFAULT` Environment Variable
 
-Prefer regex-based navigation every time without the need for explicit flags? Add the following line to your `.bashrc`, `.zshrc`, or `.zshenv`:
+Prefer regex-based navigation every time without the need for explicit flags? Add the following line to `.bashrc`, `.zshrc`, or `.zshenv`:
 
 
 ```sh
@@ -251,7 +251,7 @@ $ up --fzf
 
 #### Customizing `fzf` Options
 
-To customize the display of `fzf`, export the `_UP_FZF_PWDOPTS` environment varible within your `.bashrc` or `.zshrc`.
+To customize the display of `fzf`, export the `_UP_FZF_PWDOPTS` environment varible within `.bashrc`, `.zshrc`, or `.zshenv`.
 
 For example,
 
@@ -274,7 +274,7 @@ FZF_PWDOPTS_DEFAULT=(
 	--height=50%
 	--layout=reverse
 	--prompt=" Path: "
-	--header="󰌑 cd |  ^P ( ^J/ ^K)"
+	--header="󰌑 cd   ^P ( ^J/ ^K)"
 	--preview="tree -C {}"
 	--bind="ctrl-p:toggle-preview"
 	--bind="ctrl-j:preview-page-down,ctrl-k:preview-page-up"
@@ -291,11 +291,17 @@ The line `--layout=reverse` will display `fzf` below the prompt line; `--height=
 
 For inspiration, check out this [detailed `fzf` guide](https://thevaluable.dev/practical-guide-fzf-example/).
 
-### Path History Navigation
+### Path History Navigation (Optional)
+
+To track path history with `up`, add  `.bashrc`, `.zshrc`, or `.zshenv`:
+
+```bash
+export _UP_ENABLE_HIST=true
+```
 
 By default, the path history file is located at `~/.cache/up_history.log`.
 
-Export the `_UP_HISTFILE` to your preferred path in your `.bashrc` or `.zshrc`.
+Export the `_UP_HISTFILE` to your preferred path in `.bashrc`, `.zshrc`, or `.zshenv`.
 
 Likewise, the maximum history size in lines can be set with `_UP_HISTSIZE`.
 
@@ -333,7 +339,7 @@ $ up -F
 $ up --fzf-hist
 ```
 
-To customize the display of `fzf`, export the `_UP_FZF_HISTOPTS` environment varible within your `.bashrc` or `.zshrc`.
+To customize the display of `fzf`, export the `_UP_FZF_HISTOPTS` environment varible within `.bashrc`, `.zshrc`, or `.zshenv`.
 
 ```sh
 # Define array-based fzf options
@@ -353,7 +359,7 @@ FZF_HISTOPTS_DEFAULT=(
 	--height=50%
 	--layout=reverse
 	--prompt="󰜊 Path: "
-	--header="󰌑 cd |  ^P ( ^J/ ^K)"
+	--header="󰌑 cd   ^P ( ^J/ ^K)   Missing Paths Omitted"
 	--preview="tree -C {}"
 	--bind="ctrl-p:toggle-preview"
 	--preview-window=hidden
@@ -366,7 +372,7 @@ The preview window is hidden by default so the path names are not obstructed. Hi
 
 By default, `up` only tracks its own path history.
 
-To capture and track global path histories, use the `up_passthru` helper function by adding aliases to your `.bashrc` and `.zshrc`.
+To capture and track global path histories, use the `up_passthru` helper function by adding aliases to `.bashrc` and `.zshrc`.
 
 ```bash
 alias cd='up_passthru cd'  # cd
@@ -417,7 +423,7 @@ pwd: /Volumes/WD_SSD_1TB/Pictures
 
 #### `_UP_ALWAYS_VERBOSE` Environment Variable
 
-Prefer verbose mode every time without polluting your aliases? Add the following line to your `.bashrc`, `.zshrc`, or `.zshenv`:
+Prefer verbose mode every time without polluting your aliases? Add the following line to `.bashrc`, `.zshrc`, or `.zshenv`:
 
 ```bash
 export _UP_ALWAYS_VERBOSE=true
@@ -485,7 +491,7 @@ export _UP_REGEX_STYLE="\033[38;2;116;199;236m" # Sapphire
 
 #### Turning Off Styling
 
-To turn off styling and display plaintext only, add the following line to your `.bashrc`, `.zshrc`, or `.zshenv`:
+To turn off styling and display plaintext only, add the following line to `.bashrc`, `.zshrc`, or `.zshenv`:
 
 ```bash
 export _UP_NO_STYLES=true

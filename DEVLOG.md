@@ -11,6 +11,12 @@ Development-related notes.
 
 ## March 2025
 
+### __[2025-03-30]__
+* __Features:__
+  * History features must be enabled by setting `export _UP_ENABLE_HIST=true` in shell config.
+    - Display message when history-related flags used and history not enabled.
+  * Added `-H` / `--hist-status` flags to check whether history logging is on/off.
+* __Changes:__ `up::filter_history_with_fzf` omits missing/deleted paths; only valid paths listed by `fzf`.
 
 ### __[2025-03-29]__
 * __Documentation:__ Fixed typos and inaccuracies.
@@ -19,7 +25,7 @@ Development-related notes.
   - `up::construct_dotted_path`:
     - Swapped for loop to `printf "../%.0s" $(seq 1 "$jump_index")`.
     - Check to see if the passed index value is not larger than possible for `PWD`.
-  - `if $verbose_mode; ...` -> `if [[ "$verbose_mode" == true ]] ...` for Boolean checks (best practice)
+  - `if $verbose_mode; ...` -> `if [[ "$verbose_mode" == true ]] ...` for Boolean checks (best practice).
 * __Features:__
   - Added `up::filter_ancestors_with_fzf` (`-f` / `--fzf`) to jump to ancestor paths within `PWD` only.
   - `_UP_FZF_HISTOPTS`: Environment variable for setting `fzf` options for path history.
@@ -84,16 +90,19 @@ There may be skill-related limitations: I’m not a Bash scripting expert.
 ### March 2025
 
 - [ ] Add pager environment variable.
-- [ ] Clearn and refactor `up.bash` to make it more readable and maintainable.
+- [ ] Clean and refactor `up.bash` to make it more readable and maintainable.
 - [ ] Add `bats` tests for `up.bash` related to regex flags.
 - [ ] Add more styling examples in this `README.md`, e.g., Dracula, gruvbox.
 
 ### Ideas
 
+### March 2025
+
 - [ ] Write a fish-compatible version.
   * I'm not using [fish](https://fishshell.com/) as my primary shell.
 - [ ] Write a binary version of `up.bash` in a language like Go or Rust for universal shell compatibility. (Better idea?)
   * Only completion scripts for target shells would need to be created.
+- [ ] History session management.
 
 ## 🍿Credits
 
