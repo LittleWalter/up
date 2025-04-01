@@ -102,6 +102,9 @@ MATCH_REGEX=2
 MATCH_START=3
 MATCH_END=4
 
+EXIT_SUCCESS=0
+EXIT_FAILURE=1
+
 ### Function definitions: print and related helpers ####################
 
 # Helper: Label styling for helper sections
@@ -359,7 +362,7 @@ up::show_history() {
 		local paginators=("bat" "less" "most" "more")
 
 		for paginator in "${paginators[@]}"; do
-			if command -v "$paginator" &>/dev/null; then
+			if $(up::is_command_available "$paginator"); then
 				case "$paginator" in
 					bat)
 						eval "$base_history_command" | bat --style="plain"
@@ -432,7 +435,7 @@ up::jump_from_history() {
 			up::print_verbose VERBOSE_DEFAULT "$prejump_path" "$msg"
 		fi
 	else
-		up::print_msg "directory does not exist: ${ERR_STYLE}$dir${RESET}"
+		up::print_msg "path does not exist: ${ERR_STYLE}$dir${RESET}"
 		return $ERR_BAD_ARG
 	fi
 }
@@ -443,7 +446,7 @@ up::filter_history_with_fzf() {
 
 	[[ "$HIST_ENABLED" == false ]] && up::print_history_status
 
-	if ! command -v fzf &>/dev/null; then
+	if ! $(up::is_command_available "fzf"); then
 		up::print_msg "\`fzf\` command not found: check installation of fuzzy finder"
 		return $ERR_ACCESS
 	elif [[ "$(up::history_count)" -eq 0 ]]; then
@@ -490,7 +493,7 @@ up::filter_history_with_fzf() {
 	fi
 }
 
-### Function definitions: `up <count>` #################################
+### Function definitions: `up <index>` #################################
 
 # Helper: Validate jump count, defaults to 1 (to parent)
 up::validate_jump_index() {
@@ -731,7 +734,7 @@ up::cd_by_dir_name() {
 # Filter paths in PWD using fzf and change into the selected directory
 up::filter_ancestors_with_fzf() {
 	# Verify that fzf is installed
-	if ! command -v fzf &>/dev/null; then
+	if ! $(up::is_command_available "fzf"); then
 		up::print_msg "\`fzf\` not found: check installation of fuzzy finder"
 		return ERR_ACCESS
 	fi
@@ -779,7 +782,7 @@ up::filter_ancestors_with_fzf() {
 
 up() {
 	# Check if `cd` is available
-	if ! command -v cd &>/dev/null; then
+	if ! $(up::is_command_available "cd"); then
 		up::print_msg "\`cd\` command not found"
 		return $ERR_ACCESS
 	fi
@@ -1006,8 +1009,8 @@ up_passthru() {
 	shift # Consume the dir change command name
 
 	# Check if the command exists
-	if ! command -v $main_command &>/dev/null; then
-		up::print_msg "command ${ERR_STYLE}'$main_command'${RESET} not found"
+	if ! $(up::is_command_available "$main_command"); then
+		up::print_msg "command ${ERR_STYLE}'$main_command'${RESET} not valid for directory changes"
 		return $ERR_ACCESS
 	fi
 
@@ -1135,7 +1138,7 @@ ph() {
 							up::print_history_size
 							return 0
 							;;
-						-H|--hist-status)
+						H)
 							up::print_history_status
 							return 0
 							;;
@@ -1156,9 +1159,11 @@ ph() {
 
 	# Jump to specified history index (by most recent), or launch fuzzy finder
 	if [ -n "$1" ]; then
+		[[ "$verbose_mode" == true ]] && up -vj "$1" && return $?
 		up -j "$1"
 	else
-		up -F
+		[[ "$verbose_mode" == true ]] && up -vF "$1" && return $?
+		up -F "$1"
 	fi
 }
 
@@ -1169,5 +1174,14 @@ up::remove_leading_zeros() {
 		echo $((10#$integer))
 	else
 		up::print_msg "did not remove leading zeros from non-integer: ${ERR_STYLE}$integer${RESET}"
+	fi
+}
+
+# Basic check to check whether a command exists
+up::is_command_available() {
+	if command -v "$1" &>/dev/null; then
+		return $EXIT_SUCCESS
+	else
+		return $EXIT_FAILURE
 	fi
 }

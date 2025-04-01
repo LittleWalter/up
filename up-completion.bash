@@ -24,37 +24,40 @@
 # source ~/path/to/up-completion.bash
 #-----------------------------------------------------------------------
 
-EXIT_SUCCESS=0
-EXIT_FAILURE=1
-
-_up::is_sed_available() {
-	if command -v sed &>/dev/null; then
-		return $EXIT_SUCCESS
-	else
-		return $EXIT_FAILURE
-	fi
-}
-
 _up::normalize_pwd() {
 	# Replace multiple slashes with a single slash
-	local normalized_pwd=${PWD//\/\//\/}
+	local -r normalized_pwd=${PWD//\/\//\/}
 	# Remove leading slash
 	echo ${normalized_pwd:1}
 }
 
+# Escapes special ASCII characters (e.g., `/`, `$`, `*`, etc.) of a given
+# directory name: $1=<dir name>
+_up::escape_dir_name() {
+	local dir_name="$1"
+	local escaped_dir_name
+	local -r sed_accessible=$(up::is_command_available "sed")
+	if $sed_available; then
+		# Allow Unicode characters to pass thru unescaped
+		escaped_dir_name=$(printf '%s' "$dir_name" | sed -E 's/([][{}()<>*?|&^$!~`"\\[:space:]])/\\\1/g')
+	else # Fallback escaping
+		# WARN: This approach causes problems w/ Unicode characters
+		# like Japanese, Cyrillic, emojis, etc.
+		printf -v escaped_dir_name '%q' "$dir_name"
+	fi
+	echo "$escaped_dir_name"
+}
+
 _up() {
 	# Edge case: root directory
-	if [[ $PWD == "/" ]]; then
-		COMPREPLY=("/")
-		return
-	fi
+	[[ "$PWD" == "/" ]] && { COMPREPLY=("/"); return 0; }
 
-	local -r sed_accessible=$(_up::is_sed_available)
 	local -r current_word=${COMP_WORDS[COMP_CWORD]}
 	local -r pwd_without_leading_slash=$(_up::normalize_pwd)
 
 	local basenames=()
-	# Extract base directory names from $PWD and append slash
+
+	# Extract base directory names from PWD and append a trailing slash
 	while IFS= read -r -d/; do
 		basenames+=("$REPLY/")
 	done <<<"$pwd_without_leading_slash"
@@ -66,17 +69,7 @@ _up() {
 	local candidate
 	for basename in "${basenames[@]}"; do
 		if [[ $basename == "$current_word"* ]]; then
-
-			# Escape ASCII special characters automatically
-			if $sed_accessible; then
-				# Allow Unicode characters to pass thru unescaped
-				candidate=$(printf '%s' "$basename" | sed -E 's/([][{}()<>*?|&^$!~`"\\[:space:]])/\\\1/g')
-			else # Fallback escaping
-				# WARN: This approach causes problems w/ Unicode characters
-				# like Japanese, Cyrillic, emojis, etc.
-				printf -v candidate '%q' "$basename"
-			fi
-
+			candidate=$(_up::escape_dir_name "$basename")
 			COMPREPLY+=("$candidate")
 		fi
 	done

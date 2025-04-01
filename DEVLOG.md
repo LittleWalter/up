@@ -1,15 +1,29 @@
 # DEVLOG
 
-Development-related notes.
+Development-related notes, not really a CHANGELOG.
+
+## Motivation & Goals
+
+The goal of this project is to deepen my understanding of shell scripting, specifically Bash and Zsh, by building something useful. While I recognize there are excellent existing solutions for directory navigation, this project serves as a creative opportunity to experiment and learn.
+
+Maybe I'll get around to learning POSIX-compliant scripting for portability later.
 
 ## Table of Contents
 
+- [Motivation & Goals](#motivation--goals)
 - [March 2025](#march-2025)
 - [Known Issues](#-known-issues)
 - [TODOs and Future Ideas](#-todos-and-future-ideas)
 - [Credits](#credits)
 
 ## March 2025
+
+### __[2025-03-31]__
+* __Fixes:__ Verbose flag handling for wrapper function `ph -v`.
+* __Refactoring:__ Minor changes to `up-completion.bash`.
+* __Documentation:__
+  - Added `ph -help` screenshot to `README.md`.
+  - Moved contributing section in `README.md` to `CONTRIBUTING.md`.
 
 ### __[2025-03-30]__
 * __Features:__
@@ -91,8 +105,10 @@ There may be skill-related limitations: I’m not a Bash scripting expert.
 
 - [ ] Add pager environment variable.
 - [ ] Clean and refactor `up.bash` to make it more readable and maintainable.
-- [ ] Add `bats` tests for `up.bash` related to regex flags.
-- [ ] Add more styling examples in this `README.md`, e.g., Dracula, gruvbox.
+- [ ] Add `bats` tests for `up.bash` related to:
+    - [ ] Regex flags
+    - [ ] History tracking and navigation
+- [ ] Add more styling examples in `README.md`, e.g., Dracula, gruvbox.
 
 ### Ideas
 
@@ -100,9 +116,10 @@ There may be skill-related limitations: I’m not a Bash scripting expert.
 
 - [ ] Write a fish-compatible version.
   * I'm not using [fish](https://fishshell.com/) as my primary shell.
-- [ ] Write a binary version of `up.bash` in a language like Go or Rust for universal shell compatibility. (Better idea?)
+- [ ] Write a binary version of `up.bash` in a language like Go or Rust for universal shell compatibility. (Better idea than this script?)
   * Only completion scripts for target shells would need to be created.
 - [ ] History session management.
+- [ ] Bookmarking paths.
 
 ## 🍿Credits
 
@@ -151,7 +168,6 @@ up() {
 
 My modifications are a result of combining the functionalities of these two `up` functions. 
 
-It's also just another excuse to fiddle with my Zsh config and do some light Bash scripting. ☺️
 
 ### [Jonathan Suh's Terminal Colors for Bash (jonsuh on GitHub)](https://gist.github.com/jonsuh/3c89c004888dfc7352be)
 

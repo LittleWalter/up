@@ -3,12 +3,7 @@
     Navigate <code>up</code> the Directory Tree with Ease | Bash & Zsh Navigation Script
 </h1>
 
-`up` is a Bash and Zsh script that takes the hassle out of navigating to parent and ancestor directories. Effortlessly jump multiple levels, autocomplete directory names, or harness powerful regex-based matching for precise and flexible navigation—all in a single, intuitive command!
-
-Easily handle:
-- **Tab Completion**: Quickly autocomplete directory names.
-- **Regex Patterns**: Jump to directories that start, end, or partially match your search, with options for case-insensitive matching.
-- **Unicode Paths**: Works with directories containing non-Latin characters like `フォルダ/`, `🚀/`, `नमस्ते/`, or `مرحبا/`.
+`up` is a Bash and Zsh script that takes the hassle out of navigating to parent and ancestor directories. Effortlessly jump multiple levels by index or directory names with autocomplete and regex. Inspect and jump into directories interactively with [`fzf`](https://junegunn.github.io/fzf/getting-started/).
 
 Kiss tedious `cd ..` chains goodbye!
 
@@ -19,17 +14,16 @@ Kiss tedious `cd ..` chains goodbye!
 - [Installation](#-installation)
 - [Usage](#-usage)
 - [Testing](#-testing-in-bats-bash-automated-testing-system)
-- [Contributing](#-contributing)
 
 ## ⭐ Key Features
 
-1. **Simple Multi-Level Navigation**
+1. **Multi-Level Navigation**
     - Jump up multiple directory levels by index:
         - `up` (jumps one level)
         - `up 2` (jumps two levels)
         - `up 3` (jumps three levels)
 
-2. **Intuitive Tab Completion**
+2. **Tab Completion**
     - Autocomplete parent and ancestor directory names with auto-escape (e.g., `\!\[special\ dir\]/`).
     - Supports Unicode directories (e.g., `ダン·メイソン/`, `日本語/`, `привет/`, emojis like `📂/`).
 
@@ -37,12 +31,13 @@ Kiss tedious `cd ..` chains goodbye!
     - Use `-r` for general matches, `-s` for "starts with," `-e` for "ends with," or `-x` for exact matches.
     - Combine with `-i` for case-insensitivity or export `_UP_REGEX_DEFAULT=true` for default regex behavior.
 
-4. **Detailed Feedback**
+4. **Verbose Feedback**
     - View directory change details with `-v` or enable persistent verbosity with `_UP_ALWAYS_VERBOSE=true`.
     - Customize output colors with style variables or disable them with `_UP_NO_STYLES=true`.
 
 5. **History Features (Optional)**
-    - Track recently visited directories and jump to them using `ph` (path history) or `-F` (`fzf`) by exporting `_UP_ENABLE_HIST`.
+    - Track recently visited directories by exporting `_UP_ENABLE_HIST=true`.
+    - Jump history using `-F` (`fzf`) or the [`ph` (path history)](#ph-path-history-wrapper-function) wrapper.
         - Use `up_passthru` to capture directory changes from `cd`, [`zoxide`](https://github.com/ajeetdsouza/zoxide), [`jump`](https://github.com/gsamokovarov/jump), etc.
     - List history in order of recency with `-l`.
     - Clear history using `-c`.
@@ -51,8 +46,8 @@ Kiss tedious `cd ..` chains goodbye!
     - Provides proper exit codes and styled error messages (`_UP_ERR_STYLE`) for clarity; useful for scripts or shell prompts like [starship](https://starship.rs/).
 
 7. **Compatibility**
-    - Works with Bash and Zsh. Minimal dependencies for fast performance.
-    - Optional fuzzy finder integration via [`fzf`](https://github.com/junegunn/fzf) with a [`tree`](https://oldmanprogrammer.net/source.php?dir=projects/tree) preview.
+    - Supports both Bash and Zsh, with minimal, standard tool dependencies ensuring fast performance.
+    - Optional integration with the fuzzy finder [`fzf`](https://github.com/junegunn/fzf), featuring a [`tree`](https://oldmanprogrammer.net/source.php?dir=projects/tree) preview.
 
 ## ⚙ Installation
 
@@ -133,12 +128,7 @@ export XDG_CACHE_HOME="$HOME/.cache" # Non-essential files such as shell command
 
 ## ⌨ Usage
 
-For example usage, assume `pwd` command returns:
-
-```sh
-$ pwd
-/Volumes/WD_SSD_1TB/Pictures/wallpapers/apple
-```
+![up --help screenshot](assets/up_help_screenshot.jpg "`up --help` has detailed usage information")
 
 ### Jump to the nth Ancestor Directory
 
@@ -148,9 +138,9 @@ $ up <optional: integer>
 
 #### Jump 1 Directory
 
-To simple jump to the parent directory:
-
 ```sh
+$ pwd
+/Volumes/WD_SSD_1TB/Pictures/wallpapers/apple
 $ up
 $ pwd
 /Volumes/WD_SSD_1TB/Pictures/wallpapers
@@ -183,8 +173,6 @@ $ up Pictures/
 ```
 #### Jump to a Directory Name with Regex
 
-Leverage regular expression flags for flexible directory navigation:
-
 - **`-i` / `--ignore-case`**: Perform case-insensitive regex jumps with the `-s`, `-e`, and `-r` flags.
 - **`-s` / `--starts-with`**: Jump to the nearest directory that starts with a given regex pattern.
     - Automatically prefixes your regex with `^` for matching at the start.
@@ -211,7 +199,7 @@ $ pwd
 
 ##### Alias Tip
 
-Simplify your workflow by setting up an alias for case-insensitive regex jumps. Add this line to `.bashrc` or `.zshrc` to enable it:
+Simplify your workflow by setting up an alias for case-insensitive regex jumps. Add to `.bashrc` or `.zshrc`:
 
 ```sh
 alias u='up -ri'
@@ -293,7 +281,7 @@ For inspiration, check out this [detailed `fzf` guide](https://thevaluable.dev/p
 
 ### Path History Navigation (Optional)
 
-To track path history with `up`, add  `.bashrc`, `.zshrc`, or `.zshenv`:
+To track path history with `up`, add to `.bashrc`, `.zshrc`, or `.zshenv`:
 
 ```bash
 export _UP_ENABLE_HIST=true
@@ -303,9 +291,9 @@ By default, the path history file is located at `~/.cache/up_history.log`.
 
 Export the `_UP_HISTFILE` to your preferred path in `.bashrc`, `.zshrc`, or `.zshenv`.
 
-Likewise, the maximum history size in lines can be set with `_UP_HISTSIZE`.
+Likewise, the maximum history size, in lines, can be set with `_UP_HISTSIZE`.
 
-While the history file is ordered by oldest to newest, path histories are listed by most recent.
+While the history file is ordered by oldest to newest, path histories are indexed by most recent.
 
 ```sh
 $ up -l
@@ -381,18 +369,12 @@ alias z='up_passthru z'    # zoxide
 
 #### `ph` (Path History) Wrapper Function
 
+
 `ph` is a wrapper for `up` that focuses on path history navigation.
 
-If you are tracking your path history using `up_passthru`, this is a more intuitive interface.
+If you are tracking path history of `cd`, `zoxide`, `jump`, etc., using `up_passthru`, this is a more intuitive interface.
 
-### Display Help
-
-![up --help screenshot](assets/up_help_screenshot.jpg "`up --help` has detailed usage information")
-
-```sh
-$ up -h
-$ up --help
-```
+![ph --help screenshot](assets/ph_help_screenshot.jpg "`ph --help` is an `up` wrapper for path history")
 
 ### Verbose Mode
 
@@ -519,17 +501,3 @@ $ brew install bats-core
 $ bats up_test.bats # Test the `up` function
 $ bats up-completion_test.bats # Test the `_up` function for Bash completions
 ```
-
-## 🤝 Contributing
-
-Contributions and suggestions are welcome!
-
-If you’d like to contribute:
-1. Fork the repository.
-2. Make your changes in a feature branch.
-3. Open a pull request with your proposed changes.
-
-For major changes, please open an issue to discuss what you’d like to improve.
-
-Before submitting a pull request, please:
-- Run the tests with `bats` to ensure everything works as expected.
