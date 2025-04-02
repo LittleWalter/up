@@ -6,8 +6,9 @@
 #  \__,_| .__(_)_.__/ \__,_|___/_| |_| For Bash & Zsh
 #       |_|
 # up: an alternative way to quickly change directories upward!
+#     (Plus bonus goodies like optional path history tracking.)
 #
-# Default without arguments is up 1 directory, to parent.
+# Default without arguments is `up 1` directory, to parent.
 #
 # USAGE: up <FLAG> [integer | directory name]
 #        up [optional: number of directories]
@@ -15,6 +16,27 @@
 #        up 0/ (integer w/ slash to jump to int-named dir)
 #
 #-----------------------------------------------------------------------
+
+### Miscellaneous function definitions #################################
+
+# Basic check to check whether a command exists
+up::is_command_available() {
+	if command -v "$1" &>/dev/null; then
+		return $EXIT_SUCCESS
+	else
+		return $EXIT_FAILURE
+	fi
+}
+
+# Remove leading 0's, base-10 conversion: $1=<integer string>
+up::remove_leading_zeros() {
+	local -r integer="$1"
+	if [[ "$integer" =~ ^[0-9]+$ ]]; then
+		echo $((10#$integer))
+	else
+		up::print_msg "did not remove leading zeros from non-integer: ${ERR_STYLE}$integer${RESET}"
+	fi
+}
 
 ### Constant definitions: Avoid magic values! ##########################
 
@@ -33,29 +55,49 @@ fi
 LOG_SIZE_DEFAULT=250
 LOG_SIZE=${_UP_HISTSIZE:-$LOG_SIZE_DEFAULT}
 
-# `fzf` (interactive fuzzy finder)
+# `fzf` (interactive fuzzy finder) defaults:
+# Ctrl-P toggles preview; Ctrl-J/Ctrl-K PGDN/PGUP in preview
+# Ctrl-L displays `ls` as a long list, in human-readable sizes, and in color
+# Ctrl-T displays dir tree in color (dependency: might need to install `tree` or `eza`)
+# Ctrl-I displays `stat` information in preview
+
+tree_option="tree -C {}"
+ls_option="ls --color=always -lAh {}"
+up::is_command_available "eza" && { tree_option="eza --color=always --tree --icons {}"; ls_option="eza --color=always --icons -laah {}"; }
+
 # Options for history log
 FZF_HISTOPTS_DEFAULT=(
 	--height=50%
 	--layout=reverse
 	--prompt="󰜊 Path: "
-	--header="󰌑 cd   ^P ( ^J/ ^K)   Missing Paths Omitted"
-	--preview="tree -C {}"
-	--bind="ctrl-p:toggle-preview"
+	--header="󰌑 cd   ^P   Missing Paths Omitted"
 	--preview-window=hidden
+	--preview="$tree_option"
+	--bind="ctrl-l:change-preview($ls_option)"
+	--bind="ctrl-t:change-preview($tree_option)"
+	--bind="ctrl-i:change-preview(echo '\`stat\` Information:'; stat {})"
+	--bind="ctrl-p:toggle-preview"
 	--bind="ctrl-j:preview-page-down,ctrl-k:preview-page-up"
+	--preview-window=70%,border-double,top
+	--preview-label="[ 󰈍 ^L   ^T   ^I   ^J   ^K ]"
 )
 FZF_HISTOPTS=("${_UP_FZF_HISTOPTS[@]:-${FZF_HISTOPTS_DEFAULT[@]}}")
 
+#	--bind="ctrl-l:change-preview(ls --color=always -lAh {})"
 # Options for PWD ancestors
 FZF_PWDOPTS_DEFAULT=(
 	--height=50%
 	--layout=reverse
 	--prompt=" Path: "
-	--header="󰌑 cd   ^P ( ^J/ ^K)"
-	--preview="tree -C {}"
+	--header="󰌑 cd   ^P"
+	--preview="$tree_option"
+	--bind="ctrl-l:change-preview($ls_option)"
+	--bind="ctrl-t:change-preview($tree_option)"
+	--bind="ctrl-i:change-preview(echo '\`stat\` Information:'; stat {})"
 	--bind="ctrl-p:toggle-preview"
 	--bind="ctrl-j:preview-page-down,ctrl-k:preview-page-up"
+	--preview-window=70%,border-double,top
+	--preview-label="[ 󰈍 ^L   ^T   ^I   ^J   ^K ]"
 )
 FZF_PWDOPTS=("${_UP_FZF_PWDOPTS[@]:-${FZF_PWDOPTS_DEFAULT[@]}}")
 
@@ -101,6 +143,12 @@ MATCH_EXACT=1
 MATCH_REGEX=2
 MATCH_START=3
 MATCH_END=4
+
+# Flag processing constants for non-default behavior
+FLAG_DEFAULT=0
+HIST_JUMP=1
+HIST_FZF=2
+PWD_FZF=3
 
 EXIT_SUCCESS=0
 EXIT_FAILURE=1
@@ -476,7 +524,7 @@ up::filter_history_with_fzf() {
 			if [[ -d "$selected_path" ]]; then
 				cd "$selected_path" || up::print_msg "fzf: failed to change directory to: ${ERR_STYLE}$selected_path${RESET}"
 				if [[ "$verbose_mode" == true ]]; then
-					local -r msg="fzf: changed directory in history"
+					local -r msg="fzf: changed path in history"
 					up::print_verbose VERBOSE_DEFAULT "$prejump_path" "$msg"
 				fi
 				up::validate_and_log_history "$prejump_path"
@@ -780,6 +828,25 @@ up::filter_ancestors_with_fzf() {
 
 ### `up <int|dir name|regex>` ##########################################
 
+# Non-default behavior flag processing. `up` and `ph` have default behavior
+# when no args and exactly 1 arg is passed; this deals w/ arbitrary flag
+# combinations passed that don't immediately pass return values.
+up::secondary_processing_flags() {
+	local -r jump_index="$1"
+	case "$flag_type" in
+		HIST_JUMP)
+			up::jump_from_history "$jump_index"
+			;;
+		HIST_FZF)
+			up::filter_history_with_fzf
+			;;
+		PWD_FZF)
+			up::filter_ancestors_with_fzf
+			;;
+	esac
+	return $?
+}
+
 up() {
 	# Check if `cd` is available
 	if ! $(up::is_command_available "cd"); then
@@ -804,6 +871,7 @@ up() {
 	fi
 
 	# Process flags
+	local flag_type="$FLAG_DEFAULT"
 	if ! [[ "$1" =~ /$ ]]; then # directory args always end in slash
 		local prejump_path="$PWD"
 		[[ "$1" == "-" ]] && cd - && up::validate_and_log_history "$prejump_path" && return 0
@@ -830,17 +898,19 @@ up() {
 					return 0
 					;;
 				-j|--jump-hist)
-					shift # Next arg must be line number in history log file
-					up::jump_from_history "$1"
-					return $?
+					flag_type=HIST_JUMP
+					shift # Consume flag
+					change_dir_arg="${1:-1}"
 					;;
 				-f|--fzf)
-					up::filter_ancestors_with_fzf
-					return $?
+					flag_type=PWD_FZF
+					shift # Consume flag
+					change_dir_arg="${1:-1}"
 					;;
 				-F|--fzf-hist)
-					up::filter_history_with_fzf
-					return $?
+					flag_type=HIST_FZF
+					shift # Consume flag
+					change_dir_arg="${1:-1}"
 					;;
 				-v|--verbose)
 					verbose_mode=true
@@ -892,17 +962,13 @@ up() {
 								return 0
 								;;
 							j)
-								shift
-								up::jump_from_history "$1"
-								return $?
+								flag_type=HIST_JUMP
 								;;
 							f)
-								up::filter_ancestors_with_fzf
-								return $?
+								flag_type=PWD_FZF
 								;;
 							F)
-								up::filter_history_with_fzf
-								return $?
+								flag_type=HIST_FZF
 								;;
 							S)
 								up::print_history_size
@@ -945,8 +1011,10 @@ up() {
 	fi
 
 	# Directory change happens here: where the action's actually at!
-	# First check if the arg is an integer, then jump up the desired number
-	if [[ "$change_dir_arg" =~ ^[0-9]+$ ]]; then
+	if [[ "$flag_type" -ne FLAG_DEFAULT ]]; then
+		up::secondary_processing_flags "$change_dir_arg"
+	# Check if the arg is an integer, then jump up the desired number
+	elif [[ "$change_dir_arg" =~ ^[0-9]+$ ]]; then
 		up::cd_by_int "$change_dir_arg"
 	else # Arg is a string or an int/flag w/ slash, try to jump up to the named dir
 		up::cd_by_dir_name "$change_dir_arg" "$match_mode"
@@ -954,7 +1022,7 @@ up() {
 	return $? # Return exit code of directory change
 }
 
-### Miscellaneous function definition(s) ##############################
+### `up` wrapper function definitions ##################################
 
 # Display help message for `up_passthru` function
 up::print_passthru_help() {
@@ -977,6 +1045,8 @@ EOF
 	cat <<EOF
   To track directory changes with \`cd\`, add to your Bash/Zsh configuration:
   alias cd='up_passthru cd'
+
+	Use \`builtin cd -- <path>\` to a skip logging with \`cd\`.
 
   For zoxide support, add:
   alias z='up_passthru z'
@@ -1035,7 +1105,7 @@ track global path history.
 EOF
 	up::print_help_label "USAGE"
 	cat <<EOF
-ph <FLAG> [jump index]
+ph <FLAGS> [jump index]
 EOF
 	up::print_help_label "FLAGS"
 	cat <<EOF
@@ -1071,6 +1141,7 @@ EOF
 ph() {
 	local verbose_mode=${_UP_ALWAYS_VERBOSE:-false}
 	# Process flags
+	local flag_type=FLAG_DEFAULT
 	while [[ "$1" =~ ^- ]]; do
 		case "$1" in
 			-h|--help)
@@ -1079,7 +1150,7 @@ ph() {
 				;;
 			-l|--list)
 				up --list-hist # Print contents of LOG_FILE
-				return $?
+				return 0
 				;;
 			-c|--clear)
 				up::clear_history
@@ -1094,13 +1165,12 @@ ph() {
 				return 0
 				;;
 			-j|--jump)
-				shift # Next arg must be line number in history log file
-				up::jump_from_history "$1"
-				return $?
+				flag_type=HIST_JUMP
+				shift # Consume flag
 				;;
 			-f|--fzf)
-				up::filter_history_with_fzf
-				return $?
+				flag_type=HIST_FZF
+				shift # Consume flag
 				;;
 			-v|--verbose)
 				verbose_mode=true
@@ -1126,13 +1196,10 @@ ph() {
 							return 0
 							;;
 						j)
-							shift
-							up::jump_from_history "$1"
-							return $?
+							flag_type=HIST_JUMP
 							;;
 						f)
-							up::filter_history_with_fzf
-							return $?
+							flag_type=HIST_FZF
 							;;
 						s)
 							up::print_history_size
@@ -1157,31 +1224,15 @@ ph() {
 		esac
 	done
 
-	# Jump to specified history index (by most recent), or launch fuzzy finder
-	if [ -n "$1" ]; then
+	if [[ "$flag_type" -ne FLAG_DEFAULT ]]; then
+		up::secondary_processing_flags "$1"
+	elif [ -n "$1" ]; then
+		# Jump to specified history index
 		[[ "$verbose_mode" == true ]] && up -vj "$1" && return $?
 		up -j "$1"
 	else
-		[[ "$verbose_mode" == true ]] && up -vF "$1" && return $?
-		up -F "$1"
-	fi
-}
-
-# Remove leading 0's, base-10 conversion: $1=<integer string>
-up::remove_leading_zeros() {
-	local -r integer="$1"
-	if [[ "$integer" =~ ^[0-9]+$ ]]; then
-		echo $((10#$integer))
-	else
-		up::print_msg "did not remove leading zeros from non-integer: ${ERR_STYLE}$integer${RESET}"
-	fi
-}
-
-# Basic check to check whether a command exists
-up::is_command_available() {
-	if command -v "$1" &>/dev/null; then
-		return $EXIT_SUCCESS
-	else
-		return $EXIT_FAILURE
+		# Launch fuzzy finder to jump history
+		[[ "$verbose_mode" == true ]] && up -vF && return $?
+		up -F
 	fi
 }

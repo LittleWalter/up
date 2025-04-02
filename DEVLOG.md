@@ -16,7 +16,17 @@ Maybe I'll get around to learning POSIX-compliant scripting for portability late
 - [TODOs and Future Ideas](#-todos-and-future-ideas)
 - [Credits](#credits)
 
+## April 2025
+
+### [2025-04-01]
+
+* __Fixes:__ Flag processing behavior for `up` and `ph` on arbitrary combinations of flag ordering. Issues around flags that should not immediately return an exit value such as `fzf`-related commands.
+* __Documentation:__ Added programmatic [`vhs`] animated demo source code at `assets/up_vhs_demo.tape`; the file is `asset/up_vhs_demo_animation.gif`.
+* __Changes:__ Dynamically check for `eza` installation for use with `fzf`; default to `ls` and `tree` when not available.
+
 ## March 2025
+
+Regular commits to main branch.
 
 ### __[2025-03-31]__
 * __Fixes:__ Verbose flag handling for wrapper function `ph -v`.

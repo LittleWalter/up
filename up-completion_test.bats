@@ -30,6 +30,7 @@
 # REF: https://github.com/bats-core/bats-core
 #-----------------------------------------------------------------------
 
+load ./up.bash
 load ./up-completion.bash
 
 setup() {

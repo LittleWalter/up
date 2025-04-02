@@ -7,13 +7,22 @@
 
 Kiss tedious `cd ..` chains goodbye!
 
-![Animation showing the up script in action](assets/up_example_use_animation.gif "See `up` in action!")
+## Bash Demo
+
+![vhs animation showing the up script in action](assets/up_vhs_demo_animation.gif "See `up` in action using charmbracelet's `vhs` tool in Bash!")
+
+*`up` animated GIF created programmatically with [`vhs`](https://github.com/charmbracelet/vhs)*
+
+## Zsh Demo
+
+![Manually recorded animation of the up script in action](assets/up_example_use_animation.gif "See `up` in action with a handcrafted screengrab using Zsh!")
+
+*`up` animated GIF created manually with [LICEcap](https://www.cockos.com/licecap/)*
 
 ## 📜 Table of Contents
 - [Key Features](#-key-features)
 - [Installation](#-installation)
 - [Usage](#-usage)
-- [Testing](#-testing-in-bats-bash-automated-testing-system)
 
 ## ⭐ Key Features
 
@@ -237,45 +246,58 @@ $ up -f
 $ up --fzf
 ```
 
-#### Customizing `fzf` Options
+#### Customizing `fzf` Options for Ancestor Paths (`PWD`)
 
-To customize the display of `fzf`, export the `_UP_FZF_PWDOPTS` environment varible within `.bashrc`, `.zshrc`, or `.zshenv`.
-
-For example,
-
-```sh
-# Define array-based fzf options
-_UP_FZF_PWDOPTS=(
-    --height=50%
-    --layout=reverse
-    --prompt="Select: "
-    --preview="ls -A {}"
-    --bind="ctrl-p:toggle-preview"
-)
-export _UP_FZF_PWDOPTS
-```
-
-The default options are:
+When [`eza`](https://github.com/eza-community/eza) is not installed, the default `fzf` options for listing ancestor paths of the current working directory are:
 
 ```sh
 FZF_PWDOPTS_DEFAULT=(
 	--height=50%
 	--layout=reverse
 	--prompt=" Path: "
-	--header="󰌑 cd   ^P ( ^J/ ^K)"
+	--header="󰌑 cd   ^P"
 	--preview="tree -C {}"
+	--bind="ctrl-l:change-preview(ls --color=always -lAh {})"
+	--bind="ctrl-i:change-preview(echo '\`stat\` Information:'; stat {})"
+	--bind="ctrl-t:change-preview(tree -C {})"
 	--bind="ctrl-p:toggle-preview"
 	--bind="ctrl-j:preview-page-down,ctrl-k:preview-page-up"
+	--preview-window=70%,border-double,top
+	--preview-label="[ 󰈍 ^L   ^T   ^I   ^J   ^K ]"
 )
 ```
 
-The [Nerd Fonts](https://github.com/ryanoasis/nerd-fonts) for [icons](https://www.nerdfonts.com/) might not render in this Markdown file.
+If `eza` is installed, then the `tree` and `ls` respective equivalents are used for preview for icon support: `eza --color=always --tree --icons {}`, `eza --color=always --icons -laah {}`.
 
-The preview window utilizes [`tree`](https://github.com/Old-Man-Programmer/tree).
+Note: The [Nerd Fonts](https://github.com/ryanoasis/nerd-fonts) for [icons](https://www.nerdfonts.com/) might not render in this Markdown file.
 
-The header notes that `Ctrl-P` toggles the preview window and `Ctrl-J` / `Ctrl-K` for page down/up in it.
+Default `fzf` keybinds:
+
+* `Ctrl-P`: Toggle preview
+* `Ctrl-J` / `Ctrl-K`: Preview PGUP/PGDN
+* `Ctrl-T`: [`tree`](https://github.com/Old-Man-Programmer/tree) in preview
+* `Ctrl-L`: `ls --color=always -lAh` in preview
+* `Ctrl-I`: `stat` information in preview
 
 The line `--layout=reverse` will display `fzf` below the prompt line; `--height=50%` uses half of the available terminal emulator window.
+
+##### Example: `fzf` Options for Ancestor Paths (`PWD`)
+
+To customize the display of `fzf`, export `_UP_FZF_PWDOPTS` within `.bashrc`, `.zshrc`, or `.zshenv`.
+
+For example,
+
+```sh
+# Define an array of fzf options for PWD
+_UP_FZF_PWDOPTS=(
+	--height=50%
+	--layout=reverse
+	--prompt="Select: "
+	--preview="ls -A {}"
+	--bind="ctrl-p:toggle-preview"
+)
+export _UP_FZF_PWDOPTS
+```
 
 For inspiration, check out this [detailed `fzf` guide](https://thevaluable.dev/practical-guide-fzf-example/).
 
@@ -287,11 +309,16 @@ To track path history with `up`, add to `.bashrc`, `.zshrc`, or `.zshenv`:
 export _UP_ENABLE_HIST=true
 ```
 
-By default, the path history file is located at `~/.cache/up_history.log`.
+By default, the path history file is located at `~/.cache/up_history.log` with a maximum size (in lines) of 250.
 
-Export the `_UP_HISTFILE` to your preferred path in `.bashrc`, `.zshrc`, or `.zshenv`.
+Export the `_UP_HISTFILE` and `_UP_HISTSIZE` to your preferred path and maximum size in `.bashrc`, `.zshrc`, or `.zshenv`.
 
-Likewise, the maximum history size, in lines, can be set with `_UP_HISTSIZE`.
+```bash
+export _UP_HISTFILE="$XDG_CACHE_HOME/up/up_path_history.log"
+export _UP_HISTSIZE=1000
+```
+
+#### List All History Entries
 
 While the history file is ordered by oldest to newest, path histories are indexed by most recent.
 
@@ -300,11 +327,15 @@ $ up -l
 $ up --list-hist
 ```
 
+#### Jump to a Specific History Index
+
 To jump to an index, use the `-j` / `--jump-hist` flags:
 
 ```sh
 $ up -j 34 # jump to the 34th most recent tracked path
 ```
+
+#### Show the Current History Size
 
 Display the size of the history with `-S` / `--size`:
 
@@ -313,7 +344,9 @@ $ up --size
 up: history size: [=================...] 88% (221/250)
 ```
 
-Clear the history with `-c` / `--clear`:
+#### Clear All History Entries
+
+Clear history with `-c` / `--clear`:
 
 ```sh
 $ up -c
@@ -327,10 +360,38 @@ $ up -F
 $ up --fzf-hist
 ```
 
-To customize the display of `fzf`, export the `_UP_FZF_HISTOPTS` environment varible within `.bashrc`, `.zshrc`, or `.zshenv`.
+##### Customizing `fzf` Options for Paths in History
+
+When [`eza`](https://github.com/eza-community/eza) is not installed, the default `fzf` options for listing historic paths are:
 
 ```sh
-# Define array-based fzf options
+FZF_HISTOPTS_DEFAULT=(
+	--height=50%
+	--layout=reverse
+	--prompt="󰜊 Path: "
+	--header="󰌑 cd   ^P   Missing Paths Omitted"
+	--preview-window=hidden
+	--preview="tree -C {}"
+	--bind="ctrl-l:change-preview(ls --color=always -lAh {})"
+	--bind="ctrl-t:change-preview(tree -C {})"
+	--bind="ctrl-i:change-preview(echo '\`stat\` Information:'; stat {})"
+	--bind="ctrl-p:toggle-preview"
+	--bind="ctrl-j:preview-page-down,ctrl-k:preview-page-up"
+	--preview-window=70%,border-double,top
+	--preview-label="[ 󰈍 ^L   ^T   ^I   ^J   ^K ]"
+)
+```
+
+The preview window is hidden by default; `Ctrl-P` to toggle the preview window.
+
+In the header, "Missing Paths Omitted" denotes non-jumpable paths in history are skipped.
+
+##### Example: `fzf` Options for Paths in History
+
+To customize the display of `fzf`, export `_UP_FZF_HISTOPTS` within `.bashrc`, `.zshrc`, or `.zshenv`.
+
+```sh
+# Example: Define array-based fzf options w/ `ls -A` preview
 _UP_FZF_HISTOPTS=(
     --height=50%
     --layout=reverse
@@ -340,31 +401,17 @@ _UP_FZF_HISTOPTS=(
 )
 export _UP_FZF_HISTOPTS
 ```
-The default options are similar to `--fzf`:
-
-```sh
-FZF_HISTOPTS_DEFAULT=(
-	--height=50%
-	--layout=reverse
-	--prompt="󰜊 Path: "
-	--header="󰌑 cd   ^P ( ^J/ ^K)   Missing Paths Omitted"
-	--preview="tree -C {}"
-	--bind="ctrl-p:toggle-preview"
-	--preview-window=hidden
-	--bind="ctrl-j:preview-page-down,ctrl-k:preview-page-up"
-)
-```
-The preview window is hidden by default so the path names are not obstructed. Hit `Ctrl-P` to toggle the preview window.
 
 #### `up_passthru` Helper Function
 
-By default, `up` only tracks its own path history.
+By default, `up` only tracks its own path history when `_UP_ENABLE_HIST=true` is exported.
 
 To capture and track global path histories, use the `up_passthru` helper function by adding aliases to `.bashrc` and `.zshrc`.
 
 ```bash
-alias cd='up_passthru cd'  # cd
-alias z='up_passthru z'    # zoxide
+# up: Global history logging 
+alias cd='up_passthru cd' # cd: Use \`builtin cd -- <path>` to a skip logging
+alias z='up_passthru z'   # zoxide
 ```
 
 #### `ph` (Path History) Wrapper Function
@@ -477,27 +524,4 @@ To turn off styling and display plaintext only, add the following line to `.bash
 
 ```bash
 export _UP_NO_STYLES=true
-```
-
-## 🔬 Testing in Bats (Bash Automated Testing System)
-
-Tests are written for [`bats-core`](https://github.com/bats-core/bats-core), a test framework for Bash.
-
-Tested with **Bash 3.2.57(1)-release** and **Zsh 5.9** with `bash -n` to check for syntax errors.
-
-Refer to the [official documentation of Bats](https://bats-core.readthedocs.io/en/stable/installation.html) for installation information.
-
-###  Homebrew Installation
-
-Cheers to easy installation methods! 🍺
-
-```sh
-$ brew install bats-core
-```
-
-### Running Tests
-
-```sh
-$ bats up_test.bats # Test the `up` function
-$ bats up-completion_test.bats # Test the `_up` function for Bash completions
 ```
