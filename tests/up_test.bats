@@ -23,7 +23,8 @@
 # REF: https://github.com/bats-core/bats-core
 #-----------------------------------------------------------------------
 
-load ./up.bash
+# Change into this test file's path, then load `up.bash`
+load "$(cd "$(dirname "${BATS_TEST_FILENAME}")/.." && pwd)/up.bash"
 
 setup() {
 	# Make sure Unicode characters are available to testing environment

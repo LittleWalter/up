@@ -31,6 +31,7 @@ $ brew install bats-core
 ### Running Tests
 
 ```sh
+$ cd tests/
 $ bats up_test.bats # Test the `up` function
-$ bats up-completion_test.bats # Test the `_up` function for Bash completions
+$ bats up_completion_test.bats # Test the `_up` function for Bash completions
 ```

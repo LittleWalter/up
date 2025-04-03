@@ -72,7 +72,7 @@ Add to `.bashrc` or `.bash_profile` on Apple macOS systems:
 
 ```bash
 source ~/.local/share/shell/up/up.bash # The `up` function
-source ~/.local/share/shell/up/up-completion.bash # `up` completion
+source ~/.local/share/shell/up/up_completion.bash # `up` completion
 ```
 
 #### Quick Bash Installation
@@ -82,7 +82,7 @@ Assuming your Bash config is at `~/.bashrc`, use this snippet to download and ap
 ```sh
 git clone https://github.com/LittleWalter/up ~/.local/share/shell/up
 echo 'source ~/.local/share/shell/up/up.bash' >> ~/.bashrc
-echo 'source ~/.local/share/shell/up/up-completion.bash' >> ~/.bashrc
+echo 'source ~/.local/share/shell/up/up_completion.bash' >> ~/.bashrc
 ```
 
 ### Zsh
@@ -104,7 +104,7 @@ autoload -U +X compinit && compinit # Enable Zsh completion
 autoload -U +X bashcompinit && bashcompinit # Enable Bash completion compatibility
 
 source ~/.local/share/shell/up/up.bash # The `up` function
-source ~/.local/share/shell/up/up-completion.bash # `up` completion
+source ~/.local/share/shell/up/up_completion.bash # `up` completion
 ```
 
 #### Quick Zsh Installation
@@ -116,7 +116,7 @@ git clone https://github.com/LittleWalter/up ~/.local/share/shell/up
 echo 'autoload -U +X compinit && compinit' >> ~/.zshrc
 echo 'autoload -U +X bashcompinit && bashcompinit' >> ~/.zshrc
 echo 'source ~/.local/share/shell/up/up.bash' >> ~/.zshrc
-echo 'source ~/.local/share/shell/up/up-completion.bash' >> ~/.zshrc
+echo 'source ~/.local/share/shell/up/up_completion.bash' >> ~/.zshrc
 ```
 
 ### 📝 Sidenote on `HOME` Directory Organization
@@ -410,7 +410,7 @@ To capture and track global path histories, use the `up_passthru` helper functio
 
 ```bash
 # up: Global history logging 
-alias cd='up_passthru cd' # cd: Use \`builtin cd -- <path>` to a skip logging
+alias cd='up_passthru cd' # cd: Use `builtin cd -- <path>` to a skip logging
 alias z='up_passthru z'   # zoxide
 ```
 

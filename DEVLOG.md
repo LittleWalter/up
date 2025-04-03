@@ -18,10 +18,22 @@ Maybe I'll get around to learning POSIX-compliant scripting for portability late
 
 ## April 2025
 
+### [2025-04-02]
+
+* __Refactoring:__
+  - Modularized monolithic `up.bash` into multiple files (1200+ raw lines).
+    - `up_environment_vars.bash`: Definitions of constants defined by environment variables, etc.
+    - `up_wrappers.bash`: Definitions of wrapper functions such as `ph` and `up_passthru`.
+    - `up_history.bash`: Definitions of path history functions.
+    - `up_utils.bash`: Definitions of miscellanous helper functions.
+  - Moved `bats` test files into `tests/` directory.
+* __Changes:__ Added checks for `ustat` and `gstat` for `fzf` options defaults; the macOS BSD version of stat is harder to visually parse.
+
+
 ### [2025-04-01]
 
 * __Fixes:__ Flag processing behavior for `up` and `ph` on arbitrary combinations of flag ordering. Issues around flags that should not immediately return an exit value such as `fzf`-related commands.
-* __Documentation:__ Added programmatic [`vhs`] animated demo source code at `assets/up_vhs_demo.tape`; the file is `asset/up_vhs_demo_animation.gif`.
+* __Documentation:__ Added programmatic [`vhs`](https://github.com/charmbracelet/vhs) animated demo source code at `assets/up_vhs_demo.tape`; the file is `asset/up_vhs_demo_animation.gif`.
 * __Changes:__ Dynamically check for `eza` installation for use with `fzf`; default to `ls` and `tree` when not available.
 
 ## March 2025

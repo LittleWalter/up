@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 #-----------------------------------------------------------------------
-#                                             _      _   _
-# _   _ _ __         ___ ___  _ __ ___  _ __ | | ___| |_(_) ___  _ __
-#| | | | '_ \ _____ / __/ _ \| '_ ` _ \| '_ \| |/ _ \ __| |/ _ \| '_ \
-#| |_| | |_) |_____| (_| (_) | | | | | | |_) | |  __/ |_| | (_) | | | |
-# \__,_| .__/       \___\___/|_| |_| |_| .__/|_|\___|\__|_|\___/|_| |_|
-#      |_|                    _            _     _               _
+#                                         _      _   _
+# _   _ _ __     ___ ___  _ __ ___  _ __ | | ___| |_(_) ___  _ __
+#| | | | '_ \   / __/ _ \| '_ ` _ \| '_ \| |/ _ \ __| |/ _ \| '_ \
+#| |_| | |_) | | (_| (_) | | | | | | |_) | |  __/ |_| | (_) | | | |
+# \__,_| .__/___\___\___/|_| |_| |_| .__/|_|\___|\__|_|\___/|_| |_|
+#      |_| |_____|            _    |_|     _     _               _
 #                            | |_ ___  ___| |_  | |__   __ _ ___| |__
 #                            | __/ _ \/ __| __| | '_ \ / _` / __| '_ \
 #                            | ||  __/\__ \ |_ _| |_) | (_| \__ \ | | |
@@ -24,14 +24,16 @@
 # To run these tests, install `bats-core`, then:
 # cd </path/to/up-completion.bash>
 # bats up_test.bats
+# bats up_completion_test.bats
 #
 # For Homebrew, run: `brew install bats-core`.
 #
 # REF: https://github.com/bats-core/bats-core
 #-----------------------------------------------------------------------
 
-load ./up.bash
-load ./up-completion.bash
+# Change into this test file's path, then load `up.bash`
+load "$(cd "$(dirname "${BATS_TEST_FILENAME}")/.." && pwd)/up.bash"
+load "$(cd "$(dirname "${BATS_TEST_FILENAME}")/.." && pwd)/up_completion.bash"
 
 setup() {
 	# Make sure Unicode characters are available to testing environment
