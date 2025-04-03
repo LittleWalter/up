@@ -18,17 +18,18 @@
 #-----------------------------------------------------------------------
 
 # Get the absolute path of this file; avoids problems of relative paths
-if [ -n "$BASH_SOURCE" ]; then
+if [ -n "${BASH_SOURCE[0]}" ]; then
 	UP_ABS_PATH="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 else
 	UP_ABS_PATH="$(cd "$(dirname "$0")" && pwd)"
 fi
 
 # Source dependencies
-source "$UP_ABS_PATH/up_utils.bash" # Load misc helper functions first
-source "$UP_ABS_PATH/up_environment_vars.bash" # Constant definitions
-source "$UP_ABS_PATH/up_history.bash" # Path history logging
-source "$UP_ABS_PATH/up_wrappers.bash" # `ph` and `up_passthru`
+LIBRARY_PATH="$UP_ABS_PATH/up_lib"
+source "$LIBRARY_PATH/up_utils.bash" # Load misc helper functions first
+source "$LIBRARY_PATH/up_environment_vars.bash" # Constant definitions
+source "$LIBRARY_PATH/up_history.bash" # Path history logging
+source "$LIBRARY_PATH/up_wrappers.bash" # `ph` and `up_passthru`
 
 ### Function definitions: print and related helpers ####################
 
@@ -67,6 +68,7 @@ EOF
   -i, --ignore-case  Enables case-insensitivity for regex matching
   -j, --jump-hist    Jumps to a path in history by its most recent index
   -l, --list-hist    Lists the history of paths w/ pagination, ordered by recency
+  -p, --prune-hist   Remove missing paths from history
   -r, --regex        Jumps to the nearest directory regex match
   -s, --starts-with  Jumps to the nearest directory regex starting with
   -v, --verbose      Prints additional change directory information
@@ -118,7 +120,7 @@ EOF
 # Helper: Return "dir" or "dirs", depending on count: $1=<number of dirs>
 up::pluralize_dir() {
 	local -r count="$1"
-	if [ $count -gt 1 ]; then
+	if [ "$count" -gt 1 ]; then
 		echo "dirs"
 	else
 		echo "dir"
@@ -135,8 +137,8 @@ up::get_num_of_slashes() {
 # Helper: Returns the number of dirs changed
 # NOTE: Only called within up::get_dirs_changed_string
 up::num_of_dirs_changed() {
-	local old_path=$(up::get_num_of_slashes $OLDPWD)
-	local -r current_path=$(up::get_num_of_slashes $PWD)
+	local old_path=$(up::get_num_of_slashes "$OLDPWD")
+	local -r current_path=$(up::get_num_of_slashes "$PWD")
 	if [ "$PWD" = "/" ]; then
 		((old_path=old_path+1)) # Add 1 when navigating to device root directory
 	fi
@@ -148,7 +150,7 @@ up::num_of_dirs_changed() {
 up::get_dirs_changed_string() {
 	# Determine the number of dirs jumped
 	local -r dirs_changed=$(up::num_of_dirs_changed)
-	local -r dir_pluralized=$(up::pluralize_dir $dirs_changed)
+	local -r dir_pluralized=$(up::pluralize_dir "$dirs_changed")
 	echo "$dirs_changed $dir_pluralized"
 }
 
@@ -199,7 +201,7 @@ up::validate_jump_index() {
 	if [ -z "$jump_index" ] || [ "$jump_index" -le 0 ]; then
 		jump_index=1
 	fi
-	echo $(up::remove_leading_zeros "$jump_index")
+	echo "$(up::remove_leading_zeros "$jump_index")"
 }
 
 # Helper: Create the `../../../etc.` string to use with `cd`
@@ -220,18 +222,18 @@ up::cd_by_int() {
 	local -r dotted_path=$(up::construct_dotted_path "$jump_index")
 
 	local -r prejump_path="$PWD"
-	local -r dir_pluralized=$(up::pluralize_dir $jump_index)
+	local -r dir_pluralized=$(up::pluralize_dir "$jump_index")
 
 	# Attempt to change directory
 	if ! cd "$dotted_path"; then # perform `cd`; show error if `cd` fails
 		up::print_msg "couldn't go up ${ERR_STYLE}$jump_index $dir_pluralized${RESET}..."
-		return $ERR_ACCESS
+		return "$ERR_ACCESS"
 	fi
 
 	# Check for no change
 	if [ "$prejump_path" = "$PWD" ]; then
 		up::print_msg "did not jump ${ERR_STYLE}$jump_index $dir_pluralized${RESET}, already on root..."
-		return $ERR_NO_CHANGE # technically not an error, but helpful to indicate to user of no change
+		return "$ERR_NO_CHANGE" # technically not an error, but helpful to indicate to user of no change"
 	else
 		up::validate_and_log_history "$prejump_path"
 	fi
@@ -255,13 +257,13 @@ up::cd_by_dir_exact() {
 	if ! [[ "$PWD" =~ "/$dir_name/" ]]; then
 		up::print_msg "directory ${ERR_STYLE}'$dir_name'${RESET} does not exist in:"
 		up::print_pwd
-		return $ERR_BAD_ARG
+		return "$ERR_BAD_ARG"
 	fi
 
 	# Attempt to change to the directory
 	if ! cd "${PWD%"${PWD##*/"$dir_name"/}"}"; then
 		up::print_msg "failed to navigate to directory: ${ERR_STYLE}'$dir_name'${RESET}"
-		return $ERR_ACCESS
+		return "$ERR_ACCESS"
 	else
 		up::validate_and_log_history "$prejump_path"
 	fi
@@ -307,7 +309,7 @@ up::cd_by_dir_regex() {
 	local i=${#basenames[@]}
 
 	# Iterate over the array from the last element to the first
-	while [ $i -ge 0 ]; do
+	while [ "$i" -ge 0 ]; do
 		local current_dir="${basenames[i]}"
 
 		# Tranform chars: case insensitivity
@@ -346,7 +348,7 @@ up::cd_by_dir_regex() {
 				return 0
 			else
 				up::print_msg "failed to navigate to regex: ${ERR_STYLE}'$dir_regex'${RESET}"
-				return $ERR_ACCESS
+				return "$ERR_ACCESS"
 			fi
 		fi
 		i=$((i - 1))  # Decrement the loop index
@@ -355,7 +357,7 @@ up::cd_by_dir_regex() {
 	# If no match is found
 	up::print_msg "no directory regex matches ${ERR_STYLE}'$dir_regex'${RESET} in:"
 	up::print_pwd
-	return $ERR_BAD_ARG
+	return "$ERR_BAD_ARG"
 }
 
 # Jumps to dir name: $1=<directory name|regex|HOME>
@@ -367,11 +369,11 @@ up::cd_by_dir_name() {
 	if [[ "$dir_name" == "/" ]]; then
 		if [[ "$PWD" == "/" ]]; then
 			up::print_msg "already on the root..."
-			return $ERR_NO_CHANGE
+			return "$ERR_NO_CHANGE"
 		fi
 		if ! cd "/"; then
 			up::print_msg "failed to navigate to root"
-			return $ERR_ACCESS
+			return "$ERR_ACCESS"
 		else
 			up::validate_and_log_history "$prejump_path"
 		fi
@@ -379,7 +381,7 @@ up::cd_by_dir_name() {
 		if [[ "$verbose_mode" == true ]]; then
 			local dir_string=$(up::get_dirs_changed_string)
 			local msg="jumped ${DIR_CHANGE_STYLE}$dir_string${RESET} to root: ${PWD_STYLE}$PWD${RESET}"
-			up::print_verbose VERBOSE_TWO_LINES $prejump_path $msg
+			up::print_verbose VERBOSE_TWO_LINES "$prejump_path" "$msg"
 		fi
 		return 0
 	fi
@@ -388,11 +390,11 @@ up::cd_by_dir_name() {
 	if [[ "$dir_name" == "$HOME" || "$dir_name" == "~" ]]; then
 		if [[ "$PWD" == "$HOME" ]]; then
 			up::print_msg "already in the HOME directory"
-			return $ERR_NO_CHANGE
+			return "$ERR_NO_CHANGE"
 		fi
 		if ! cd "$HOME"; then
 			up::print_msg "failed to navigate to HOME: ${ERR_STYLE}$HOME${RESET}"
-			return $ERR_ACCESS
+			return "$ERR_ACCESS"
 		else
 			up::validate_and_log_history "$prejump_path"
 		fi
@@ -403,7 +405,7 @@ up::cd_by_dir_name() {
 				local -r dir_string=$(up::get_dirs_changed_string)
 				msg="jumped ${DIR_CHANGE_STYLE}$dir_string${RESET} to HOME: ${PWD_STYLE}$PWD${RESET}"
 			fi
-			up::print_verbose VERBOSE_TWO_LINES $prejump_path $msg
+			up::print_verbose VERBOSE_TWO_LINES "$prejump_path" "$msg"
 		fi
 		return 0
 	fi
@@ -432,9 +434,9 @@ up::cd_by_dir_name() {
 # Filter paths in PWD using fzf and change into the selected directory
 up::filter_ancestors_with_fzf() {
 	# Verify that fzf is installed
-	if ! $(up::is_command_available "fzf"); then
+	if ! up::is_command_available "fzf"; then
 		up::print_msg "\`fzf\` not found: check installation of fuzzy finder"
-		return ERR_ACCESS
+		return "$ERR_ACCESS"
 	fi
 
 	# Constuct array of ancestor full paths
@@ -468,11 +470,11 @@ up::filter_ancestors_with_fzf() {
 			fi
 		else
 			up::print_msg "fzf: did not jump up tree"
-			return ERR_NO_CHANGE
+			return "$ERR_NO_CHANGE"
 		fi
 	else
 		up::print_msg "fzf: invalid ancestor path: ${ERR_STYLE}$selected_path${RESET}"
-		return ERR_ACCESS
+		return "$ERR_ACCESS"
 	fi
 }
 
@@ -480,9 +482,9 @@ up::filter_ancestors_with_fzf() {
 
 up() {
 	# Check if `cd` is available
-	if ! $(up::is_command_available "cd"); then
+	if ! up::is_command_available "cd"; then
 		up::print_msg "\`cd\` command not found"
-		return $ERR_ACCESS
+		return "$ERR_ACCESS"
 	fi
 
 	# Default verbose to the environment variable, if defined, otherwise false
@@ -519,6 +521,10 @@ up() {
 				-c|--clear)
 					up::clear_history
 					return 0
+					;;
+				-p|--prune-hist)
+					up::prune_history
+					return $?
 					;;
 				-S|--size)
 					up::print_history_size
@@ -592,6 +598,10 @@ up() {
 								up::clear_history
 								return 0
 								;;
+							p)
+								up::prune_history
+								return $?
+								;;
 							j)
 								flag_type=HIST_JUMP
 								;;
@@ -628,8 +638,8 @@ up() {
 								ignore_case=true
 								;;
 							*)
-								up::print_msg "unknown flag: ${ERR_STYLE}-$char"${RESET}
-								return $ERR_BAD_ARG
+								up::print_msg "unknown flag: ${ERR_STYLE}-$char${RESET}"
+								return "$ERR_BAD_ARG"
 								;;
 						esac
 						i=$((i + 1))
@@ -642,7 +652,7 @@ up() {
 	fi
 
 	# Directory change happens here: where the action's actually at!
-	if [[ "$flag_type" -ne FLAG_DEFAULT ]]; then
+	if [[ "$flag_type" -ne $FLAG_DEFAULT ]]; then
 		up::secondary_processing_flags "$change_dir_arg"
 	# Check if the arg is an integer, then jump up the desired number
 	elif [[ "$change_dir_arg" =~ ^[0-9]+$ ]]; then

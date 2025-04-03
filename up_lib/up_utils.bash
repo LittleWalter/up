@@ -6,9 +6,9 @@
 # Basic check to check whether a command exists
 up::is_command_available() {
 	if command -v "$1" &>/dev/null; then
-		return $EXIT_SUCCESS # NOTE: Truthiness of exit status
+		return "$EXIT_SUCCESS" # NOTE: Truthiness of exit status
 	else
-		return $EXIT_FAILURE
+		return "$EXIT_FAILURE"
 	fi
 }
 

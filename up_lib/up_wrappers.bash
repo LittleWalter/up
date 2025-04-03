@@ -58,9 +58,9 @@ up_passthru() {
 	shift # Consume the dir change command name
 
 	# Check if the command exists
-	if ! $(up::is_command_available "$main_command"); then
+	if ! up::is_command_available "$main_command"; then
 		up::print_msg "command ${ERR_STYLE}'$main_command'${RESET} not valid for directory changes"
-		return $ERR_ACCESS
+		return "$ERR_ACCESS"
 	fi
 
 	# Handle directory changes
@@ -70,7 +70,7 @@ up_passthru() {
 		"$main_command" "${@}" # Change to specified directory
 	fi
 
-	return $(up::validate_and_log_history "$prejump_path")
+	return "$(up::validate_and_log_history "$prejump_path")"
 }
 
 # Display help information for `ph` function
@@ -94,6 +94,7 @@ EOF
   -h, --help         Print help
   -j, --jump         Jumps to a path in history by its most recent index
   -l, --list         Lists the history of paths w/ pagination, ordered by recency
+  -p, --prune        Remove missing paths from history
   -s, --size         Displays the current history size
   -v, --verbose      Prints additional change directory information
 EOF
@@ -135,6 +136,10 @@ ph() {
 				up::clear_history
 				return 0
 				;;
+			-p|--prune)
+				up::prune_history
+				return $?
+				;;
 			-s|--size)
 				up::print_history_size
 				return 0
@@ -174,6 +179,10 @@ ph() {
 							up::clear_history
 							return 0
 							;;
+						p)
+							up::prune_history
+							return $?
+							;;
 						j)
 							flag_type=HIST_JUMP
 							;;
@@ -192,7 +201,7 @@ ph() {
 							verbose_mode=true
 							;;
 						*)
-							up::print_msg "ph: unknown flag: ${ERR_STYLE}-$char"${RESET}
+							up::print_msg "ph: unknown flag: ${ERR_STYLE}-$char${RESET}"
 							return $ERR_BAD_ARG
 							;;
 					esac
@@ -203,7 +212,7 @@ ph() {
 		esac
 	done
 
-	if [[ "$flag_type" -ne FLAG_DEFAULT ]]; then
+	if [[ "$flag_type" -ne $FLAG_DEFAULT ]]; then
 		up::secondary_processing_flags "$1"
 	elif [ -n "$1" ]; then
 		# Jump to specified history index

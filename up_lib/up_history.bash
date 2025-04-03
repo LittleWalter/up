@@ -9,6 +9,15 @@ up::print_history_status() {
 	up::print_msg "history disabled; set \`export _UP_ENABLE_HIST=true\` in shell config"
 }
 
+# Add a line to the history log w/ time and date: $1=<path to log>
+up::log_history() {
+	local -r log_entry="$1"
+	local -r timestamp="$(date '+%Y-%m-%d %H:%M:%S')"
+	echo "$timestamp $log_entry" >> "$LOG_FILE"
+	# Trim log file
+	tail -n $LOG_SIZE "$LOG_FILE" > "$LOG_FILE.tmp" && mv "$LOG_FILE.tmp" "$LOG_FILE"
+}
+
 # Checks to see if path changed before adding line to history
 # $1=<prejump_path>
 up::validate_and_log_history() {
@@ -22,28 +31,81 @@ up::validate_and_log_history() {
 		# IDEA: Code is a rudimentary locking simulation, try `flock` and `lockf`?
 		# Might be overkill for non-critical path history logging
 		local -r lock_file="/tmp/up_history.lock"
-		# Acquire the lock using a unique identifier (e.g., PID)
-		if echo "$$" >"$lock_file" 2>/dev/null; then
-			# Perform logging
-			up::log_history "$log_entry"
-			# Cleanup: Overwrite the lock file or leave it as is
-			echo "Lock released by PID $$" >"$lock_file"
-		else
-			# Failed to acquire lock; $lock_file is in use by same PID?
-			return $ERR_ACCESS
-		fi
+		local -r retries=10 # Maximum retries to lock
+		local -r delay=0.1  # Delay in seconds
+		for ((i=1; i<=retries; i++)); do
+			# Acquire the lock using a unique identifier (e.g., PID)
+			if echo "$$" >"$lock_file" 2>/dev/null; then
+				# Perform logging
+				up::log_history "$log_entry"
+				# Release lock
+				rm -f "$lock_file"
+				return 0
+			else
+				sleep "$delay"
+			fi
+		done
+		# Failed to acquire lock; report failure
+		up::print_msg "failed to acquire history file lock after $retries attempts"
+		return "$ERR_ACCESS"
 	else
-		return $ERR_NO_CHANGE
+		return "$ERR_NO_CHANGE"
 	fi
 }
 
-# Add a line to the history log w/ time and date: $1=<path to log>
-up::log_history() {
-	local -r log_entry="$1"
-	local -r timestamp="$(date '+%Y-%m-%d %H:%M:%S')"
-	echo "$timestamp $log_entry" >> "$LOG_FILE"
-	# Trim log file
-	tail -n $LOG_SIZE "$LOG_FILE" > "$LOG_FILE.tmp" && mv "$LOG_FILE.tmp" "$LOG_FILE"
+# Removes missing/removed paths from history file
+up::prune_history() {
+	[[ ! -f "$LOG_FILE" ]] && up::print_msg "no history file found to prune..." && return 0
+
+	local -r lock_file="/tmp/up_history.lock"
+	local -r temp_file="${LOG_FILE}.tmp"
+	local -r original_count=$(up::history_count)
+
+	[[ "$original_count" -eq 0 ]] && up::print_msg "no history entries to prune, file empty..." && return 0
+
+	# Try to acquire the lock
+	local -r max_retries=10  # Limit retries to 100 (10 seconds with 0.1s sleeps)
+	local attempts=0
+	while ! (echo $$ > "$lock_file" 2>/dev/null); do
+		sleep 0.1 # Wait for the lock to be released
+		((attempts++))
+		if [[ $attempts -ge $max_retries ]]; then
+			up::print_msg "failed to acquire lock after $max_retries attempts"
+			return "$ERR_ACCESS"
+		fi
+
+		# Check for stale lock (optional)
+		lock_pid=$(cat "$lock_file" 2>/dev/null || echo "")
+		if [[ -n "$lock_pid" ]] && ! ps -p "$lock_pid" > /dev/null 2>&1; then
+			up::print_msg "removing stale lock file (PID $lock_pid not running)"
+			rm -f "$lock_file"
+		fi
+	done
+
+	# Perform pruning only if lock acquired
+	{
+		# Filter out invalid paths, preserve timestamps
+		awk '
+		{
+			path = substr($0, index($0, $3)) # Extract the path (skip timestamp)
+			gsub(/^ +| +$/, "", path)        # Trim whitespace
+			if (system("[ -d \"" path "\" ]") == 0) print $0
+		}' "$LOG_FILE" > "$temp_file"
+
+		# Replace the log file with the pruned version
+		mv "$temp_file" "$LOG_FILE"
+	} || { up::print_msg "failed to prune the history file"; return "$ERR_ACCESS"; }
+
+	rm -f "$lock_file" # Release lock
+
+	# Print summary
+	local -r new_count=$(up::history_count)
+	local -r count_diff=$((original_count - new_count))
+	if [[ "$count_diff" -eq 0 ]]; then
+		up::print_msg "nothing pruned: all ${DIR_CHANGE_STYLE}$original_count${RESET} entries are valid paths (max: $LOG_SIZE)"
+	else
+		up::print_msg "pruned history: removed $count_diff invalid paths (${DIR_CHANGE_STYLE}$new_count${RESET} remaining, max: $LOG_SIZE)"
+	fi
 }
 
 # Clear history log file
@@ -64,7 +126,8 @@ up::clear_history() {
 
 # Number of entries (lines) in the history log file
 up::history_count() {
-	[[ -f "$LOG_FILE" ]] && echo $(wc -l < "$LOG_FILE") && return 0
+	#[[ -f "$LOG_FILE" ]] && echo "$(wc -l < "$LOG_FILE")" && return 0
+	[[ -f "$LOG_FILE" ]] && wc -l < "$LOG_FILE" | xargs && return 0
 	echo "0" # history file doesn't exist
 }
 
@@ -97,7 +160,7 @@ up::show_history() {
 		local paginators=("bat" "less" "most" "more")
 
 		for paginator in "${paginators[@]}"; do
-			if $(up::is_command_available "$paginator"); then
+			if up::is_command_available "$paginator"; then
 				case "$paginator" in
 					bat)
 						eval "$base_history_command" | bat --style="plain"
@@ -138,7 +201,7 @@ up::jump_from_history() {
 	# Validate index input as integer value
 	if ! [[ "$index" =~ ^[0-9]+$ ]]; then
 		up::print_msg "not a valid history index: ${ERR_STYLE}'$index'${RESET}"
-		return $ERR_BAD_ARG
+		return "$ERR_BAD_ARG"
 	fi
 
 	# Get the total number of lines in the log file
@@ -165,13 +228,13 @@ up::jump_from_history() {
 	elif [[ -d "$dir" ]]; then
 		cd "$dir" || up::print_msg "failed to jump to ${ERR_STYLE}$dir${RESET}"
 		up::validate_and_log_history "$prejump_path"
-		if [[ $verbose_mode == true ]]; then
+		if [[ "$verbose_mode" == true ]]; then
 			local -r msg="jumped to ${DIR_CHANGE_STYLE}index $index${RESET} in history (line $reversed_index)"
 			up::print_verbose VERBOSE_DEFAULT "$prejump_path" "$msg"
 		fi
 	else
 		up::print_msg "path does not exist: ${ERR_STYLE}$dir${RESET}"
-		return $ERR_BAD_ARG
+		return "$ERR_BAD_ARG"
 	fi
 }
 
@@ -181,9 +244,9 @@ up::filter_history_with_fzf() {
 
 	[[ "$HIST_ENABLED" == false ]] && up::print_history_status
 
-	if ! $(up::is_command_available "fzf"); then
+	if ! up::is_command_available "fzf"; then
 		up::print_msg "\`fzf\` command not found: check installation of fuzzy finder"
-		return $ERR_ACCESS
+		return "$ERR_ACCESS"
 	elif [[ "$(up::history_count)" -eq 0 ]]; then
 		up::print_msg "no history entries..."
 		return 0
@@ -206,7 +269,7 @@ up::filter_history_with_fzf() {
 
 		if [[ "$selected_path" == "$PWD" ]]; then
 			up::print_msg "fzf: already in: ${PWD_STYLE}$selected_path${RESET}"
-			return $ERR_NO_CHANGE
+			return "$ERR_NO_CHANGE"
 		elif [[ -n "$selected_path" ]]; then
 			if [[ -d "$selected_path" ]]; then
 				cd "$selected_path" || up::print_msg "fzf: failed to change directory to: ${ERR_STYLE}$selected_path${RESET}"
@@ -217,13 +280,13 @@ up::filter_history_with_fzf() {
 				up::validate_and_log_history "$prejump_path"
 			else
 				up::print_msg "fzf: not a valid directory: ${ERR_STYLE}$selected_path${RESET}"
-				return $ERR_BAD_ARG
+				return "$ERR_BAD_ARG"
 			fi
 		else
 			up::print_msg "fzf: no path selected in history"
 		fi
 	else
 		up::print_msg "fzf: no history file available to filter"
-		return $ERR_BAD_ARG
+		return "$ERR_BAD_ARG"
 	fi
 }

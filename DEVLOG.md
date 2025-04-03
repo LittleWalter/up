@@ -22,13 +22,14 @@ Maybe I'll get around to learning POSIX-compliant scripting for portability late
 
 * __Refactoring:__
   - Modularized monolithic `up.bash` into multiple files (1200+ raw lines).
-    - `up_environment_vars.bash`: Definitions of constants defined by environment variables, etc.
-    - `up_wrappers.bash`: Definitions of wrapper functions such as `ph` and `up_passthru`.
-    - `up_history.bash`: Definitions of path history functions.
-    - `up_utils.bash`: Definitions of miscellanous helper functions.
+    - `up_lib/up_environment_vars.bash`: Definitions of constants defined by environment variables, etc.
+    - `up_lib/up_wrappers.bash`: Definitions of wrapper functions such as `ph` and `up_passthru`.
+    - `up_lib/up_history.bash`: Definitions of path history functions.
+    - `up_lib/up_utils.bash`: Definitions of miscellanous helper functions.
   - Moved `bats` test files into `tests/` directory.
-* __Changes:__ Added checks for `ustat` and `gstat` for `fzf` options defaults; the macOS BSD version of stat is harder to visually parse.
-
+  - _Linting_: Turned on Bash LSP support for Neovim by using [`bash-language-server`](https://github.com/bash-lsp/bash-language-server) and [`shellcheck`](https://www.shellcheck.net/); fixing basic mistakes and most closing warnings, e.g., missing quotes, etc.
+* __Changes:__ Added checks for `ustat` and `gstat` for `fzf` options defaults; the macOS BSD version of `stat` is harder to visually parse.
+* __Features:__ Added `-p` / `--prune-hist` to remove dead paths in history file.
 
 ### [2025-04-01]
 

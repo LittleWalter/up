@@ -58,6 +58,8 @@ Kiss tedious `cd ..` chains goodbye!
     - Supports both Bash and Zsh, with minimal, standard tool dependencies ensuring fast performance.
     - Optional integration with the fuzzy finder [`fzf`](https://github.com/junegunn/fzf), featuring a [`tree`](https://oldmanprogrammer.net/source.php?dir=projects/tree) preview.
 
+---
+
 ## ⚙ Installation
 
 ### Bash
@@ -134,6 +136,8 @@ export XDG_CONFIG_HOME="$HOME/.config" # Configuration files
 export XDG_DATA_HOME="$HOME/.local/share" # Persistent data storage
 export XDG_CACHE_HOME="$HOME/.cache" # Non-essential files such as shell command history, log files, etc.
 ```
+
+---
 
 ## ⌨ Usage
 
@@ -266,10 +270,9 @@ FZF_PWDOPTS_DEFAULT=(
 	--preview-label="[ 󰈍 ^L   ^T   ^I   ^J   ^K ]"
 )
 ```
+**NOTE**: The [Nerd Fonts](https://github.com/ryanoasis/nerd-fonts) for [icons](https://www.nerdfonts.com/) might not render in this Markdown file.
 
 If `eza` is installed, then the `tree` and `ls` respective equivalents are used for preview for icon support: `eza --color=always --tree --icons {}`, `eza --color=always --icons -laah {}`.
-
-Note: The [Nerd Fonts](https://github.com/ryanoasis/nerd-fonts) for [icons](https://www.nerdfonts.com/) might not render in this Markdown file.
 
 Default `fzf` keybinds:
 
@@ -344,13 +347,20 @@ $ up --size
 up: history size: [=================...] 88% (221/250)
 ```
 
-#### Clear All History Entries
+#### Clear and Prune History Entries
 
-Clear history with `-c` / `--clear`:
+Clear all history entries with `-c` / `--clear`:
 
 ```sh
 $ up -c
 up: history file cleared: /home/mrpink/.cache/up_history.log
+```
+
+Prune missing paths in history file with `-p` / `--prune-hist`:
+
+```sh
+$ up --prune-hist
+up: pruned history: removed 28 invalid paths
 ```
 
 #### Use `fzf` (Fuzzy Finder) to Inspect and Jump Path History

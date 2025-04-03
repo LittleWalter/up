@@ -79,8 +79,6 @@ up::initialize_fzf_options() {
 	FZF_PWDOPTS=("${_UP_FZF_PWDOPTS[@]:-${FZF_PWDOPTS_DEFAULT[@]}}")
 }
 
-### Constant definitions: Avoid magic values! ##########################
-
 VERSION="1.0.0"
 
 EXIT_SUCCESS=0
