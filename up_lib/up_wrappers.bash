@@ -17,7 +17,7 @@ up_passthru <FLAGS|command name>
 EOF
 	up::print_help_label "FLAGS"
 	cat <<EOF
-  -H, --hist-status  Checks history logging status
+  -H, --hist-status  Display the status of history logging
   -h, --help         Print help
 EOF
 	up::print_help_label "EXAMPLES"
@@ -32,9 +32,9 @@ EOF
 EOF
 	up::print_help_label "ENVIRONMENT VARIABLES"
 	cat <<EOF
-  _UP_ENABLE_HIST   Enable history file (Default: false)
-  _UP_HISTFILE      Path to the history file (set as: $LOG_FILE)
-  _UP_HISTSIZE      Maximum number of history entries (set as: $LOG_SIZE)
+  _UP_ENABLE_HIST  Enable history file (Default: false)
+  _UP_HISTFILE     Path to the history file (set as: $LOG_FILE)
+  _UP_HISTSIZE     Maximum number of history entries (set as: $LOG_SIZE)
 EOF
 }
 
@@ -88,23 +88,26 @@ ph <FLAGS> [jump index]
 EOF
 	up::print_help_label "FLAGS"
 	cat <<EOF
-  -H, --hist-status  Checks history logging status
-  -c, --clear        Clears all history entries
-  -f, --fzf          Opens \`fzf\` (fuzzy finder) for history, if available
+  -H, --hist-status  Display the status of history logging
+  -c, --clear        Clear all history entries
+  -f, --fzf          Open \`fzf\` for all valid history entries, if available
   -h, --help         Print help
-  -j, --jump         Jumps to a path in history by its most recent index
-  -l, --list         Lists the history of paths w/ pagination, ordered by recency
+  -j, --jump         Jump to a path in history by its most recent index
+  -l, --list         List the history of paths w/ pagination, ordered by recency
   -p, --prune        Remove missing paths from history
-  -s, --size         Displays the current history size
-  -v, --verbose      Prints additional change directory information
+  -r, --recent       Open \`fzf\` for recent valid paths by <integer>[min|h|d|m]
+  -s, --size         Display the current history size
+  -v, --verbose      Print additional information directory changes
 EOF
 	up::print_help_label "EXAMPLES"
 	cat <<EOF
-  ph         Opens interactive \`fzf\`, if available
+  ph         Opens interactive \`fzf\` for all valid history, if available
   ph --fzf   Same as example above but using optional flag
-  ph 5       Jumps the 5th most recent path in history
+  ph 5       Jumps to 5th most recent path in history
   ph -j 17   Jumps to 17th most recent path using optional flag
   ph --list  Lists the history of paths with pagination
+  ph -r 2h   Opens \`fzf\` for valid paths accessed in the last 2 hours
+	ph -r      Opens \`fzf\` for valid paths accessed in the last hour (default)
 EOF
 	up::print_help_label "RELATED ENVIRONMENT VARIABLES"
 	cat <<EOF
@@ -156,6 +159,10 @@ ph() {
 				flag_type=HIST_FZF
 				shift # Consume flag
 				;;
+			-r|--recent)
+				flag_type=RECENT_HIST_FZF
+				shift
+				;;
 			-v|--verbose)
 				verbose_mode=true
 				shift # Consume flag
@@ -188,6 +195,9 @@ ph() {
 							;;
 						f)
 							flag_type=HIST_FZF
+							;;
+						r)
+							flag_type=RECENT_HIST_FZF
 							;;
 						s)
 							up::print_history_size

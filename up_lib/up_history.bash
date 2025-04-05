@@ -104,7 +104,7 @@ up::prune_history() {
 	if [[ "$count_diff" -eq 0 ]]; then
 		up::print_msg "nothing pruned: all ${DIR_CHANGE_STYLE}$original_count${RESET} entries are valid paths (max: $LOG_SIZE)"
 	else
-		up::print_msg "pruned history: removed $count_diff invalid paths (${DIR_CHANGE_STYLE}$new_count${RESET} remaining, max: $LOG_SIZE)"
+		up::print_msg "pruned history: removed ${ERR_STYLE}$count_diff invalid paths${RESET} (${DIR_CHANGE_STYLE}$new_count remaining${RESET}, max: $LOG_SIZE)"
 	fi
 }
 
@@ -210,7 +210,7 @@ up::jump_from_history() {
 	# Check if the index is within the valid range
 	if (( index < 1 || index > total_lines )); then
 		up::print_msg "history index is out of range: ${ERR_STYLE}$index${RESET}"
-		return $ERR_BAD_ARG
+		return "$ERR_BAD_ARG"
 	fi
 
 	local -r reversed_index=$(up::reverse_history_index "$index")
@@ -223,7 +223,7 @@ up::jump_from_history() {
 
 	if [[ "$dir" == "$PWD" ]]; then
 		up::print_msg "already in: ${PWD_STYLE}$dir${RESET}"
-		return $ERR_NO_CHANGE
+		return "$ERR_NO_CHANGE"
 	# Check if the directory exists, then jump to it
 	elif [[ -d "$dir" ]]; then
 		cd "$dir" || up::print_msg "failed to jump to ${ERR_STYLE}$dir${RESET}"
@@ -288,5 +288,114 @@ up::filter_history_with_fzf() {
 	else
 		up::print_msg "fzf: no history file available to filter"
 		return "$ERR_BAD_ARG"
+	fi
+}
+
+# Filters history by recency: $1=<time string by hours or days, e.g., "15min", "2h", "3d">
+up::recent_paths() {
+	local -r timeframe="$1" # Accepts timeframe (e.g., "1h", "24h")
+	[[ ! -f "$LOG_FILE" ]] && up::print_msg "no history file available..." && return 0
+
+	# Convert timeframe to seconds
+	local seconds=0
+	case "$timeframe" in
+		*min) seconds=$(( ${timeframe%min} * 60 )) ;;  # Minutes
+		*h) seconds=$(( ${timeframe%h} * 3600 )) ;;    # Hours
+		*d) seconds=$(( ${timeframe%d} * 86400 )) ;;   # Days
+		*m) seconds=$(( ${timeframe%m} * 2592000 )) ;; # Months (approx. 30 days per month)
+		*) up::print_msg "invalid timeframe format: use '1h', '2d', '3m'" && return "$ERR_BAD_ARG" ;;
+	esac
+
+	# Current time and cutoff time (in UNIX seconds)
+	local current_time=$(date +%s)
+	local cutoff_time=$((current_time - seconds))
+
+	# Use Perl to filter paths in the history log
+	perl -e '
+		use strict;
+		use warnings;
+		use Time::Local;
+
+		my $cutoff = $ARGV[0]; # Pass cutoff time as argument
+		while (<STDIN>) {
+			chomp;
+			if (/^(\d{4}-\d{2}-\d{2}) (\d{2}:\d{2}:\d{2}) (.+)$/) {
+				my $timestamp = "$1 $2";
+				my $path = $3;
+
+				# Parse timestamp into epoch time
+				if ($timestamp =~ /(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2})/) {
+					my ($year, $mon, $mday, $hour, $min, $sec) = ($1, $2, $3, $4, $5, $6);
+					my $epoch = timelocal($sec, $min, $hour, $mday, $mon - 1, $year);
+
+					# Print path if it is within the cutoff time
+					print "$_\n" if $epoch >= $cutoff;
+				}
+			}
+		}
+	' "$cutoff_time" < "$LOG_FILE" | sort -rn
+}
+
+# Filter existing paths in the history log and given timeframe using fzf, change into the selected directory
+# $1=<timeframe, e.g. 15min, 2h, 1m, etc.>
+up::filter_recent_history_with_fzf() {
+	local timeframe_arg="$1"
+	if [[ "$timeframe_arg" =~ ^[0-9]+$ ]]; then
+		up::print_msg "no time unit: defaulting to ${timeframe_arg}h timeframe"
+		timeframe_arg="${timeframe_arg}h"
+	elif [[ ! "$timeframe_arg" =~ ^[0-9]+("min"|h|d|m)$ ]]; then
+		up::print_msg "invalid timeframe argument, not in form of <integer>[min|h|d|m]: ${ERR_STYLE}'$timeframe_arg'${RESET}"
+		return "$ERR_BAD_ARG"
+	fi
+
+	local recent_paths
+	recent_paths=$(up::recent_paths "$timeframe_arg")
+
+	# Ensure recent_paths is not empty
+	if [[ -z "$recent_paths" ]]; then
+		up::print_msg "no recent paths found for $timeframe_arg timeframe"
+		return 0
+	fi
+
+	# Filter out missing paths from the timeframe
+	recent_paths=$(echo "$recent_paths" | awk '{$1=$2=""; sub(/^ +/, ""); print}' | while read -r path; do
+		[[ -d "$path" ]] && echo "$path"
+	done)
+
+	# Append the timeframe to the fzf header 
+	local FZF_RECENT_HISTOPTS=("${FZF_HISTOPTS[@]}") # Create a copy of the fzf options
+	local -r timeframe_header="  󰥌 ${timeframe_arg} ago"
+	# Replace the header line for one-time use
+	if [[ -n "$BASH_VERSION" ]]; then
+		# Bash-compatible iteration
+		for i in "${!FZF_RECENT_HISTOPTS[@]}"; do
+			if [[ "${FZF_RECENT_HISTOPTS[i]}" == --header=* ]]; then
+				FZF_RECENT_HISTOPTS[i]="${FZF_RECENT_HISTOPTS[i]}$timeframe_header"
+			fi
+		done
+	elif [[ -n "$ZSH_VERSION" ]]; then
+		# Zsh-compatible iteration
+		for i in {1..${#FZF_RECENT_HISTOPTS[@]}}; do
+			if [[ "${FZF_RECENT_HISTOPTS[i]}" == --header=* ]]; then
+				FZF_RECENT_HISTOPTS[i]="${FZF_RECENT_HISTOPTS[i]}$timeframe_header"
+			fi
+		done
+	else
+		up::print_msg "unsupported shell detected"
+		return "$ERR_ACCESS"
+	fi
+
+	local -r selected_path=$(echo "$recent_paths" | fzf "${FZF_RECENT_HISTOPTS[@]}")
+
+	if [[ -n "$selected_path" ]]; then
+		local -r prejump_path="$PWD"
+		cd "$selected_path" || { up::print_msg "failed to change path"; return "$ERR_BAD_ARG"; }
+		up::validate_and_log_history "$prejump_path"
+		if [[ "$verbose_mode" == true ]]; then
+			local -r msg="jumped to a path from history (${DIR_CHANGE_STYLE}within $timeframe_arg${RESET})"
+			up::print_verbose VERBOSE_DEFAULT "$prejump_path" "$msg"
+		fi
+	else
+		up::print_msg "no path selected from $timeframe_arg ago"
 	fi
 }

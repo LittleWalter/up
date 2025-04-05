@@ -26,13 +26,17 @@ up::remove_leading_zeros() {
 # when no args and exactly 1 arg is passed; this deals w/ arbitrary flag
 # combinations passed that don't immediately pass return values.
 up::secondary_processing_flags() {
-	local -r jump_index="$1"
+	local -r hist_arg="${1:-1}" # defaults to "1", if no arg
 	case "$flag_type" in
 		HIST_JUMP)
-			up::jump_from_history "$jump_index"
+			up::jump_from_history "$hist_arg" # Arg should be a jump index
 			;;
 		HIST_FZF)
 			up::filter_history_with_fzf
+			;;
+		RECENT_HIST_FZF)
+			# Arg should be a timeframe string in hours or days, e.g., "1h", "2d"
+			up::filter_recent_history_with_fzf "$hist_arg"
 			;;
 		PWD_FZF)
 			up::filter_ancestors_with_fzf

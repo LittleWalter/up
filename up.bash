@@ -49,8 +49,8 @@ up::print_help_label() {
 up::print_help() {
 	up::print_help_label "up $VERSION" true
 	cat <<EOF
-Jump the directory tree instead of using \`cd ..\` chains!
-A function written for Bash and Zsh.
+Quickly navigate ancestor directories and recall path history to streamline
+your workflow—ditch tedious \`cd ..\` commands! Compatible with Bash and Zsh.
 EOF
 	up::print_help_label "USAGE"
 	cat <<EOF
@@ -58,21 +58,26 @@ EOF
 EOF
 	up::print_help_label "FLAGS"
 	cat <<EOF
-  -F, --fzf-hist     Opens \`fzf\` (fuzzy finder) for history, if available
-  -H, --hist-status  Checks history logging status
-  -S, --size         Displays the current history size
-  -c, --clear        Clears all history entries
-  -e, --ends-with    Jumps to nearest directory regex ending with
-  -f, --fzf          Opens \`fzf\` (fuzzy finder) for paths of PWD, if available
-  -h, --help         Print help
-  -i, --ignore-case  Enables case-insensitivity for regex matching
-  -j, --jump-hist    Jumps to a path in history by its most recent index
-  -l, --list-hist    Lists the history of paths w/ pagination, ordered by recency
-  -p, --prune-hist   Remove missing paths from history
-  -r, --regex        Jumps to the nearest directory regex match
-  -s, --starts-with  Jumps to the nearest directory regex starting with
-  -v, --verbose      Prints additional change directory information
-  -x, --exact        Jumps to the nearest exact directory match
+  -h, --help     Print help
+  -v, --verbose  Print additional information about directory changes
+
+    PWD Navigation:
+      -e, --ends-with    Jump to nearest directory regex that ends with <string>
+      -f, --fzf          Open \`fzf\` for paths of PWD, if available
+      -i, --ignore-case  Enable case-insensitive matching for regex navigation
+      -r, --regex        Jump to nearest directory regex matching <string>
+      -s, --starts-with  Jump to nearest directory regex that starts with <string>
+      -x, --exact        Jump to the nearest directory matching <string> exactly
+
+    Path History Management:
+      -F, --fzf-hist     Open \`fzf\` for all valid history entries, if available
+      -H, --hist-status  Display the status of history logging
+      -R, --fzf-recent   Open \`fzf\` for recent valid paths by <integer>[min|h|d|m]
+      -S, --size         Display the current history size
+      -c, --clear        Clear all history entries
+      -j, --jump-hist    Jump to a path in history by its most recent index
+      -l, --list-hist    List the history of paths w/ pagination, ordered by recency
+      -p, --prune-hist   Remove missing paths from history
 EOF
 	up::print_help_label "EXAMPLES"
 	cat <<EOF
@@ -84,6 +89,8 @@ EOF
   up -r src       Jump to nearest directory matching 'src' (regex)
   up -ir 'logs$'  Jump to nearest directory ending with 'logs' (ignore case)
   up -eiv logs    Equivalent to previous example but with verbose output
+  up -R 10min     Open \`fzf\` for valid paths accessed in the last 10 minutes
+  up -R 1h        Open \`fzf\` for valid paths accessed in the last hour
 EOF
 	up::print_help_label "EDGE CASES"
 	cat <<EOF
@@ -547,6 +554,10 @@ up() {
 				-F|--fzf-hist)
 					flag_type=HIST_FZF
 					shift # Consume flag
+					;;
+				-R|--fzf-recent)
+					flag_type=RECENT_HIST_FZF
+					shift
 					change_dir_arg="${1:-1}"
 					;;
 				-v|--verbose)
@@ -610,6 +621,9 @@ up() {
 								;;
 							F)
 								flag_type=HIST_FZF
+								;;
+							R)
+								flag_type=RECENT_HIST_FZF
 								;;
 							S)
 								up::print_history_size

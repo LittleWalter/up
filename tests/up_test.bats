@@ -493,7 +493,7 @@ teardown() {
 	echo "$output"
 
 	# Use grep to check for a regex match in the output of line 1
-	echo "$output" | grep -q "Jump the directory tree instead of using \`cd ..\` chains!"
+	echo "$output" | grep -q "Quickly navigate ancestor directories and recall path history to streamline"
 	# Assert that grep succeeded
 	[ "$?" -eq 0 ]
 }
@@ -509,7 +509,7 @@ teardown() {
 	echo "$output"
 
 	# Use grep to check for a regex match in the output of line 1
-	echo "$output" | grep -q "Jump the directory tree instead of using \`cd ..\` chains!"
+	echo "$output" | grep -q "Quickly navigate ancestor directories and recall path history to streamline"
 	# Assert that grep succeeded
 	[ "$?" -eq 0 ]
 }

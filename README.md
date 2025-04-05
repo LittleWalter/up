@@ -22,7 +22,16 @@ Kiss tedious `cd ..` chains goodbye!
 ## 📜 Table of Contents
 - [Key Features](#-key-features)
 - [Installation](#-installation)
+    - [Bash](#bash)
+    - [Zsh](#zsh)
 - [Usage](#-usage)
+    - [Jump by Index](#jump-by-index)
+    - [Jump to a Directory Name](#jump-to-a-directory-name)
+    - [Jump by `fzf`](#jump-by-fzf-fuzzy-finderhttpsgithubcomjunegunnfzf)
+    - [Verbose Mode](#verbose-mode)
+    - [Navigation to `HOME` and Previous Paths](#navigate-to-home-and-previous-paths)
+    - [Path History Navigation (Optional)](#path-history-navigation-optional)
+    - [Output Style Environment Variables](#output-style-environment-variables)
 
 ## ⭐ Key Features
 
@@ -46,7 +55,7 @@ Kiss tedious `cd ..` chains goodbye!
 
 5. **History Features (Optional)**
     - Track recently visited directories by exporting `_UP_ENABLE_HIST=true`.
-    - Jump history using `-F` (`fzf`) or the [`ph` (path history)](#ph-path-history-wrapper-function) wrapper.
+    - Jump history using `-F` (`fzf`) or the [](#ph-path-history-wrapper-function) wrapper.
         - Use `up_passthru` to capture directory changes from `cd`, [`zoxide`](https://github.com/ajeetdsouza/zoxide), [`jump`](https://github.com/gsamokovarov/jump), etc.
     - List history in order of recency with `-l`.
     - Clear history using `-c`.
@@ -56,7 +65,7 @@ Kiss tedious `cd ..` chains goodbye!
 
 7. **Compatibility**
     - Supports both Bash and Zsh, with minimal, standard tool dependencies ensuring fast performance.
-    - Optional integration with the fuzzy finder [`fzf`](https://github.com/junegunn/fzf), featuring a [`tree`](https://oldmanprogrammer.net/source.php?dir=projects/tree) preview.
+    - Optional integration with the fuzzy finder [`fzf`](https://github.com/junegunn/fzf), featuring [`tree`](https://oldmanprogrammer.net/source.php?dir=projects/tree), `ls`, and `stat` previews. (Or [`eza`](https://github.com/eza-community/eza) for `tree` and `ls`, if available.)
 
 ---
 
@@ -143,7 +152,7 @@ export XDG_CACHE_HOME="$HOME/.cache" # Non-essential files such as shell command
 
 ![up --help screenshot](assets/up_help_screenshot.jpg "`up --help` has detailed usage information")
 
-### Jump to the nth Ancestor Directory
+### Jump by Index
 
 ```sh
 $ up <optional: integer>
@@ -241,9 +250,9 @@ $ pwd
 /Volumes
 ```
 
-### Use [`fzf` (Fuzzy Finder)](https://github.com/junegunn/fzf) to Inspect and Jump Ancestor Directories
+### Jump by [`fzf` (Fuzzy Finder)](https://github.com/junegunn/fzf)
 
-To use an optional interactive fuzzy finder on your current working directory, use the `-f` / `--fzf` flags.
+Use an optional interactive fuzzy finder to jump directories in your PWD, use the `-f` / `--fzf` flags.
 
 ```sh
 $ up -f
@@ -304,6 +313,86 @@ export _UP_FZF_PWDOPTS
 
 For inspiration, check out this [detailed `fzf` guide](https://thevaluable.dev/practical-guide-fzf-example/).
 
+### Verbose Mode
+
+Just like the `cd` command, `up` will generally not output text upon successful execution.
+
+To display extra information such as `$OLDPWD` and `$PWD` after calling `up`:
+
+```sh
+$ up -v [integer or directory name]
+$ up --verbose [integer or directory name]
+```
+
+#### Verbose Mode Examples
+
+```sh
+$ up -v Pictures/
+up: jumped 2 dirs to nearest: Pictures
+old: /Volumes/WD_SSD_1TB/Pictures/wallpapers/apple
+pwd: /Volumes/WD_SSD_1TB/Pictures
+```
+
+```sh
+$ up verbose 2
+up: jumped 2 dirs
+old: /Volumes/WD_SSD_1TB/Pictures/wallpapers/apple
+pwd: /Volumes/WD_SSD_1TB/Pictures
+```
+
+#### `_UP_ALWAYS_VERBOSE` Environment Variable
+
+Prefer verbose mode every time without polluting your aliases? Add the following line to `.bashrc`, `.zshrc`, or `.zshenv`:
+
+```bash
+export _UP_ALWAYS_VERBOSE=true
+```
+
+### Navigate to `HOME` and Previous Paths
+
+For the sake of completeness, navigating to your `HOME` and previous paths are included.
+
+`HOME` is the only valid full path `up` allows; all other arguments must be a single directory name.
+
+You don't have to be in a `HOME` directory for this to work.
+
+```sh
+$ pwd
+/Volumes/WD_SSD_1TB/Pictures/wallpapers/apple
+$ up ~
+$ pwd
+/home/mwallace
+$ up -
+$ pwd
+/Volumes/WD_SSD_1TB/Pictures/wallpapers/apple
+```
+
+#### Example: Custom Style Theming
+
+If your terminal emulator supports the full RGB spectrum, you may define style variables using a mix-and-match of foreground (`\033[38;2;<r>;<g>;<b>m`) and background (`\033[48;2;<r>;<g>;<b>m`) colors.
+
+```bash
+# `up` style theme: based on Catppuccin Mocha
+# REF: https://github.com/catppuccin/catppuccin
+# NOTE: ANSI escape format
+#       Foreground = "\033[38;2;<r>;<g>;<b>m"
+#       Background = "\033[48;2;<r>;<g>;<b>m"
+export _UP_DIR_CHANGE_STYLE="\033[38;2;249;226;175m" # Yellow
+export _UP_ERR_STYLE="\033[48;2;243;160;168m\033[38;2;30;30;46m" # Red background, "Crust" foreground
+export _UP_OLDPWD_STYLE="\033[38;2;88;91;112m" # "Surface2"
+export _UP_PWD_STYLE="\033[38;2;166;227;161m" # Green
+export _UP_REGEX_STYLE="\033[38;2;116;199;236m" # Sapphire
+```
+![up example using the Catppuccin Mocha theme for style output](assets/up_catppuccin_mocha_theme_example.jpg "Style example: Catppuccin Mocha theme in WezTerm")
+
+#### Turning Off Styling
+
+To turn off styling and display plaintext only, add the following line to `.bashrc`, `.zshrc`, or `.zshenv`:
+
+```bash
+export _UP_NO_STYLES=true
+```
+
 ### Path History Navigation (Optional)
 
 To track path history with `up`, add to `.bashrc`, `.zshrc`, or `.zshenv`:
@@ -360,7 +449,7 @@ Prune missing paths in history file with `-p` / `--prune-hist`:
 
 ```sh
 $ up --prune-hist
-up: pruned history: removed 28 invalid paths
+up: pruned history: removed 28 invalid paths (24 remaining, max: 250)
 ```
 
 #### Use `fzf` (Fuzzy Finder) to Inspect and Jump Path History
@@ -368,6 +457,16 @@ up: pruned history: removed 28 invalid paths
 ```sh
 $ up -F
 $ up --fzf-hist
+```
+
+To filter by most recent, use, `-R`, `--fzf-recent` flags passing `<integer>[min|h|d|m]` argument:
+
+```sh
+$ up -R                 # Paths accessed in the last hour
+$ up --fzf-recent 15min # Path accessed in the last 15 minutes
+$ up -R 5h              # Paths accessed in the last 5 hours
+$ up -R 2d              # Paths accessed in the last 2 days
+$ up -R 1m              # Paths accessed in the last month
 ```
 
 ##### Customizing `fzf` Options for Paths in History
@@ -433,60 +532,6 @@ If you are tracking path history of `cd`, `zoxide`, `jump`, etc., using `up_pass
 
 ![ph --help screenshot](assets/ph_help_screenshot.jpg "`ph --help` is an `up` wrapper for path history")
 
-### Verbose Mode
-
-Just like the `cd` command, `up` will generally not output text upon successful execution.
-
-To display extra information such as `$OLDPWD` and `$PWD` after calling `up`:
-
-```sh
-$ up -v [integer or directory name]
-$ up --verbose [integer or directory name]
-```
-
-#### Verbose Mode Examples
-
-```sh
-$ up -v Pictures/
-up: jumped 2 dirs to nearest: Pictures
-old: /Volumes/WD_SSD_1TB/Pictures/wallpapers/apple
-pwd: /Volumes/WD_SSD_1TB/Pictures
-```
-
-```sh
-$ up verbose 2
-up: jumped 2 dirs
-old: /Volumes/WD_SSD_1TB/Pictures/wallpapers/apple
-pwd: /Volumes/WD_SSD_1TB/Pictures
-```
-
-#### `_UP_ALWAYS_VERBOSE` Environment Variable
-
-Prefer verbose mode every time without polluting your aliases? Add the following line to `.bashrc`, `.zshrc`, or `.zshenv`:
-
-```bash
-export _UP_ALWAYS_VERBOSE=true
-```
-
-### Navigate to `HOME` and Previous Paths
-
-For the sake of completeness, navigating to your `HOME` and previous paths are included.
-
-`HOME` is the only valid full path `up` allows; all other arguments must be a single directory name.
-
-You don't have to be in a `HOME` directory for this to work.
-
-```sh
-$ pwd
-/Volumes/WD_SSD_1TB/Pictures/wallpapers/apple
-$ up ~
-$ pwd
-/home/mwallace
-$ up -
-$ pwd
-/Volumes/WD_SSD_1TB/Pictures/wallpapers/apple
-```
-
 ### Output Style Environment Variables
 
 Define output styles to tailor how directory changes, errors, and other terminal messages appear. Setting environment variables allows you to enhance readability and match colors to your terminal theme.
@@ -509,29 +554,3 @@ Default values represent standard ANSI colors, which work reliably across most t
 Some terminal emulators may be flexible displaying basic colors and automatically match your preconfigured terminal theme, depending on the capabilities of your terminal emulator (e.g., [WezTerm](https://wezterm.org/) for advanced color support).
 
 Refer to [this GitHub Gist](https://gist.github.com/JBlond/2fea43a3049b38287e5e9cefc87b2124) for more styling ideas.
-
-#### Example: Custom Style Theming
-
-If your terminal emulator supports the full RGB spectrum, you may define style variables using a mix-and-match of foreground (`\033[38;2;<r>;<g>;<b>m`) and background (`\033[48;2;<r>;<g>;<b>m`) colors.
-
-```bash
-# `up` style theme: based on Catppuccin Mocha
-# REF: https://github.com/catppuccin/catppuccin
-# NOTE: ANSI escape format
-#       Foreground = "\033[38;2;<r>;<g>;<b>m"
-#       Background = "\033[48;2;<r>;<g>;<b>m"
-export _UP_DIR_CHANGE_STYLE="\033[38;2;249;226;175m" # Yellow
-export _UP_ERR_STYLE="\033[48;2;243;160;168m\033[38;2;30;30;46m" # Red background, "Crust" foreground
-export _UP_OLDPWD_STYLE="\033[38;2;88;91;112m" # "Surface2"
-export _UP_PWD_STYLE="\033[38;2;166;227;161m" # Green
-export _UP_REGEX_STYLE="\033[38;2;116;199;236m" # Sapphire
-```
-![up example using the Catppuccin Mocha theme for style output](assets/up_catppuccin_mocha_theme_example.jpg "Style example: Catppuccin Mocha theme in WezTerm")
-
-#### Turning Off Styling
-
-To turn off styling and display plaintext only, add the following line to `.bashrc`, `.zshrc`, or `.zshenv`:
-
-```bash
-export _UP_NO_STYLES=true
-```

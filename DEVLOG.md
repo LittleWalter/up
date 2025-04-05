@@ -18,6 +18,12 @@ Maybe I'll get around to learning POSIX-compliant scripting for portability late
 
 ## April 2025
 
+### [2025-04-04]
+
+* __Features:__ Added `-R`, `--fzf-recent` to open `fzf` for recent paths by `<integer>[min|h|d|m]` for timeframes representing hours, days, and months.
+* __Documentation__:
+  - Updated `-h` / `--help` text by organizing flags by sections "PWD Navigation" and "Path History Management".
+
 ### [2025-04-02]
 
 * __Refactoring:__
@@ -27,7 +33,7 @@ Maybe I'll get around to learning POSIX-compliant scripting for portability late
     - `up_lib/up_history.bash`: Definitions of path history functions.
     - `up_lib/up_utils.bash`: Definitions of miscellanous helper functions.
   - Moved `bats` test files into `tests/` directory.
-  - _Linting_: Turned on Bash LSP support for Neovim by using [`bash-language-server`](https://github.com/bash-lsp/bash-language-server) and [`shellcheck`](https://www.shellcheck.net/); fixing basic mistakes and most closing warnings, e.g., missing quotes, etc.
+  - _Linting_: Turned on Bash LSP support for Neovim by using [`bash-language-server`](https://github.com/bash-lsp/bash-language-server) and [`shellcheck`](https://www.shellcheck.net/); fixing basic mistakes and closing most warnings, e.g., missing quotes, etc.
 * __Changes:__ Added checks for `ustat` and `gstat` for `fzf` options defaults; the macOS BSD version of `stat` is harder to visually parse.
 * __Features:__ Added `-p` / `--prune-hist` to remove dead paths in history file.
 
