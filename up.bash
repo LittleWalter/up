@@ -28,8 +28,11 @@ fi
 LIBRARY_PATH="$UP_ABS_PATH/up_lib"
 source "$LIBRARY_PATH/up_utils.bash" # Load misc helper functions first
 source "$LIBRARY_PATH/up_environment_vars.bash" # Constant definitions
-source "$LIBRARY_PATH/up_history.bash" # Path history logging
-source "$LIBRARY_PATH/up_wrappers.bash" # `ph` and `up_passthru`
+
+if [[ "$HIST_ENABLED" == true ]]; then # Don't pollute config w/ useless functions, if not needed
+	source "$LIBRARY_PATH/up_history.bash" # Path history logging
+	source "$LIBRARY_PATH/up_wrappers.bash" # `ph` and `up_passthru`
+fi
 
 ### Function definitions: print and related helpers ####################
 
@@ -121,6 +124,8 @@ EOF
 
   \`up_passthru\`: A background helper function that captures directory
   changes triggered by commands like \`cd\`, \`zoxide\`, \`jump\`, etc.
+
+  To enable these functions, use: \`export _UP_ENABLE_HIST=true\`
 EOF
 }
 
@@ -178,6 +183,15 @@ up::print_pwd() {
 up::print_oldpwd() {
 	local -r oldpwd=${1:-OLDPWD}
 	echo -e "old: ${OLDPWD_STYLE}$oldpwd${RESET}"
+}
+
+# Helper: Prints error message concerning history not enabled
+# Returns error exit code, if the history is disabled
+up::print_history_disabled_warning() {
+	if [[ "$HIST_ENABLED" == false ]]; then
+		up::print_msg "history logging disabled: use \`export _UP_ENABLE_HIST=true\` in your shell config"
+		return "$ERR_ACCESS"
+	fi
 }
 
 # Print output for verbose mode:
@@ -241,7 +255,7 @@ up::cd_by_int() {
 	if [ "$prejump_path" = "$PWD" ]; then
 		up::print_msg "did not jump ${ERR_STYLE}$jump_index $dir_pluralized${RESET}, already on root..."
 		return "$ERR_NO_CHANGE" # technically not an error, but helpful to indicate to user of no change"
-	else
+	elif [[ "$HIST_ENABLED" == true ]]; then
 		up::validate_and_log_history "$prejump_path"
 	fi
 
@@ -271,7 +285,7 @@ up::cd_by_dir_exact() {
 	if ! cd "${PWD%"${PWD##*/"$dir_name"/}"}"; then
 		up::print_msg "failed to navigate to directory: ${ERR_STYLE}'$dir_name'${RESET}"
 		return "$ERR_ACCESS"
-	else
+	elif [[ "$HIST_ENABLED" == true ]]; then
 		up::validate_and_log_history "$prejump_path"
 	fi
 
@@ -351,7 +365,7 @@ up::cd_by_dir_regex() {
 					fi
 					up::print_verbose DEFAULT "$prejump_path" "$msg"
 				fi
-				up::validate_and_log_history "$prejump_path"
+				[[ "$HIST_ENABLED" == true ]] && up::validate_and_log_history "$prejump_path"
 				return 0
 			else
 				up::print_msg "failed to navigate to regex: ${ERR_STYLE}'$dir_regex'${RESET}"
@@ -381,7 +395,7 @@ up::cd_by_dir_name() {
 		if ! cd "/"; then
 			up::print_msg "failed to navigate to root"
 			return "$ERR_ACCESS"
-		else
+		elif [[ "$HIST_ENABLED" == true ]]; then
 			up::validate_and_log_history "$prejump_path"
 		fi
 		# Verbose mode output on successful dir change
@@ -402,7 +416,7 @@ up::cd_by_dir_name() {
 		if ! cd "$HOME"; then
 			up::print_msg "failed to navigate to HOME: ${ERR_STYLE}$HOME${RESET}"
 			return "$ERR_ACCESS"
-		else
+		elif [[ "$HIST_ENABLED" == true ]]; then
 			up::validate_and_log_history "$prejump_path"
 		fi
 		# Verbose mode output on successful dir change
@@ -468,13 +482,12 @@ up::filter_ancestors_with_fzf() {
 	if [[ -d "$selected_path" ]]; then
 		local -r prejump_path="$PWD"
 		if [[ "$selected_path" != "$prejump_path" ]]; then
-			cd "$selected_path"
-			local -r cd_exit_status=$(up::validate_and_log_history "$prejump_path")
-			if [[ "$cd_exit_status" -eq 0 ]] && [[ "$verbose_mode" == true ]]; then
+			if cd "$selected_path" && [[ "$verbose_mode" == true ]]; then
 				local -r dir_string=$(up::get_dirs_changed_string)
 				local -r msg="fzf: jumped ${DIR_CHANGE_STYLE}$dir_string${RESET}"
 				up::print_verbose VERBOSE_DEFAULT "$prejump_path" "$msg"
 			fi
+			[[ "$HIST_ENABLED" == true ]] && up::validate_and_log_history "$prejump_path"
 		else
 			up::print_msg "fzf: did not jump up tree"
 			return "$ERR_NO_CHANGE"
@@ -514,7 +527,10 @@ up() {
 	local flag_type="$FLAG_DEFAULT"
 	if ! [[ "$1" =~ /$ ]]; then # directory args always end in slash
 		local prejump_path="$PWD"
-		[[ "$1" == "-" ]] && cd - && up::validate_and_log_history "$prejump_path" && return 0
+		if [[ "$1" == "-" ]] && cd -; then
+			[[ "$HIST_ENABLED" == true ]] && up::validate_and_log_history "$prejump_path"
+			return 0
+		fi
 		while [[ "$1" =~ ^- ]]; do
 			case "$1" in
 				-h|--help)
@@ -522,26 +538,32 @@ up() {
 					return 0 # Don't bother shifting args, just exit
 					;;
 				-l|--list-hist)
+					up::print_history_disabled_warning || return 0
 					up::show_history
 					return 0
 					;;
 				-c|--clear)
+					up::print_history_disabled_warning || return 0
 					up::clear_history
 					return 0
 					;;
 				-p|--prune-hist)
+					up::print_history_disabled_warning || return 0
 					up::prune_history
 					return $?
 					;;
 				-S|--size)
+					up::print_history_disabled_warning || return 0
 					up::print_history_size
 					return 0
 					;;
 				-H|--hist-status)
+					up::print_history_disabled_warning || return 0
 					up::print_history_status
 					return 0
 					;;
 				-j|--jump-hist)
+					up::print_history_disabled_warning || return 0
 					flag_type=HIST_JUMP
 					shift # Consume flag
 					change_dir_arg="${1:-1}"
@@ -552,10 +574,12 @@ up() {
 					change_dir_arg="${1:-1}"
 					;;
 				-F|--fzf-hist)
+					up::print_history_disabled_warning || return 0
 					flag_type=HIST_FZF
 					shift # Consume flag
 					;;
 				-R|--fzf-recent)
+					up::print_history_disabled_warning || return 0
 					flag_type=RECENT_HIST_FZF
 					shift
 					change_dir_arg="${1:-1}"
@@ -602,34 +626,42 @@ up() {
 								return 0
 								;;
 							l)
+								up::print_history_disabled_warning || return 0
 								up::show_history
 								return 0
 								;;
 							c)
+								up::print_history_disabled_warning || return 0
 								up::clear_history
 								return 0
 								;;
 							p)
+								up::print_history_disabled_warning || return 0
 								up::prune_history
 								return $?
 								;;
 							j)
+								up::print_history_disabled_warning || return 0
 								flag_type=HIST_JUMP
 								;;
 							f)
 								flag_type=PWD_FZF
 								;;
 							F)
+								up::print_history_disabled_warning || return 0
 								flag_type=HIST_FZF
 								;;
 							R)
+								up::print_history_disabled_warning || return 0
 								flag_type=RECENT_HIST_FZF
 								;;
 							S)
+								up::print_history_disabled_warning || return 0
 								up::print_history_size
 								return 0
 								;;
 							H)
+								up::print_history_disabled_warning || return 0
 								up::print_history_status
 								return 0
 								;;

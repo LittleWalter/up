@@ -25,7 +25,7 @@ EOF
   To track directory changes with \`cd\`, add to your Bash/Zsh configuration:
   alias cd='up_passthru cd'
 
-	Use \`builtin cd -- <path>\` to a skip logging with \`cd\`.
+  Use \`builtin cd -- <path>\` to a skip logging with \`cd\`.
 
   For zoxide support, add:
   alias z='up_passthru z'
@@ -107,7 +107,7 @@ EOF
   ph -j 17   Jumps to 17th most recent path using optional flag
   ph --list  Lists the history of paths with pagination
   ph -r 2h   Opens \`fzf\` for valid paths accessed in the last 2 hours
-	ph -r      Opens \`fzf\` for valid paths accessed in the last hour (default)
+  ph -r      Opens \`fzf\` for valid paths accessed in the last hour (default)
 EOF
 	up::print_help_label "RELATED ENVIRONMENT VARIABLES"
 	cat <<EOF

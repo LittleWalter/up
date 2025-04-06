@@ -3,7 +3,7 @@
     Navigate <code>up</code> the Directory Tree with Ease | Bash & Zsh Navigation Script
 </h1>
 
-`up` is a Bash and Zsh script that takes the hassle out of navigating to parent and ancestor directories. Effortlessly jump multiple levels by index or directory names with autocomplete and regex. Inspect and jump into directories interactively with [`fzf`](https://junegunn.github.io/fzf/getting-started/).
+`up` is a Bash and Zsh script that takes the hassle out of navigating parent and ancestor directories. Effortlessly jump multiple levels by index or directory name with autocomplete and regex support. Inspect and dive into directories interactively with [`fzf`](https://junegunn.github.io/fzf/getting-started/)—and optionally track your path history for seamless recall.
 
 Kiss tedious `cd ..` chains goodbye!
 
@@ -30,8 +30,8 @@ Kiss tedious `cd ..` chains goodbye!
     - [Jump by `fzf`](#jump-by-fzf-fuzzy-finderhttpsgithubcomjunegunnfzf)
     - [Verbose Mode](#verbose-mode)
     - [Navigation to `HOME` and Previous Paths](#navigate-to-home-and-previous-paths)
-    - [Path History Navigation (Optional)](#path-history-navigation-optional)
     - [Output Style Environment Variables](#output-style-environment-variables)
+    - [Path History Navigation (Optional)](#path-history-navigation-optional)
 
 ## ⭐ Key Features
 
@@ -367,6 +367,29 @@ $ pwd
 /Volumes/WD_SSD_1TB/Pictures/wallpapers/apple
 ```
 
+### Output Style Environment Variables
+
+Define output styles to tailor how directory changes, errors, and other terminal messages appear. Setting environment variables allows you to enhance readability and match colors to your terminal theme.
+
+Set ANSI escape sequences in your shell configuration file (i.e., `.bashrc`, `.zshrc`, or `.zshenv`) to avoid editing `up.bash` manually.
+
+* `_UP_DIR_CHANGE_STYLE` for the number of parent directories jumped.
+    - Default: Orange (`\033[0;33m`)
+* `_UP_ERR_STYLE` for error messages.
+    - Default: Red (`\033[0;31m`)
+* `_UP_OLDPWD_STYLE` for the previous directory.
+    - Default: Light Gray (`\033[0;37m`)
+* `_UP_PWD_STYLE` for your current working directory.
+    - Default: Light Green (`\033[0;32m`)
+* `_UP_REGEX_STYLE` for regular expression patterns, e.g., `'^big_kahuna_.urger$'`.
+    - Default: Cyan (`\033[0;36m`)
+
+Default values represent standard ANSI colors, which work reliably across most terminal emulators.
+
+Some terminal emulators may be flexible displaying basic colors and automatically match your preconfigured terminal theme, depending on the capabilities of your terminal emulator (e.g., [WezTerm](https://wezterm.org/) for advanced color support).
+
+Refer to [this GitHub Gist](https://gist.github.com/JBlond/2fea43a3049b38287e5e9cefc87b2124) for more styling ideas.
+
 #### Example: Custom Style Theming
 
 If your terminal emulator supports the full RGB spectrum, you may define style variables using a mix-and-match of foreground (`\033[38;2;<r>;<g>;<b>m`) and background (`\033[48;2;<r>;<g>;<b>m`) colors.
@@ -511,7 +534,15 @@ _UP_FZF_HISTOPTS=(
 export _UP_FZF_HISTOPTS
 ```
 
-#### `up_passthru` Helper Function
+#### `up` Wrapper Functions
+
+To access the following wrapper functions, set the `_UP_ENABLE_HIST` environment variable within `.bashrc`, `.zshrc`, or `.zshenv`:
+
+```bash
+export _UP_ENABLE_HIST=true
+```
+
+##### `up_passthru` Helper Function
 
 By default, `up` only tracks its own path history when `_UP_ENABLE_HIST=true` is exported.
 
@@ -523,8 +554,7 @@ alias cd='up_passthru cd' # cd: Use `builtin cd -- <path>` to a skip logging
 alias z='up_passthru z'   # zoxide
 ```
 
-#### `ph` (Path History) Wrapper Function
-
+##### `ph` (Path History) Wrapper Function
 
 `ph` is a wrapper for `up` that focuses on path history navigation.
 
@@ -532,25 +562,3 @@ If you are tracking path history of `cd`, `zoxide`, `jump`, etc., using `up_pass
 
 ![ph --help screenshot](assets/ph_help_screenshot.jpg "`ph --help` is an `up` wrapper for path history")
 
-### Output Style Environment Variables
-
-Define output styles to tailor how directory changes, errors, and other terminal messages appear. Setting environment variables allows you to enhance readability and match colors to your terminal theme.
-
-Set ANSI escape sequences in your shell configuration file (i.e., `.bashrc`, `.zshrc`, or `.zshenv`) to avoid editing `up.bash` manually.
-
-* `_UP_DIR_CHANGE_STYLE` for the number of parent directories jumped.
-    - Default: Orange (`\033[0;33m`)
-* `_UP_ERR_STYLE` for error messages.
-    - Default: Red (`\033[0;31m`)
-* `_UP_OLDPWD_STYLE` for the previous directory.
-    - Default: Light Gray (`\033[0;37m`)
-* `_UP_PWD_STYLE` for your current working directory.
-    - Default: Light Green (`\033[0;32m`)
-* `_UP_REGEX_STYLE` for regular expression patterns, e.g., `'^big_kahuna_.urger$'`.
-    - Default: Cyan (`\033[0;36m`)
-
-Default values represent standard ANSI colors, which work reliably across most terminal emulators.
-
-Some terminal emulators may be flexible displaying basic colors and automatically match your preconfigured terminal theme, depending on the capabilities of your terminal emulator (e.g., [WezTerm](https://wezterm.org/) for advanced color support).
-
-Refer to [this GitHub Gist](https://gist.github.com/JBlond/2fea43a3049b38287e5e9cefc87b2124) for more styling ideas.

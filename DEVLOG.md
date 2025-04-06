@@ -18,6 +18,10 @@ Maybe I'll get around to learning POSIX-compliant scripting for portability late
 
 ## April 2025
 
+### [2025-04-05]
+
+* __Refactoring:__ Path history functions only sourced when `_UP_ENABLE_HIST=true`. `up.bash` history flags displays message when using and logging disabled.
+
 ### [2025-04-04]
 
 * __Features:__ Added `-R`, `--fzf-recent` to open `fzf` for recent paths by `<integer>[min|h|d|m]` for timeframes representing hours, days, and months.
