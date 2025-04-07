@@ -89,7 +89,7 @@ EOF
 	up::print_help_label "FLAGS"
 	cat <<EOF
   -H, --hist-status  Display the status of history logging
-  -L, --list-freq    List historic paths by frequency
+  -L, --list-freq    List historic paths by frequency w/ pagination, descending
   -c, --clear        Clear all history entries
   -f, --fzf          Open \`fzf\` for all valid history entries, if available
   -h, --help         Print help
@@ -97,7 +97,7 @@ EOF
   -l, --list         List the history of paths w/ pagination, ordered by recency
   -m, --fzf-freq     Open \`fzf\` for the most frequently visited historic paths
   -p, --prune        Remove missing paths from history
-  -r, --recent       Open \`fzf\` for recent valid paths by <integer>[min|h|d|m]
+  -r, --recent       Open \`fzf\` for recent valid paths by <integer>(min|h|d|m)
   -s, --size         Display the current history size
   -v, --verbose      Print additional information directory changes
 EOF

@@ -19,6 +19,10 @@ Maybe I'll get around to learning POSIX-compliant scripting for portability late
 
 ## April 2025
 
+### __[2025-04-07]__
+
+* __Documentation:__ Created `up.1` man page in `groff` derived from the `--help` output and available Markdown. The simple `install_up_man_page.bash` script automates installation of the manual.
+
 ### __[2025-04-06]__
 * __Refactoring__: Modularized pagination code from `up::show_history` into `up::run_with_pagination`.
 * __Features__:

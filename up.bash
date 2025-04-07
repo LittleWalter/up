@@ -31,7 +31,7 @@ LIBRARY_PATH="$UP_ABS_PATH/up_lib"
 source "$LIBRARY_PATH/up_utils.bash" # Load misc helper functions first
 source "$LIBRARY_PATH/up_environment_vars.bash" # Constant definitions
 
-if [[ "$HIST_ENABLED" == true ]]; then # Don't pollute config w/ useless functions, if not needed
+if [[ "$HIST_ENABLED" == true ]]; then # Don't pollute config w/ useless functions
 	source "$LIBRARY_PATH/up_history.bash" # Path history logging
 	source "$LIBRARY_PATH/up_wrappers.bash" # `ph` and `up_passthru`
 fi
@@ -59,7 +59,7 @@ your workflow—ditch tedious \`cd ..\` commands! Compatible with Bash and Zsh.
 EOF
 	up::print_help_label "USAGE"
 	cat <<EOF
-  up <FLAGS> [integer|directory name|\$HOME]
+  up <FLAGS> [integer|directory name/regex|\$HOME]
 EOF
 	up::print_help_label "FLAGS"
 	cat <<EOF
@@ -77,8 +77,8 @@ EOF
     Path History Management:
       -F, --fzf-hist     Open \`fzf\` for all valid history entries, if available
       -H, --hist-status  Display the status of history logging
-      -L, --list-freq    List historic paths by frequency
-      -R, --fzf-recent   Open \`fzf\` for recent valid paths by <integer>[min|h|d|m]
+      -L, --list-freq    List historic paths by frequency w/ pagination, descending
+      -R, --fzf-recent   Open \`fzf\` for recent valid paths by <integer>(min|h|d|m)
       -S, --size         Display the current history size
       -c, --clear        Clear all history entries
       -j, --jump-hist    Jump to a path in history by its most recent index

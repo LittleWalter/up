@@ -131,6 +131,22 @@ echo 'source ~/.local/share/shell/up/up.bash' >> ~/.zshrc
 echo 'source ~/.local/share/shell/up/up_completion.bash' >> ~/.zshrc
 ```
 
+### Install Man Page (Optional)
+
+Run the following script to install the optional man page:
+
+```sh
+cd ~/.config/shell/up/man # Or where you downloaded these scripts
+chmod +x install_up_man_page.bash # Ensure execution
+./install_up_man_page.bash
+```
+
+See if the man page is available with:
+
+```sh
+man up
+```
+
 ### 📝 Sidenote on `HOME` Directory Organization
 
 Following best practices, I recommend using the [XDG Base Directory Specification](https://specifications.freedesktop.org/basedir-spec/latest/) to reduce `HOME` directory clutter.
