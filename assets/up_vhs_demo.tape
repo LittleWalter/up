@@ -19,27 +19,33 @@ Set FontFamily "JetBrainsMonoNL Nerd Font"
 Set FontSize 32
 Set Width 1920
 Set Height 1080
-Set TypingSpeed 150ms
+Set WindowBar Colorful
+Set TypingSpeed 115ms
 Set Theme "Catppuccin Mocha"
 Set Margin 20
 Set MarginFill "#CBA6F7"
-Set BorderRadius 10
+Set BorderRadius 15
+Set PlaybackSpeed 2.0
 
 # Load `up` and `_up` tab completion
 Hide
-Type "cd /Users/lw/.config_repo/zsh/.local/share/zsh/plugins/up"
+# TIP: Change this path, if necessary
+Type "cd ~/.config_repo/zsh/.local/share/zsh/plugins/up"
 Enter
 Type "source ./up.bash"
 Enter
-Type "source ./up-completion.bash"
+Type "source ./up_completion.bash"
 Enter
+# TIP: Change this path, if necessary
 Type "cd /Volumes/WD_SSD_1TB/Pictures/wallpapers/apple"
+Enter
+Type "up --clear"
 Enter
 Type "clear"
 Enter
 Show
 
-# Type a welcome comment to the terminal
+# Intro message
 Type "# Jump `up` the PWD tree with ease!"
 # Pause for dramatic effect...
 Sleep 2s
@@ -133,7 +139,11 @@ Sleep 4s
 Enter
 Sleep 10s
 Ctrl+j
-Sleep 8s
+Sleep 2s
+Ctrl+j
+Sleep 2s
+Ctrl+j
+Sleep 2s
 Ctrl+j
 Sleep 8s
 Down
@@ -146,6 +156,32 @@ Ctrl+t
 Sleep 8s
 Down
 Sleep 8s
+Enter
+
+Type "# Optionally, jump to path history when you add `export _UP_ENABLE_HIST=true`"
+Enter
+Type "# to your .bashrc, .zshrc, or .zshenv"
+Sleep 3s
+Enter
+Type "# Use the helper function `up_passthru` to capture and track changes made by `cd`,"
+Enter
+Type "# `zoxide`, `jump`, and other commands that change directories..."
+Sleep 5s
+Enter
+Type "up_passthru --help"
+Sleep 2s
+Enter
+Sleep 10s
+Type "up -Fv # or `up --fzf-hist --verbose`"
+Sleep 5s
+Enter
+Sleep 3s
+Down
+Sleep 3s
+Ctrl+p
+Sleep 2s
+Ctrl+l
+Sleep 5s
 Enter
 
 Sleep 8s

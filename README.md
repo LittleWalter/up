@@ -27,6 +27,7 @@ Kiss tedious `cd ..` chains goodbye!
 - [Usage](#-usage)
     - [Jump by Index](#jump-by-index)
     - [Jump to a Directory Name](#jump-to-a-directory-name)
+    - [Jump to a Directory Name Using Regex](#jump-to-directory-name-using-regex)
     - [Jump by `fzf`](#jump-by-fzf-fuzzy-finderhttpsgithubcomjunegunnfzf)
     - [Verbose Mode](#verbose-mode)
     - [Navigation to `HOME` and Previous Paths](#navigate-to-home-and-previous-paths)
@@ -193,7 +194,7 @@ To autocomplete the only directory that starts with `Pic`:
 $ up Pic<tab>
 $ up Pictures/
 ```
-#### Jump to a Directory Name with Regex
+### Jump to Directory Name Using Regex
 
 - **`-i` / `--ignore-case`**: Perform case-insensitive regex jumps with the `-s`, `-e`, and `-r` flags.
 - **`-s` / `--starts-with`**: Jump to the nearest directory that starts with a given regex pattern.
@@ -442,6 +443,13 @@ $ up -l
 $ up --list-hist
 ```
 
+To show the list of most frequently visited paths, use `-L`, `--list-freq` flags:
+
+```sh
+$ up -L
+$ up --list-freq
+```
+
 #### Jump to a Specific History Index
 
 To jump to an index, use the `-j` / `--jump-hist` flags:
@@ -482,14 +490,21 @@ $ up -F
 $ up --fzf-hist
 ```
 
-To filter by most recent, use, `-R`, `--fzf-recent` flags passing `<integer>[min|h|d|m]` argument:
+To filter by most recent paths, use `-R`, `--fzf-recent` flags passing `<integer>[min|h|d|m]` argument:
 
 ```sh
 $ up -R                 # Paths accessed in the last hour
-$ up --fzf-recent 15min # Path accessed in the last 15 minutes
+$ up --fzf-recent 15min # Paths accessed in the last 15 minutes
 $ up -R 5h              # Paths accessed in the last 5 hours
 $ up -R 2d              # Paths accessed in the last 2 days
 $ up -R 1m              # Paths accessed in the last month
+```
+
+To filter by the most frequently visited paths, use `-m`, `--fzf-freq` flags:
+
+```sh
+$ up -m
+$ up --fzf-freq
 ```
 
 ##### Customizing `fzf` Options for Paths in History
@@ -561,4 +576,3 @@ alias z='up_passthru z'   # zoxide
 If you are tracking path history of `cd`, `zoxide`, `jump`, etc., using `up_passthru`, this is a more intuitive interface.
 
 ![ph --help screenshot](assets/ph_help_screenshot.jpg "`ph --help` is an `up` wrapper for path history")
-

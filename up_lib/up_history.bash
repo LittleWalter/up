@@ -146,6 +146,44 @@ up::print_history_size() {
 	[[ "$HIST_ENABLED" == false ]] && up::print_history_status
 }
 
+# Print the paths visited by frequency w/ pagination
+up::print_paths_by_frequency() {
+	if [[ -f "$LOG_FILE" ]] && [[ "$(up::history_count)" -ne 0 ]]; then
+		local -r most_freq_command="up::print_help_label 'PATHS BY FREQUENCY'; awk '{print \$3}' $LOG_FILE | sort | uniq -c | sort -nr"
+		up::run_with_pagination "$most_freq_command"
+	elif [[ "$(up::history_count)" -eq 0 ]]; then
+		up::print_msg "history file is empty..."
+	else
+		up::print_msg "no history file available..."
+	fi
+}
+
+# Runs an arbitrary command with pagination: $1=<command>
+up::run_with_pagination() {
+	local -r base_command="$1"
+
+	# Array of paginators (commands w/o options)
+	local -r paginators=("bat" "less" "most" "more")
+
+	for paginator in "${paginators[@]}"; do
+		if up::is_command_available "$paginator"; then
+			case "$paginator" in
+				bat)
+					eval "$base_command" | bat --style="plain"
+					;;
+				*) # paginators w/o options
+					eval "$base_command" | "$paginator"
+					;;
+			esac
+			[[ "$HIST_ENABLED" == false ]] && { echo ""; up::print_history_status; }
+			return 0
+		fi
+	done
+	# Fallback: No paginator available
+	eval "$base_command"
+	[[ "$HIST_ENABLED" == false ]] && { echo ""; up::print_history_status; }
+}
+
 # Print the history log file w/ pagination
 up::show_history() {
 	local -r count=$(up::history_count)
@@ -154,29 +192,8 @@ up::show_history() {
 		[[ "$HIST_ENABLED" == false ]] && up::print_history_status
 	elif [[ -f "$LOG_FILE" ]]; then
 		# Display a numbered list of history entries in reverse order
-		local -r base_history_command='up::print_help_label "PATH HISTORY"; nl -b a <(tac "$LOG_FILE")'
-
-		# Array of paginators (commands w/o options)
-		local paginators=("bat" "less" "most" "more")
-
-		for paginator in "${paginators[@]}"; do
-			if up::is_command_available "$paginator"; then
-				case "$paginator" in
-					bat)
-						eval "$base_history_command" | bat --style="plain"
-						;;
-					*) # paginators w/o options
-						eval "$base_history_command" | "$paginator"
-						;;
-				esac
-				[[ "$HIST_ENABLED" == false ]] && { echo ""; up::print_history_status; }
-				return
-			fi
-		done
-
-		# Fallback: No paginator available
-		eval "$base_history_command"
-		[[ "$HIST_ENABLED" == false ]] && { echo ""; up::print_history_status; }
+		local -r base_history_command="up::print_help_label 'PATH HISTORY'; nl -b a <(tac $LOG_FILE)"
+		up::run_with_pagination "$base_history_command"
 	else
 		up::print_msg "no history file available..."
 	fi
@@ -337,6 +354,7 @@ up::recent_paths() {
 }
 
 # Filter existing paths in the history log and given timeframe using fzf, change into the selected directory
+# Missing paths removed from list
 # $1=<timeframe, e.g. 15min, 2h, 1m, etc.>
 up::filter_recent_history_with_fzf() {
 	local timeframe_arg="$1"
@@ -362,7 +380,7 @@ up::filter_recent_history_with_fzf() {
 		[[ -d "$path" ]] && echo "$path"
 	done)
 
-	# Append the timeframe to the fzf header 
+	# Append the timeframe to the fzf header
 	local FZF_RECENT_HISTOPTS=("${FZF_HISTOPTS[@]}") # Create a copy of the fzf options
 	local -r timeframe_header="  󰥌 ${timeframe_arg} ago"
 	# Replace the header line for one-time use
@@ -397,5 +415,60 @@ up::filter_recent_history_with_fzf() {
 		fi
 	else
 		up::print_msg "no path selected from $timeframe_arg ago"
+	fi
+}
+
+# Filter and select the most frequent paths from the history log; missing paths removed from list
+up::filter_most_frequent_paths() {
+	local -r prejump_path="$PWD"
+
+	[[ "$HIST_ENABLED" == false ]] && up::print_history_status
+
+	if [[ "$(up::history_count)" -eq 0 ]]; then
+		up::print_msg "no history entries available..."
+		return 0
+	fi
+
+	if [[ -f "$LOG_FILE" ]]; then
+		# Extract and count occurrences of paths
+		local frequent_paths
+		frequent_paths=$(awk '{print $3}' "$LOG_FILE" | sort | uniq -c | sort -nr | awk '{print $2}')
+
+		# Check if there are any paths
+		if [[ -z "$frequent_paths" ]]; then
+			up::print_msg "no valid paths found in most frequently visited..."
+			return 0
+		fi
+
+		# Filter out missing paths from the frequency list
+		frequent_paths=$(echo "$frequent_paths" | while read -r path; do
+			[[ -d "$path" ]] && echo "$path"
+		done)
+
+		# Use fzf to let the user select from the most frequent paths
+		local selected_path
+		selected_path=$(echo "$frequent_paths" | fzf "${FZF_HISTOPTS[@]}")
+
+		if [[ "$selected_path" == "$PWD" ]]; then
+			up::print_msg "already in: ${PWD_STYLE}$selected_path${RESET}"
+			return "$ERR_NO_CHANGE"
+		elif [[ -n "$selected_path" ]]; then
+			if [[ -d "$selected_path" ]]; then
+				cd "$selected_path" || up::print_msg "failed to change to: ${ERR_STYLE}$selected_path${RESET}"
+				if [[ "$verbose_mode" == true ]]; then
+					local -r msg="fzf: changed to path in most frequently visited list"
+					up::print_verbose VERBOSE_DEFAULT "$prejump_path" "$msg"
+				fi
+				up::validate_and_log_history "$prejump_path"
+			else
+				up::print_msg "fzf: not a valid directory: ${ERR_STYLE}$selected_path${RESET}"
+				return "$ERR_BAD_ARG"
+			fi
+		else
+			up::print_msg "fzf: no path selected in most frequently visited list"
+		fi
+	else
+		up::print_msg "no history file available..."
+		return "$ERR_BAD_ARG"
 	fi
 }

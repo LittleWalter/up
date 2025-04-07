@@ -38,6 +38,9 @@ up::secondary_processing_flags() {
 			# Arg should be a timeframe string in hours or days, e.g., "1h", "2d"
 			up::filter_recent_history_with_fzf "$hist_arg"
 			;;
+		MOST_FREQ_FZF)
+			up::filter_most_frequent_paths
+			;;
 		PWD_FZF)
 			up::filter_ancestors_with_fzf
 			;;

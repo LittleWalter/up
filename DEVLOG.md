@@ -11,6 +11,7 @@ Maybe I'll get around to learning POSIX-compliant scripting for portability late
 ## Table of Contents
 
 - [Motivation & Goals](#motivation--goals)
+- [April 2025](#april-2025)
 - [March 2025](#march-2025)
 - [Known Issues](#-known-issues)
 - [TODOs and Future Ideas](#-todos-and-future-ideas)
@@ -18,18 +19,21 @@ Maybe I'll get around to learning POSIX-compliant scripting for portability late
 
 ## April 2025
 
-### [2025-04-05]
+### __[2025-04-06]__
+* __Refactoring__: Modularized pagination code from `up::show_history` into `up::run_with_pagination`.
+* __Features__:
+    - `L` / `--list-freq` flags display the history sorted by frequency of paths visited.
+    - `m` / `--fzf-freq` opens `fzf` with the most frequently visited list, sorted by most to least visited; only displays existing paths.
 
+### __[2025-04-05]__
 * __Refactoring:__ Path history functions only sourced when `_UP_ENABLE_HIST=true`. `up.bash` history flags displays message when using and logging disabled.
 
-### [2025-04-04]
-
+### __[2025-04-04]__
 * __Features:__ Added `-R`, `--fzf-recent` to open `fzf` for recent paths by `<integer>[min|h|d|m]` for timeframes representing hours, days, and months.
 * __Documentation__:
   - Updated `-h` / `--help` text by organizing flags by sections "PWD Navigation" and "Path History Management".
 
-### [2025-04-02]
-
+### __[2025-04-02]__
 * __Refactoring:__
   - Modularized monolithic `up.bash` into multiple files (1200+ raw lines).
     - `up_lib/up_environment_vars.bash`: Definitions of constants defined by environment variables, etc.
@@ -41,8 +45,7 @@ Maybe I'll get around to learning POSIX-compliant scripting for portability late
 * __Changes:__ Added checks for `ustat` and `gstat` for `fzf` options defaults; the macOS BSD version of `stat` is harder to visually parse.
 * __Features:__ Added `-p` / `--prune-hist` to remove dead paths in history file.
 
-### [2025-04-01]
-
+### __[2025-04-01]__
 * __Fixes:__ Flag processing behavior for `up` and `ph` on arbitrary combinations of flag ordering. Issues around flags that should not immediately return an exit value such as `fzf`-related commands.
 * __Documentation:__ Added programmatic [`vhs`](https://github.com/charmbracelet/vhs) animated demo source code at `assets/up_vhs_demo.tape`; the file is `asset/up_vhs_demo_animation.gif`.
 * __Changes:__ Dynamically check for `eza` installation for use with `fzf`; default to `ls` and `tree` when not available.

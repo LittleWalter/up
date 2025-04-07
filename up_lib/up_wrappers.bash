@@ -30,7 +30,7 @@ EOF
   For zoxide support, add:
   alias z='up_passthru z'
 EOF
-	up::print_help_label "ENVIRONMENT VARIABLES"
+	up::print_help_label "RELATED ENVIRONMENT VARIABLES"
 	cat <<EOF
   _UP_ENABLE_HIST  Enable history file (Default: false)
   _UP_HISTFILE     Path to the history file (set as: $LOG_FILE)
@@ -89,11 +89,13 @@ EOF
 	up::print_help_label "FLAGS"
 	cat <<EOF
   -H, --hist-status  Display the status of history logging
+  -L, --list-freq    List historic paths by frequency
   -c, --clear        Clear all history entries
   -f, --fzf          Open \`fzf\` for all valid history entries, if available
   -h, --help         Print help
   -j, --jump         Jump to a path in history by its most recent index
   -l, --list         List the history of paths w/ pagination, ordered by recency
+  -m, --fzf-freq     Open \`fzf\` for the most frequently visited historic paths
   -p, --prune        Remove missing paths from history
   -r, --recent       Open \`fzf\` for recent valid paths by <integer>[min|h|d|m]
   -s, --size         Display the current history size
@@ -135,6 +137,10 @@ ph() {
 				up --list-hist # Print contents of LOG_FILE
 				return 0
 				;;
+			-L|--list-freq)
+				up --list-freq
+				return 0
+				;;
 			-c|--clear)
 				up::clear_history
 				return 0
@@ -157,6 +163,10 @@ ph() {
 				;;
 			-f|--fzf)
 				flag_type=HIST_FZF
+				shift # Consume flag
+				;;
+			-m|--fzf-freq)
+				flag_type=MOST_FREQ_FZF
 				shift # Consume flag
 				;;
 			-r|--recent)
@@ -182,6 +192,10 @@ ph() {
 							up::show_history
 							return 0
 							;;
+						L)
+							up --list-freq
+							return 0
+							;;
 						c)
 							up::clear_history
 							return 0
@@ -195,6 +209,9 @@ ph() {
 							;;
 						f)
 							flag_type=HIST_FZF
+							;;
+						m)
+							flag_type=MOST_FREQ_FZF
 							;;
 						r)
 							flag_type=RECENT_HIST_FZF

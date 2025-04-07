@@ -18,10 +18,12 @@
 #-----------------------------------------------------------------------
 
 # Get the absolute path of this file; avoids problems of relative paths
+# NOTE: Using `builtin cd -- <path>` to avoid additional line in history 
+# if using `up_passthru`
 if [ -n "${BASH_SOURCE[0]}" ]; then
-	UP_ABS_PATH="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+	UP_ABS_PATH="$(builtin cd -- "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 else
-	UP_ABS_PATH="$(cd "$(dirname "$0")" && pwd)"
+	UP_ABS_PATH="$(builtin cd -- "$(dirname "$0")" && pwd)"
 fi
 
 # Source dependencies
@@ -75,11 +77,13 @@ EOF
     Path History Management:
       -F, --fzf-hist     Open \`fzf\` for all valid history entries, if available
       -H, --hist-status  Display the status of history logging
+      -L, --list-freq    List historic paths by frequency
       -R, --fzf-recent   Open \`fzf\` for recent valid paths by <integer>[min|h|d|m]
       -S, --size         Display the current history size
       -c, --clear        Clear all history entries
       -j, --jump-hist    Jump to a path in history by its most recent index
       -l, --list-hist    List the history of paths w/ pagination, ordered by recency
+      -m, --fzf-freq     Open \`fzf\` for the most frequently visited historic paths
       -p, --prune-hist   Remove missing paths from history
 EOF
 	up::print_help_label "EXAMPLES"
@@ -103,20 +107,26 @@ EOF
 EOF
 	up::print_help_label "ENVIRONMENT VARIABLES"
 	cat <<EOF
-  _UP_ALWAYS_IGNORE_CASE  Enable case-insensitive regex by default (Default: false)
-  _UP_ALWAYS_VERBOSE      Always print change directory information (Default: false)
-  _UP_DIR_CHANGE_STYLE    Set ANSI styling for the number of directories jumped
-  _UP_ENABLE_HIST         Enable history file (Default: false)
-  _UP_ERR_STYLE           Set ANSI styling for error message output
-  _UP_FZF_HISTOPTS        Set \`fzf\` options for history (as an array)
-  _UP_FZF_PWDOPTS         Set \`fzf\` options for current working directory (as an array)
-  _UP_HISTFILE            Path to the history file (set as: $LOG_FILE)
-  _UP_HISTSIZE            Maximum number of history entries (set as: $LOG_SIZE)
-  _UP_NO_STYLES           Disable all output styling (Default: false)
-  _UP_OLDPWD_STYLE        Set ANSI styling for the previous directory (OLDPWD)
-  _UP_PWD_STYLE           Set ANSI styling for the current directory (PWD)
-  _UP_REGEX_DEFAULT       Use regex as default instead of exact matches (Default: false)
-  _UP_REGEX_STYLE         Set ANSI styling for regex patterns
+  _UP_ALWAYS_VERBOSE  Always print change directory information (Default: false)
+
+  PWD Navigation:
+    _UP_ALWAYS_IGNORE_CASE  Enable case-insensitive regex by default (Default: false)
+    _UP_FZF_PWDOPTS         Set \`fzf\` options for current working directory (as an array)
+    _UP_REGEX_DEFAULT       Use regex as default instead of exact matches (Default: false)
+
+  Path History Management:
+    _UP_ENABLE_HIST         Enable history file (Default: false)
+    _UP_FZF_HISTOPTS        Set \`fzf\` options for history (as an array)
+    _UP_HISTFILE            Path to the history file (set as: $LOG_FILE)
+    _UP_HISTSIZE            Maximum number of history entries (set as: $LOG_SIZE)
+
+  Output Styling:
+    _UP_DIR_CHANGE_STYLE    Set ANSI styling for the number of directories jumped
+    _UP_ERR_STYLE           Set ANSI styling for error message output
+    _UP_NO_STYLES           Disable all output styling (Default: false)
+    _UP_OLDPWD_STYLE        Set ANSI styling for the previous directory (OLDPWD)
+    _UP_PWD_STYLE           Set ANSI styling for the current directory (PWD)
+    _UP_REGEX_STYLE         Set ANSI styling for regex patterns
 EOF
 	up::print_help_label "RELATED COMMANDS"
 	cat <<EOF
@@ -125,7 +135,7 @@ EOF
   \`up_passthru\`: A background helper function that captures directory
   changes triggered by commands like \`cd\`, \`zoxide\`, \`jump\`, etc.
 
-  To enable these functions, use: \`export _UP_ENABLE_HIST=true\`
+  To enable these functions, use: \`export _UP_ENABLE_HIST=true\`.
 EOF
 }
 
@@ -542,6 +552,11 @@ up() {
 					up::show_history
 					return 0
 					;;
+				-L|--list-freq)
+					up::print_history_disabled_warning || return 0
+					up::print_paths_by_frequency
+					return 0
+					;;
 				-c|--clear)
 					up::print_history_disabled_warning || return 0
 					up::clear_history
@@ -576,6 +591,11 @@ up() {
 				-F|--fzf-hist)
 					up::print_history_disabled_warning || return 0
 					flag_type=HIST_FZF
+					shift # Consume flag
+					;;
+				-m|--fzf-freq)
+					up::print_history_disabled_warning || return 0
+					flag_type=MOST_FREQ_FZF
 					shift # Consume flag
 					;;
 				-R|--fzf-recent)
@@ -630,6 +650,11 @@ up() {
 								up::show_history
 								return 0
 								;;
+							L)
+								up::print_history_disabled_warning || return 0
+								up::print_paths_by_frequency
+								return 0
+								;;
 							c)
 								up::print_history_disabled_warning || return 0
 								up::clear_history
@@ -654,6 +679,10 @@ up() {
 							R)
 								up::print_history_disabled_warning || return 0
 								flag_type=RECENT_HIST_FZF
+								;;
+							m)
+								up::print_history_disabled_warning || return 0
+								flag_type=MOST_FREQ_FZF
 								;;
 							S)
 								up::print_history_disabled_warning || return 0
