@@ -21,11 +21,15 @@ Maybe I'll get around to learning POSIX-compliant scripting for portability late
 
 ### __[2025-04-07]__
 
-* __Documentation:__ Created `up.1` man page in `groff` derived from the `--help` output and available Markdown. The simple `install_up_man_page.bash` script automates installation of the manual.
+* __Documentation:__
+  - Created `up.1` man page in `groff` derived from the `--help` output and available Markdown.
+    - README for `man` page installation instructions.
+    - The simple `install_up_man_page.bash` script automates installation of the manual.
+* __Features:__ Modified the `-c` / `--clear` function to take `<integer>(min|h|d|m)` argument.
 
 ### __[2025-04-06]__
-* __Refactoring__: Modularized pagination code from `up::show_history` into `up::run_with_pagination`.
-* __Features__:
+* __Refactoring:__ Modularized pagination code from `up::show_history` into `up::run_with_pagination`.
+* __Features:__
     - `L` / `--list-freq` flags display the history sorted by frequency of paths visited.
     - `m` / `--fzf-freq` opens `fzf` with the most frequently visited list, sorted by most to least visited; only displays existing paths.
 
@@ -34,7 +38,7 @@ Maybe I'll get around to learning POSIX-compliant scripting for portability late
 
 ### __[2025-04-04]__
 * __Features:__ Added `-R`, `--fzf-recent` to open `fzf` for recent paths by `<integer>[min|h|d|m]` for timeframes representing hours, days, and months.
-* __Documentation__:
+* __Documentation:__
   - Updated `-h` / `--help` text by organizing flags by sections "PWD Navigation" and "Path History Management".
 
 ### __[2025-04-02]__

@@ -80,7 +80,7 @@ EOF
       -L, --list-freq    List historic paths by frequency w/ pagination, descending
       -R, --fzf-recent   Open \`fzf\` for recent valid paths by <integer>(min|h|d|m)
       -S, --size         Display the current history size
-      -c, --clear        Clear all history entries
+			-c, --clear        Clear all history entries or filtered by <integer>(min|h|d|m)
       -j, --jump-hist    Jump to a path in history by its most recent index
       -l, --list-hist    List the history of paths w/ pagination, ordered by recency
       -m, --fzf-freq     Open \`fzf\` for the most frequently visited historic paths
@@ -98,6 +98,8 @@ EOF
   up -eiv logs    Equivalent to previous example but with verbose output
   up -R 10min     Open \`fzf\` for valid paths accessed in the last 10 minutes
   up -R 1h        Open \`fzf\` for valid paths accessed in the last hour
+  up --clear      Clear all history entries
+  up -c 2d        Clear all history entries older than 2 days
 EOF
 	up::print_help_label "EDGE CASES"
 	cat <<EOF
@@ -559,7 +561,8 @@ up() {
 					;;
 				-c|--clear)
 					up::print_history_disabled_warning || return 0
-					up::clear_history
+					shift
+					up::clear_history "$1"
 					return 0
 					;;
 				-p|--prune-hist)
@@ -657,7 +660,8 @@ up() {
 								;;
 							c)
 								up::print_history_disabled_warning || return 0
-								up::clear_history
+								shift
+								up::clear_history "$1"
 								return 0
 								;;
 							p)

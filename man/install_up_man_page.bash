@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# ╻┏┓╻┏━┓╺┳╸┏━┓╻  ╻     ╻ ╻┏━┓   ┏┳┓┏━┓┏┓╻┏━┓┏━┓┏━╸┏━╸ ┏━┓╻ ╻
-# ┃┃┗┫┗━┓ ┃ ┣━┫┃  ┃     ┃ ┃┣━┛   ┃┃┃┣━┫┃┗┫┣━┛┣━┫┃╺┓┣╸  ┗━┓┣━┫
-# ╹╹ ╹┗━┛ ╹ ╹ ╹┗━╸┗━╸╺━╸┗━┛╹  ╺━╸╹ ╹╹ ╹╹ ╹╹  ╹ ╹┗━┛┗━╸╹┗━┛╹ ╹
+# ╻┏┓╻┏━┓╺┳╸┏━┓╻  ╻     ╻ ╻┏━┓   ┏┳┓┏━┓┏┓╻   ┏━┓┏━┓┏━╸┏━╸ ┏━┓╻ ╻
+# ┃┃┗┫┗━┓ ┃ ┣━┫┃  ┃     ┃ ┃┣━┛   ┃┃┃┣━┫┃┗┫   ┣━┛┣━┫┃╺┓┣╸  ┗━┓┣━┫
+# ╹╹ ╹┗━┛ ╹ ╹ ╹┗━╸┗━╸╺━╸┗━┛╹  ╺━╸╹ ╹╹ ╹╹ ╹╺━╸╹  ╹ ╹┗━┛┗━╸╹┗━┛╹ ╹
 # Simple installation script for the `up` function.
 
 # Set man page filename and paths
@@ -32,7 +32,7 @@ if [[ -f "$MANPAGE" ]]; then
 	echo "1) System-wide (requires sudo)"
 	echo "2) User-specific (only for your account)"
 
-	read -rp "Enter choice (1 or 2): " choice
+	read -rp "Enter choice (1, 2, or anything else to quit): " choice
 
 	case "$choice" in
 		1)
@@ -44,11 +44,11 @@ if [[ -f "$MANPAGE" ]]; then
 			;;
 		2)
 			install_manpage "$USER_MAN_DIR"
-			echo -e "\nIf neccessary, add the following line to your shell config file (e.g., ~/.bashrc or ~/.zshrc):"
+			echo -e "\nIf necessary, add the following line to your shell config file (e.g., ~/.bashrc or ~/.zshrc):"
 			echo "export MANPATH=\"$USER_MAN_DIR:\$MANPATH\""
+			echo -e "Then run: \`source ~/.bashrc\` (or \`source ~/.zshrc\`)"
 
-			if command -v manpath; then
-				echo "Then run: source ~/.bashrc (or source ~/.zshrc)"
+			if command -v manpath &>/dev/null; then
 				echo -e "\n\`manpath\` currently outputs:"
 				manpath
 			fi

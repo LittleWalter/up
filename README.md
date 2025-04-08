@@ -24,6 +24,7 @@ Kiss tedious `cd ..` chains goodbye!
 - [Installation](#-installation)
     - [Bash](#bash)
     - [Zsh](#zsh)
+    - [Man Page (Optional)](#man-page-optional)
 - [Usage](#-usage)
     - [Jump by Index](#jump-by-index)
     - [Jump to a Directory Name](#jump-to-a-directory-name)
@@ -131,9 +132,9 @@ echo 'source ~/.local/share/shell/up/up.bash' >> ~/.zshrc
 echo 'source ~/.local/share/shell/up/up_completion.bash' >> ~/.zshrc
 ```
 
-### Install Man Page (Optional)
+### Man Page (Optional)
 
-Run the following script to install the optional man page:
+Run the following script to install the optional man page for `up`:
 
 ```sh
 cd ~/.config/shell/up/man # Or where you downloaded these scripts
@@ -485,7 +486,16 @@ up: history size: [=================...] 88% (221/250)
 
 #### Clear and Prune History Entries
 
-Clear all history entries with `-c` / `--clear`:
+Clear history entries with `-c` / `--clear` and passing a timeframe argument in the form `<integer>(min|h|d|m)`, where `min` represents minutes, `h` for hours, `d` for days, and `m` for months.
+
+For example, to remove history entries older than 5 days:
+
+```sh
+$ up --clear 5d
+up: cleared 31 history entries older than 5d: /home/mrpink/.cache/up_history.log
+```
+
+To clear all history, pass no timeframe argument:
 
 ```sh
 $ up -c

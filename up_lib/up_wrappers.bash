@@ -90,7 +90,7 @@ EOF
 	cat <<EOF
   -H, --hist-status  Display the status of history logging
   -L, --list-freq    List historic paths by frequency w/ pagination, descending
-  -c, --clear        Clear all history entries
+	-c, --clear        Clear all history entries or filtered by <integer>(min|h|d|m)
   -f, --fzf          Open \`fzf\` for all valid history entries, if available
   -h, --help         Print help
   -j, --jump         Jump to a path in history by its most recent index
@@ -142,7 +142,8 @@ ph() {
 				return 0
 				;;
 			-c|--clear)
-				up::clear_history
+				shift
+				up::clear_history "$1"
 				return 0
 				;;
 			-p|--prune)
@@ -197,7 +198,8 @@ ph() {
 							return 0
 							;;
 						c)
-							up::clear_history
+							shift
+							up::clear_history "$1"
 							return 0
 							;;
 						p)

@@ -108,20 +108,104 @@ up::prune_history() {
 	fi
 }
 
-# Clear history log file
+# Clear history log file with optional timeframe and lockfile mechanism: $1=<integer>(min|h|d|m)
 up::clear_history() {
-	local -r count=$(up::history_count)
-	if [[ -f "$LOG_FILE" ]] && [[ "$count" -gt 0 ]]; then
-		: > "$LOG_FILE" # Truncate to clear
-		if [[ "$(up::history_count)" -eq 0 ]]; then
-			up::print_msg "history file cleared: $LOG_FILE"
+	local timeframe="$1" # Accepts timeframe (e.g., "1h", "2d", "15min")
+	[[ ! -f "$LOG_FILE" ]] && up::print_msg "No history file available..." && return 0
+	local -r original_count=$(up::history_count)
+	local new_count
+	local diff_count
+
+	# Attempt to acquire the lock
+	for ((i=1; i<=retries; i++)); do
+		if (set -o noclobber; echo "$$" > "$lockfile") 2>/dev/null; then
+			trap 'rm -f "$lockfile"' EXIT # Ensure lockfile is removed on exit
+			break
 		else
-			up::print_msg "history file not cleared!"
+		# Check if the process holding the lock is still running
+			if [[ -f "$lockfile" ]]; then
+				lock_pid=$(cat "$lockfile")
+				if ! ps -p "$lock_pid" > /dev/null 2>&1; then
+					up::print_msg "stale lockfile detected, cleaning it up..."
+					rm -f "$lockfile"
+					continue
+				fi
+			fi
 		fi
-	else
-		up::print_msg "no history to clear..."
+
+		if ((i == retries)); then
+			up::print_msg "failed to acquire lock after $retries attempts."
+			return "$ERR_ACCESS"
+		fi
+		sleep "$delay" # Wait before retrying
+	done
+
+	# If no timeframe is provided, delete all entries
+	if [[ -z "$timeframe" ]] && [[ "$original_count" -gt 0 ]]; then
+		: > "$LOG_FILE" # Truncate the log file
+		new_count=$(up::history_count)
+		diff_count=$((original_count - new_count))
+		up::print_msg "history file cleared ${DIR_CHANGE_STYLE}$diff_count entries${RESET}: $LOG_FILE."
+		return 0
+	elif [[ "$original_count" -eq 0 ]]; then
+		up::print_msg "no history entries to clear..."
+			return 0
 	fi
-	[[ "$HIST_ENABLED" == false ]] && up::print_history_status
+
+	local lockfile="/tmp/up_history.lock" # Lockfile location
+	local retries=10   # Maximum retries for acquiring the lock
+	local delay=0.1    # Delay between retries
+
+	# Convert timeframe to seconds
+	local seconds=0
+	case "$timeframe" in
+		*min) seconds=$(( ${timeframe%min} * 60 )) ;;  # Minutes
+		*h) seconds=$(( ${timeframe%h} * 3600 )) ;;    # Hours
+		*d) seconds=$(( ${timeframe%d} * 86400 )) ;;   # Days
+		*m) seconds=$(( ${timeframe%m} * 2592000 )) ;; # Months (~30 days/month)
+		*) up::print_msg "Invalid timeframe format: use '15min', '1h', '2d', '6m', etc." && return "$ERR_BAD_ARG" ;;
+	esac
+
+	# Current time and cutoff time (in UNIX seconds)
+	local current_time=$(date +%s)
+	local cutoff_time=$((current_time - seconds))
+
+	# Use Perl to filter and retain entries newer than the cutoff time
+	perl -e '
+		use strict;
+		use warnings;
+		use Time::Local;
+
+		my $cutoff = $ARGV[0]; # Pass cutoff time as an argument
+		while (<STDIN>) {
+			chomp;
+			if (/^(\d{4}-\d{2}-\d{2}) (\d{2}:\d{2}:\d{2}) (.+)$/) {
+				my $timestamp = "$1 $2";
+
+				# Parse timestamp into epoch time
+				if ($timestamp =~ /(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2})/) {
+					my ($year, $mon, $mday, $hour, $min, $sec) = ($1, $2, $3, $4, $5, $6);
+					my $epoch = timelocal($sec, $min, $hour, $mday, $mon - 1, $year);
+
+					if ($epoch >= $cutoff) { # Keep entry
+						print "$_\n";
+					}
+				}
+			}
+		}
+	' "$cutoff_time" < "$LOG_FILE" > "${LOG_FILE}.tmp"
+
+	# Replace the original log file with the filtered entries
+	mv "${LOG_FILE}.tmp" "$LOG_FILE"
+
+	# Print summary
+	new_count=$(up::history_count)
+	count_diff=$((original_count - new_count))
+	if [[ "$count_diff" -eq 0 ]]; then
+		up::print_msg "did not clear any history entries older than $timeframe..."
+	else
+		up::print_msg "cleared ${DIR_CHANGE_STYLE}$count_diff history entries${RESET} older than $timeframe: $LOG_FILE"
+	fi
 }
 
 # Number of entries (lines) in the history log file

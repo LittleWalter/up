@@ -1,13 +1,15 @@
-.TH up 1 "April 2025" "Version 1.0.0" "General Commands Manual"
+.TH up 1 "April 8, 2025" "Version 1.0.0" "General Commands Manual"
 .SH NAME
 up — navigate ancestor directories and path histories: a companion to the builtin cd command
 .SH SYNOPSIS
 .B up
 [\fIOPTIONS\fR] [\fIinteger|directory name/regex|$HOME\fR]
 .SH DESCRIPTION
-up is a shell script that takes the hassle out of navigating parent and ancestor directories. 
+up is a shell script that takes the hassle out of navigating parent and ancestor directories.
 
-Jump multiple levels by index or directory name with autocomplete and regex support. Inspect and dive into directories interactively with popular fuzzy finder fzf—and optionally track your path history for seamless recall.
+Jump multiple levels by index or directory name with autocomplete and regex support. Inspect and dive into directories interactively with the popular fuzzy finder fzf—and optionally track your path history for seamless recall.
+
+This tool is especially beneficial for terminal power users frequently navigating deep directory structures or switching between project paths.
 
 Compatible with Bash and Zsh.
 .SH OPTIONS
@@ -22,23 +24,30 @@ Print additional information about directory changes.
 .SH PWD NAVIGATION OPTIONS
 .TP
 .B \-e, --ends-with
-Jump to nearest directory regex that ends with \fI<string>\fR.
+Jump to the nearest directory whose name matches a regex pattern that ends with \fI<string>\fR.
+
+This option is equivalent to using \fB\-r\fR with a regex pattern that ends with \fB$\fR.
 .TP
 .B \-f, --fzf
-Open `fzf` for paths of PWD, if available.
+Open `fzf` to browse paths within the current working directory (PWD), provided `fzf` is installed and available.
 .TP
 .B \-i, --ignore-case
 Enable case-insensitive matching for regex navigation.
 .TP
 .B \-r, --regex
-Jump to nearest directory regex matching \fI<string>\fR.
+Jump to the nearest directory that matches the specified regex pattern.
+
+Note: Regex behavior may differ slightly between \fBBash\fR and \fBZsh\fR due to variations in their respective regex engines. For consistent results, ensure your regex patterns are compatible with the shell you are using.
 .TP
 .B \-s, --starts-with
-Jump to nearest directory regex that starts with \fI<string>\fR.
+Jump to the nearest directory whose name matches a regex pattern that starts with \fI<string>\fR.
+
+This option is equivalent to using \fB\-r\fR with a regex pattern that begins with \fB^\fR.
 .TP
 .B \-x, --exact
-Jump to the nearest directory matching \fI<string>\fR exactly.
+Jump to the nearest directory that exactly matches the specified \fI<string>\fR.
 
+This is the default behavior when passing a string argument, provided \fB_UP_REGEX_DEFAULT\fR is not enabled. This option is particularly useful when regex matching is set as the default behavior, allowing you to override it for exact matches.
 .P
 .SH PATH HISTORY MANAGEMENT OPTIONS
 .TP
@@ -46,32 +55,96 @@ Jump to the nearest directory matching \fI<string>\fR exactly.
 Open `fzf` for all valid history entries, if available.
 .TP
 .B \-H, --hist-status
-Display the status of history logging.
+Display the current status of history logging.
+.IP
+This includes whether history logging is enabled, the location of the history log file, and the maximum size (number of entries) allowed by the log.
 .TP
 .B \-L, --list-freq
 List historic paths by frequency with pagination, descending order.
 .TP
 .B \-R, --fzf-recent
-Open `fzf` for recent valid paths by \fI<integer>(min|h|d|m)\fR.
+Open `fzf` to display recent valid paths filtered by \fI<integer>(min|h|d|m)\fR.
+
+Supported time units:
+.br
+- min: minutes
+.br
+- h: hours
+.br
+- d: days
+.br
+- m: months (approx. 30 days per month)
+
+If no argument is provided, defaults to '1h'. If only an integer is provided, it assumes the unit is hours.
 .TP
 .B \-S, --size
-Display the current history size.
+Display the status of history logging, including a bar graph, percentage of usage, and the number of entries relative to the total capacity.
+
+The total capacity is determined by the \fB_UP_HISTSIZE\fR environment variable, which specifies the maximum number of entries that can be stored in the history log file.
 .TP
 .B \-c, --clear
-Clear all history entries.
+Clear history entries filtered by \fI<integer>(min|h|d|m)\fR.
+
+Supported time units:
+.br
+- min: minutes
+.br
+- h: hours
+.br
+- d: days
+.br
+- m: months (approx. 30 days per month)
+
+If no argument is provided, all history entries will be removed.
 .TP
 .B \-j, --jump-hist
-Jump to a path in history by its most recent index.
+Jump to a path in history by its most recent index. Use this option in conjunction with \fB-l, --list-hist\fR for obtaining index values.
 .TP
 .B \-l, --list-hist
-List the history of paths with pagination, ordered by recency.
+List the history of paths with index, human-readable timestamps, and pagination, ordered by recency.
 .TP
 .B \-m, --fzf-freq
-Open `fzf` for the most frequently visited historic paths.
+Open `fzf` to browse and jump into the most frequently visited historic paths.
+
+Note: Visit counts are not displayed in this view. To see the visit counts, use the \fB-L, --list-freq\fR option.
 .TP
 .B \-p, --prune-hist
 Remove missing paths from history.
-.SH EXAMPLES
+.SH HISTORY LOG FILE
+The history log file is a plain text file that tracks recently accessed paths and their associated human-readable timestamps. Each entry in the log follows the format:
+.IP
+\fBYYYY-MM-DD HH:MM:SS /absolute/path/to/resource\fR
+.PP
+The purpose of history logging is to track recently accessed paths, enabling efficient navigation and recall of frequently or recently visited locations. This feature enhances usability by integrating `fzf` with options such as \fB\-R\fR (recent) and \fB\-m\fR (frequent) for quick access to relevant paths.
+.PP
+.SS Why Plain Text?
+The primary benefits of using a plain text file is to prioritize simplicity, portability, and accessibility:
+.IP \(bu 2
+\fBSimplicity\fR: Plain text files are easy to manage, edit, and inspect without requiring specialized tools or libraries.
+.IP \(bu 2
+\fBPortability\fR: Users can transfer history logs between systems without concerns about database compatibility or dependencies.
+.IP \(bu 2
+\fBTransparency\fR: Plain text ensures the log is human-readable, making it straightforward to debug or modify.
+.IP \(bu 2
+\fBInteroperability\fR: Works seamlessly with standard command-line tools like \fBgrep\fR, \fBawk\fR, and \fBsed\fR for advanced processing and analysis.
+.IP \(bu 2
+\fBDisposability\fR: Plain text logs are lightweight and easy to clear or reset, aligning with the transient nature of directory navigation. Most users do not need to preserve long-term path usage history.
+.PP
+.SS Environment Variables
+The following environment variables control how the history log behaves:
+.IP \(bu 2
+\fB_UP_ENABLE_HIST\fR: By default history is not logged, you must add this line to your shell configuration to enable:
+.IP
+export _UP_ENABLE_HIST=true
+.IP \(bu 2
+\fB_UP_HISTFILE\fR: Specifies the path to the history log file. Defaults to \fB~/.cache/up_history.log\fR.
+.IP \(bu 2
+\fB_UP_HISTSIZE\fR: Determines the maximum number of entries that can be stored in the log file. Once the limit is reached, the oldest entries are removed to make space for new ones. Defaults to 250 entries/lines.
+.SS Accessing History
+Users can clear or filter the log file using the \fB\-R\fR or \fB\-\-fzf-recent\fR option, as well as by specific timeframe arguments (e.g., '1h' for one hour or '15min' for 15 minutes).
+.PP
+For further details on managing the history log, refer to the relevant option and environment variable descriptions.
+.SH EXAMPLES: PWD NAVIGATION
 .TP
 .B up
 Jump to parent directory.
@@ -97,14 +170,24 @@ Jump to nearest directory ending with 'logs' (ignore case).
 .B up -eiv logs
 Equivalent to previous example but with verbose output.
 .TP
-.B up -j 50
-Jump to the 50th most recent path in history.
+.SH EXAMPLES: PATH HISTORY MANAGEMENT
+.B up -j 20
+Jump to the the 20th most recent path in history.
 .TP
 .B up -R 10min
 Open `fzf` for valid paths accessed in the last 10 minutes.
 .TP
-.B up -R 1h
-Open `fzf` for valid paths accessed in the last hour.
+.B up -R
+Open `fzf` for valid paths accessed in the last hour, default behavior with no argument.
+.TP
+.B up -R 2
+Open `fzf` for valid paths accessed in the two hours, default behavior with only integer argument.
+.TP
+.B up --clear
+Remove all history entries.
+.TP
+.B up -c 2d
+Remove history entries older than 2 days.
 .SH EDGE CASES
 If the directory name is an integer or matches an option, append \fB/\fR.
 
@@ -128,8 +211,38 @@ Standard tools used for processing history files and transforming text.
 .B bat, less, more, most
 Tools used for paginated outputs when viewing history listings, such as those generated by the \fB\-l\fR and \fB\-L\fR options. The tools are listed in order of preference.
 .TP
-.B ANSI-compatible terminal
-Recommended for styled output.
+.B ANSI-compatible terminal with Nerd Fonts
+Recommended for styled output and icon rendering of default `fzf` options, specifically for previews and headings.
+
+While most of the following terminal emulators have not been tested with these scripts, they are reportedly compatible with Nerd Fonts:
+.RS 10
+.IP \(bu 2
+\fBAlacritty\fR: A lightweight and fast terminal emulator that fully supports Nerd Fonts.
+.IP \(bu 2
+\fBGNOME Terminal\fR: The default terminal for GNOME, which can display Nerd Fonts with proper configuration.
+.IP \(bu 2
+\fBiTerm2\fR: A highly customizable terminal emulator for macOS, offering full Nerd Fonts support.
+.IP \(bu 2
+\fBKitty\fR: A GPU-accelerated terminal emulator with advanced support for Nerd Fonts.
+.IP \(bu 2
+\fBKonsole\fR: The default terminal emulator for KDE, supporting Nerd Fonts out of the box.
+.IP \(bu 2
+\fBWezTerm\fR: A modern terminal emulator with GPU acceleration and extensive font support.
+.IP \(bu 2
+\fBWindows Terminal\fR: A modern terminal emulator for Windows with complete Nerd Fonts compatibility.
+.RE
+.IP
+Note: The default Terminal application on macOS does not support Nerd Fonts. To use Nerd Fonts, consider installing one of the terminal emulators above. For more details on configuring Nerd Fonts, visit:
+.IP
+\fBhttps://www.nerdfonts.com\fR
+.SH TAB COMPLETION SETUP
+To enable tab completion for \fBup\fR, source the \fBup_completion.bash\fR script in your shell configuration file.
+
+Add the following line to your \fB.bashrc\fR or \fB.zshrc\fR file:
+.TP
+source /path/to/up_completion.bash
+.TP
+Reload your shell configuration by sourcing your shell configuration file, e.g., `source ~/.bashrc`, or relaunch terminal.
 .SH ENVIRONMENT VARIABLES
 .TP
 .B _UP_ALWAYS_VERBOSE
@@ -196,10 +309,59 @@ A wrapper function for up, focusing on path history navigation.
 .TP
 .B up_passthru
 A background helper function that captures directory changes triggered by commands like `cd`, `zoxide`, `jump`, etc.
+.IP
+To use this function, alias the desired commands:
+.IP
+alias cd='passthru cd' # cd support
+.br
+alias z='passthru z'   # zoxide support
+.IP
+Note: To skip history logging with `cd`, use the command:
+.IP
+builtin cd -- <path>
 .P
 To enable these functions, use:
 .TP
 \fBexport _UP_ENABLE_HIST=true\fR
+.TP
+History-related functions are not sourced when _UP_ENABLE_HIST is not exported.
+.SH TIPS AND TRICKS
+.TP
+.B Customize Default Behaviors
+.IP \(bu 2
+Use the \fB_UP_ENABLE_HIST\fR environment variable to enable or disable history logging.
+.IP \(bu 2
+Adjust the maximum history size with \fB_UP_HISTSIZE\fR to suit your usage needs (e.g., increase the limit for longer path histories).
+.IP \(bu 2
+By enabling \fB_UP_REGEX_DEFAULT\fR, ancestor directories are matched using regex patterns by default instead of exact names.
+
+.TP
+.B Combine Options for Flexibility
+.IP \(bu 2
+Combine \fB\-i\fR and \fB\-r\fR for case-insensitive regex searches (e.g., \fBup \-ir 'src$'\fR).
+.IP \(bu 2
+Use \fB\-e\fR or \fB\-s\fR with \fB\-x\fR to jump directly to directories based on specific patterns.
+
+.TP
+.B Create Aliases for Common Tasks
+.IP \(bu 2
+Speed up navigation by defining aliases in your shell configuration file. For example:
+.IP
+\fBalias u="up -ri"\fR # Jump to regex match, ignore case
+.br
+\fBalias freq="up -m"\fR # Open most frequent paths in `fzf`
+.br
+\fBalias recentdir="up -R 1d"\fR # List paths from the last day
+
+.TP
+.B Debug Directory Selection
+.IP \(bu 2
+Use the \fB\-v\fR option with any navigation command to print additional path information about the matching process.
+
+.TP
+.B Tab Completion
+.IP \(bu 2
+Enable tab completion for faster navigation. Source the provided \fBup_completion.bash\fR script in your shell configuration file (see TAB COMPLETION SETUP).
 .SH SEE ALSO
 \fBcd(1)\fR, \fBfzf(1)\fR, \fBeza(1)\fR, \fBstat(1)\fR, \fBtree(1)\fR
 
