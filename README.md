@@ -134,15 +134,17 @@ echo 'source ~/.local/share/shell/up/up_completion.bash' >> ~/.zshrc
 
 ### Man Page (Optional)
 
-Run the following script to install the optional man page for `up`:
+The man page for `up` provides detailed usage information that complements the `-h`/`--help` flags and this README. Installing it is optional but recommended for improved command-line documentation.
+
+To install the man page, run the following commands:
 
 ```sh
-cd ~/.config/shell/up/man # Or where you downloaded these scripts
-chmod +x install_up_man_page.bash # Ensure execution
-./install_up_man_page.bash
+cd ~/.config/shell/up/man         # Navigate to the directory where the scripts are located
+chmod +x install_up_man_page.bash # Ensure the script is executable
+./install_up_man_page.bash        # Run the installation script
 ```
 
-See if the man page is available with:
+After installation, verify that the man page is available by running:
 
 ```sh
 man up
@@ -232,7 +234,7 @@ $ pwd
 Example: To jump to the same location ignoring case:
 
 ```sh
-$ up -ri ssd
+$ up -i ssd
 $ pwd
 /Volumes/WD_SSD_1TB
 ```

@@ -19,6 +19,11 @@ Maybe I'll get around to learning POSIX-compliant scripting for portability late
 
 ## April 2025
 
+### __[2025-04-08]__
+
+* __Changes:__ Set `-i` / `--ignore-case` flag to use standard regex matching (`-r`) when not combined with other regex flags. It used to require explicit use of other regex flags.
+* __Documentation:__ More additions and refinements to man page.
+
 ### __[2025-04-07]__
 
 * __Documentation:__

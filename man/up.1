@@ -1,17 +1,17 @@
 .TH up 1 "April 8, 2025" "Version 1.0.0" "General Commands Manual"
 .SH NAME
-up — navigate ancestor directories and path histories: a companion to the builtin cd command
+up — navigate ancestor directories and path histories with ease: a versatile companion to the built-in cd command
 .SH SYNOPSIS
 .B up
-[\fIOPTIONS\fR] [\fIinteger|directory name/regex|$HOME\fR]
+[\fIOPTIONS\fR] [\fIindex|directory name/regex|$HOME\fR]
 .SH DESCRIPTION
-up is a shell script that takes the hassle out of navigating parent and ancestor directories.
+\fBup\fR is a shell script designed to simplify navigation through parent and ancestor directories.
 
-Jump multiple levels by index or directory name with autocomplete and regex support. Inspect and dive into directories interactively with the popular fuzzy finder fzf—and optionally track your path history for seamless recall.
+Easily jump multiple levels by index or directory name with autocomplete and regex support. Explore and interact with directories using the popular fuzzy finder \fBfzf\fR, and optionally track your path history in plain text for effortless recall.
 
-This tool is especially beneficial for terminal power users frequently navigating deep directory structures or switching between project paths.
+This tool is ideal for terminal power users who frequently navigate deep directory structures or switch between project paths.
 
-Compatible with Bash and Zsh.
+\fBup\fR is compatible with both \fBBash\fR and \fBZsh\fR.
 .SH OPTIONS
 .TP
 .B \-h, --help
@@ -21,38 +21,42 @@ Print help.
 Print additional information about directory changes.
 
 .P
-.SH PWD NAVIGATION OPTIONS
+.SS PWD NAVIGATION OPTIONS
 .TP
-.B \-e, --ends-with
-Jump to the nearest directory whose name matches a regex pattern that ends with \fI<string>\fR.
+.B \-e, --ends-with <regex>
+Jump to the nearest directory whose name matches a regex pattern that ends with \fI<regex>\fR.
 
 This option is equivalent to using \fB\-r\fR with a regex pattern that ends with \fB$\fR.
 .TP
 .B \-f, --fzf
 Open `fzf` to browse paths within the current working directory (PWD), provided `fzf` is installed and available.
 .TP
-.B \-i, --ignore-case
+.B \-i, --ignore-case <regex>
 Enable case-insensitive matching for regex navigation.
+
+By default, this option matches the specified regex pattern anywhere within ancestor directory names when not used in combination with other regex options.
 .TP
-.B \-r, --regex
+.B \-r, --regex <regex>
 Jump to the nearest directory that matches the specified regex pattern.
 
 Note: Regex behavior may differ slightly between \fBBash\fR and \fBZsh\fR due to variations in their respective regex engines. For consistent results, ensure your regex patterns are compatible with the shell you are using.
 .TP
-.B \-s, --starts-with
-Jump to the nearest directory whose name matches a regex pattern that starts with \fI<string>\fR.
+.B \-s, --starts-with <regex>
+Jump to the nearest directory whose name matches a regex pattern that starts with \fI<regex>\fR.
 
 This option is equivalent to using \fB\-r\fR with a regex pattern that begins with \fB^\fR.
 .TP
-.B \-x, --exact
-Jump to the nearest directory that exactly matches the specified \fI<string>\fR.
+.B \-x, --exact <ancestor directory name>
+Jump to the nearest directory that exactly matches the specified \fI<ancestor directory name>\fR.
 
 This is the default behavior when passing a string argument, provided \fB_UP_REGEX_DEFAULT\fR is not enabled. This option is particularly useful when regex matching is set as the default behavior, allowing you to override it for exact matches.
 .P
-.SH PATH HISTORY MANAGEMENT OPTIONS
+.SS PATH HISTORY MANAGEMENT OPTIONS
 .TP
 .B \-F, --fzf-hist
-Open `fzf` for all valid history entries, if available.
+Open `fzf` for all valid history entries, provided `fzf` is installed and available.
+
+Paths are listed by recency, with history entries pointing to missing locations automatically excluded.
 .TP
 .B \-H, --hist-status
 Display the current status of history logging.
@@ -60,45 +64,51 @@ Display the current status of history logging.
 This includes whether history logging is enabled, the location of the history log file, and the maximum size (number of entries) allowed by the log.
 .TP
 .B \-L, --list-freq
-List historic paths by frequency with pagination, descending order.
+List historic paths by frequency with pagination, descending order and frequency counts.
 .TP
-.B \-R, --fzf-recent
+.B \-R, --fzf-recent [timeframe abbrev.]
 Open `fzf` to display recent valid paths filtered by \fI<integer>(min|h|d|m)\fR.
 
 Supported time units:
+.RS 10
+- \fBmin\fR: minutes
 .br
-- min: minutes
+- \fBh\fR: hours
 .br
-- h: hours
+- \fBd\fR: days
 .br
-- d: days
-.br
-- m: months (approx. 30 days per month)
+- \fBm\fR: months (approximately 30 days per month)
+.RE
+.IP
+If no argument is provided, the default timeframe is '1h'. If only an integer is provided, the unit is assumed to be hours.
 
-If no argument is provided, defaults to '1h'. If only an integer is provided, it assumes the unit is hours.
+Paths are listed by recency within the specified timeframe, and history entries pointing to missing locations are automatically excluded.
 .TP
 .B \-S, --size
 Display the status of history logging, including a bar graph, percentage of usage, and the number of entries relative to the total capacity.
 
 The total capacity is determined by the \fB_UP_HISTSIZE\fR environment variable, which specifies the maximum number of entries that can be stored in the history log file.
 .TP
-.B \-c, --clear
+.B \-c, --clear [timeframe abbrev.]
 Clear history entries filtered by \fI<integer>(min|h|d|m)\fR.
 
 Supported time units:
+.RS 10
+- \fBmin\fR: minutes
 .br
-- min: minutes
+- \fBh\fR: hours
 .br
-- h: hours
+- \fBd\fR: days
 .br
-- d: days
-.br
-- m: months (approx. 30 days per month)
-
+- \fBm\fR: months (approximately 30 days per month)
+.RE
+.IP
 If no argument is provided, all history entries will be removed.
 .TP
-.B \-j, --jump-hist
-Jump to a path in history by its most recent index. Use this option in conjunction with \fB-l, --list-hist\fR for obtaining index values.
+.B \-j, --jump-hist <index>
+Jump to a path in history by its most recent index.
+
+Use \fB-l, --list-list\fR to list history entries and determine the index value for jumping.
 .TP
 .B \-l, --list-hist
 List the history of paths with index, human-readable timestamps, and pagination, ordered by recency.
@@ -115,7 +125,7 @@ The history log file is a plain text file that tracks recently accessed paths an
 .IP
 \fBYYYY-MM-DD HH:MM:SS /absolute/path/to/resource\fR
 .PP
-The purpose of history logging is to track recently accessed paths, enabling efficient navigation and recall of frequently or recently visited locations. This feature enhances usability by integrating `fzf` with options such as \fB\-R\fR (recent) and \fB\-m\fR (frequent) for quick access to relevant paths.
+The purpose of history logging is to track recently accessed paths, enabling efficient navigation and recall of frequently or recently visited locations.
 .PP
 .SS Why Plain Text?
 The primary benefits of using a plain text file is to prioritize simplicity, portability, and accessibility:
@@ -141,10 +151,12 @@ export _UP_ENABLE_HIST=true
 .IP \(bu 2
 \fB_UP_HISTSIZE\fR: Determines the maximum number of entries that can be stored in the log file. Once the limit is reached, the oldest entries are removed to make space for new ones. Defaults to 250 entries/lines.
 .SS Accessing History
-Users can clear or filter the log file using the \fB\-R\fR or \fB\-\-fzf-recent\fR option, as well as by specific timeframe arguments (e.g., '1h' for one hour or '15min' for 15 minutes).
+The history logging feature enhances usability by integrating `fzf` with options such as \fB\-R\fR (recent) and \fB\-m\fR (frequent) for quick access to relevant paths. Users can also specify timeframe arguments to filter history when clearing or visiting the most recent paths (e.g., '1h' for one hour or '15min' for 15 minutes).
 .PP
 For further details on managing the history log, refer to the relevant option and environment variable descriptions.
-.SH EXAMPLES: PWD NAVIGATION
+.SH EXAMPLES
+.TP
+.SS PWD NAVIGATION
 .TP
 .B up
 Jump to parent directory.
@@ -170,7 +182,8 @@ Jump to nearest directory ending with 'logs' (ignore case).
 .B up -eiv logs
 Equivalent to previous example but with verbose output.
 .TP
-.SH EXAMPLES: PATH HISTORY MANAGEMENT
+.SS PATH HISTORY MANAGEMENT
+.TP
 .B up -j 20
 Jump to the the 20th most recent path in history.
 .TP
@@ -188,7 +201,7 @@ Remove all history entries.
 .TP
 .B up -c 2d
 Remove history entries older than 2 days.
-.SH EDGE CASES
+.SS EDGE CASES
 If the directory name is an integer or matches an option, append \fB/\fR.
 
 For example:
@@ -245,27 +258,87 @@ source /path/to/up_completion.bash
 Reload your shell configuration by sourcing your shell configuration file, e.g., `source ~/.bashrc`, or relaunch terminal.
 .SH ENVIRONMENT VARIABLES
 .TP
+Place environment variables within .bashrc, .zshrc, or .zshenv.
+.TP
 .B _UP_ALWAYS_VERBOSE
-Always print change directory information (Default: false).
+Controls whether directory change information is always printed (Default: \fIfalse\fR).
 
-To enable persistent verbose output, use: export _UP_ALWAYS_VERBOSE=true
+To enable persistent verbose output, add the following to your shell configuration file:
+.IP
+export _UP_ALWAYS_VERBOSE=true
+.TP
+.SS PWD ENVIRONMENT VARIABLES
 .TP
 .B _UP_ALWAYS_IGNORE_CASE
-Enable case-insensitive regex by default (Default: false).
+Enables case-insensitive regex matching by default (Default: \fIfalse\fR).
 
-To enable, use: export _UP_ALWAYS_IGNORE_CASE=true
-.TP
-.SH PWD ENVIRONMENT VARIABLES
+To enable this feature, add the following to your shell configuration file:
+.IP
+export _UP_ALWAYS_IGNORE_CASE=true
 .TP
 .B _UP_FZF_PWDOPTS
-Set `fzf` options for current working directory (as an array).
+Configure `fzf` options specifically for the current working directory. This environment variable, defined as an array, is utilized by the \fB-f, --fzf\fR option.
+
+FZF_PWDOPTS_DEFAULT=(
+.RS 10
+--height=50%
+.br
+--layout=reverse
+.br
+--prompt=" Path: "
+.br
+--header="󰌑 cd   ^P"
+.br
+--preview="tree -C {}"
+.br
+--bind="ctrl-l:change-preview(ls --color=always -lAh {})"
+.br
+--bind="ctrl-t:change-preview(tree -C {})"
+.br
+--bind="ctrl-i:change-preview(echo '\`stat\`'; stat {})"
+.br
+--bind="ctrl-p:toggle-preview"
+.br
+--bind="ctrl-j:preview-page-down,ctrl-k:preview-page-up"
+.br
+--preview-window=70%,border-double,top
+.br
+--preview-label="[ 󰈍 ^L   ^T   ^I   ^J   ^K ]")
+.RE
+.IP
+You can customize these options by defining the \fB_UP_FZF_PWDOPTS\fR array. For example:
+.IP
+_UP_FZF_PWDOPTS=(
+.RS 10
+--height=50%
+.br
+--layout=reverse
+.br
+--prompt="Navigate > "
+.br
+--preview="tree -C {}"
+.br
+--header="󰌑 Current Directory Navigation |  Use Arrow Keys  Ctrl-L (List Details)  Ctrl-T (Tree View)"
+.br
+--bind="ctrl-l:change-preview(ls --color=always -lAh {})"
+.br
+--bind="ctrl-t:change-preview(tree -C {})"
+.br
+--bind="ctrl-p:toggle-preview"
+.br
+--color="header:bright-blue,pointer:bright-magenta,preview-bg:-1")
+.RE
+.IP
+Export the variable to make the changes effective:
+.IP
+export _UP_FZF_PWDOPTS
 .TP
 .B _UP_REGEX_DEFAULT
 Use regex as default instead of exact matches (Default: false).
 
 To enable regex searches for ancestor directory names, use: export _UP_REGEX_DEFAULT=true
 .TP
-.SH PATH HISTORY ENVIRONMENT VARIABLES
+.SS PATH HISTORY ENVIRONMENT VARIABLES
 .TP
 .B _UP_ENABLE_HIST
 Enable history file (Default: false).
@@ -273,7 +346,68 @@ Enable history file (Default: false).
 To enable history logging, use: export _UP_ENABLE_HIST=true
 .TP
 .B _UP_FZF_HISTOPTS
-Set `fzf` options for history (as an array).
+Configure `fzf` options specifically for history entries. This environment variable, defined as an array, is utilized by the \fB-F, --fzf-hist\fR and \fB-m, --fzf-freq\fR options.
+
+When `eza` in not available, the default options are defined as:
+
+FZF_HISTOPTS_DEFAULT=(
+.RS 10
+--height=50%
+.br
+--layout=reverse
+.br
+--prompt="󰜊 Path: "
+.br
+--header="󰌑 cd   ^P   Missing Paths Omitted"
+.br
+--preview-window=hidden
+.br
+--preview="tree -C {}"
+.br
+--bind="ctrl-l:change-preview(ls --color=always -lAh {})"
+.br
+--bind="ctrl-t:change-preview(tree -C {})"
+.br
+--bind="ctrl-i:change-preview(echo '\`stat\`'; stat {})"
+.br
+--bind="ctrl-p:toggle-preview"
+.br
+--bind="ctrl-j:preview-page-down,ctrl-k:preview-page-up"
+.br
+--preview-window=70%,border-double,top
+.br
+--preview-label="[ 󰈍 ^L   ^T   ^I   ^J   ^K ]")
+.RE
+.IP
+You can customize these options by defining the \fB_UP_FZF_HISTOPTS\fR array. For example:
+
+_UP_FZF_HISTOPTS=(
+)
+export _UP_FZF_HISTOPTS
+_UP_FZF_HISTOPTS=(
+.RS 10
+--height=40%
+.br
+--layout=reverse
+.br
+--header="󰌑 History Navigation |  Ctrl-N (New Paths)  Ctrl-F (Frequent)  Ctrl-P (Preview)"
+.br
+--prompt=" History > "
+.br
+--preview-window=70%,wrap,border-rounded
+.br
+--preview="ls --color=always -lhA {}"
+.br
+--bind="ctrl-p:toggle-preview"
+.br
+--bind="ctrl-n:reload(up -R),ctrl-f:reload(up -m)"
+.br
+--color="header:bright-blue,pointer:bright-magenta")
+.RE
+.IP
+Export the variable to make the changes effective:
+
+export _UP_FZF_HISTOPTS
 .TP
 .B _UP_HISTFILE
 Path to the history file (Default: $HOME/.cache/up_history.log).
@@ -281,7 +415,7 @@ Path to the history file (Default: $HOME/.cache/up_history.log).
 .B _UP_HISTSIZE
 Maximum number of history entries (Default: 250)
 .TP
-.SH OUTPUT ENVIRONMENT VARIABLES
+.SS OUTPUT ENVIRONMENT VARIABLES
 .TP
 .B _UP_DIR_CHANGE_STYLE
 Set ANSI styling for the number of directories jumped.

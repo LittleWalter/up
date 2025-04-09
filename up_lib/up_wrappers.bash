@@ -84,7 +84,7 @@ track global path history.
 EOF
 	up::print_help_label "USAGE"
 	cat <<EOF
-ph <FLAGS> [jump index]
+ph <FLAGS> [index|timeframe abbrev.]
 EOF
 	up::print_help_label "FLAGS"
 	cat <<EOF

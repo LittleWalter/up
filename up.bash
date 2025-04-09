@@ -59,7 +59,7 @@ your workflow—ditch tedious \`cd ..\` commands! Compatible with Bash and Zsh.
 EOF
 	up::print_help_label "USAGE"
 	cat <<EOF
-  up <FLAGS> [integer|directory name/regex|\$HOME]
+  up <FLAGS> [index|directory name/regex|\$HOME]
 EOF
 	up::print_help_label "FLAGS"
 	cat <<EOF
@@ -69,7 +69,7 @@ EOF
     PWD Navigation:
       -e, --ends-with    Jump to nearest directory regex that ends with <string>
       -f, --fzf          Open \`fzf\` for paths of PWD, if available
-      -i, --ignore-case  Enable case-insensitive matching for regex navigation
+      -i, --ignore-case  Case-insensitive regex matching <string>
       -r, --regex        Jump to nearest directory regex matching <string>
       -s, --starts-with  Jump to nearest directory regex that starts with <string>
       -x, --exact        Jump to the nearest directory matching <string> exactly
@@ -629,6 +629,8 @@ up() {
 					;;
 				-i|--ignore-case)
 					ignore_case=true
+					# Default to regular regex matches when not combined w/ -s, -e flags
+					match_mode=MATCH_REGEX
 					shift
 					change_dir_arg="${1:-1}"
 					;;
@@ -715,6 +717,8 @@ up() {
 								;;
 							i)
 								ignore_case=true
+								# Default to regular regex matches when not combined w/ -s, -e flags
+								match_mode=MATCH_REGEX
 								;;
 							*)
 								up::print_msg "unknown flag: ${ERR_STYLE}-$char${RESET}"
