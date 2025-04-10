@@ -19,6 +19,16 @@ Maybe I'll get around to learning POSIX-compliant scripting for portability late
 
 ## April 2025
 
+### __[2025-04-09]__
+
+* __Fixes:__ Updated all instances of `cd` in `up.bash` and `up_lib/up_history.bash` to use `cd --`, ensuring compatibility with directory names that begin with a hyphen (e.g., `-exampleDir`). This change is now documented under the EDGE CASES subsection within the EXAMPLES section of the man page.
+* __Features:__ Introduced support for a centralized configuration file to define environment variables in one location.
+    - `_UP_CONFIG_FILE`: A new environment variable allowing users to specify a custom path to the configuration file (default: `~/.config/up/up_settings.conf`).
+    - To avoid external parsers such as `tomlq`, the configuration file format defines environment variables using simple key-value pairs, such as:
+      ```bash
+      _UP_ENVIRONMENT_VARIABLE_NAME=value
+      ```
+
 ### __[2025-04-08]__
 
 * __Changes:__ Set `-i` / `--ignore-case` flag to use standard regex matching (`-r`) when not combined with other regex flags. It used to require explicit use of other regex flags.

@@ -70,7 +70,8 @@ up_passthru() {
 		"$main_command" "${@}" # Change to specified directory
 	fi
 
-	return "$(up::validate_and_log_history "$prejump_path")"
+	up::validate_and_log_history "$prejump_path"
+	return "$?"
 }
 
 # Display help information for `ph` function
@@ -90,7 +91,7 @@ EOF
 	cat <<EOF
   -H, --hist-status  Display the status of history logging
   -L, --list-freq    List historic paths by frequency w/ pagination, descending
-	-c, --clear        Clear all history entries or filtered by <integer>(min|h|d|m)
+  -c, --clear        Clear all history entries or filtered by <integer>(min|h|d|m)
   -f, --fzf          Open \`fzf\` for all valid history entries, if available
   -h, --help         Print help
   -j, --jump         Jump to a path in history by its most recent index

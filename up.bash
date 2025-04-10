@@ -31,7 +31,7 @@ LIBRARY_PATH="$UP_ABS_PATH/up_lib"
 source "$LIBRARY_PATH/up_utils.bash" # Load misc helper functions first
 source "$LIBRARY_PATH/up_environment_vars.bash" # Constant definitions
 
-if [[ "$HIST_ENABLED" == true ]]; then # Don't pollute config w/ useless functions
+if [[ "$HIST_ENABLED" == true ]]; then # Don't pollute shell config w/ unused functions
 	source "$LIBRARY_PATH/up_history.bash" # Path history logging
 	source "$LIBRARY_PATH/up_wrappers.bash" # `ph` and `up_passthru`
 fi
@@ -80,7 +80,7 @@ EOF
       -L, --list-freq    List historic paths by frequency w/ pagination, descending
       -R, --fzf-recent   Open \`fzf\` for recent valid paths by <integer>(min|h|d|m)
       -S, --size         Display the current history size
-			-c, --clear        Clear all history entries or filtered by <integer>(min|h|d|m)
+      -c, --clear        Clear all history entries or filtered by <integer>(min|h|d|m)
       -j, --jump-hist    Jump to a path in history by its most recent index
       -l, --list-hist    List the history of paths w/ pagination, ordered by recency
       -m, --fzf-freq     Open \`fzf\` for the most frequently visited historic paths
@@ -88,18 +88,18 @@ EOF
 EOF
 	up::print_help_label "EXAMPLES"
 	cat <<EOF
-  up              Jump to parent directory
-  up 2            Jump two levels up in the directory tree
-  up ~            Go to HOME path regardless of PWD
-  up -            Go to previous path (OLDPWD)
-  up <tab>        Display completion list of ancestor directories
-  up -r src       Jump to nearest directory matching 'src' (regex)
-  up -ir 'logs$'  Jump to nearest directory ending with 'logs' (ignore case)
-  up -eiv logs    Equivalent to previous example but with verbose output
-  up -R 10min     Open \`fzf\` for valid paths accessed in the last 10 minutes
-  up -R 1h        Open \`fzf\` for valid paths accessed in the last hour
-  up --clear      Clear all history entries
-  up -c 2d        Clear all history entries older than 2 days
+  up             Jump to parent directory
+  up 2           Jump two levels up in the directory tree
+  up ~           Go to HOME path regardless of PWD
+  up -           Go to previous path (OLDPWD)
+  up <tab>       Display completion list of ancestor directories
+  up -r src      Jump to nearest directory matching 'src' (regex)
+  up -i 'logs$'  Jump to nearest directory ending with 'logs' (ignore case)
+  up -eiv logs   Equivalent to previous example but with verbose output
+  up -R 10min    Open \`fzf\` for valid paths accessed in the last 10 minutes
+  up -R 1h       Open \`fzf\` for valid paths accessed in the last hour
+  up --clear     Clear all history entries
+  up -c 2d       Clear all history entries older than 2 days
 EOF
 	up::print_help_label "EDGE CASES"
 	cat <<EOF
@@ -110,6 +110,8 @@ EOF
 	up::print_help_label "ENVIRONMENT VARIABLES"
 	cat <<EOF
   _UP_ALWAYS_VERBOSE  Always print change directory information (Default: false)
+  _UP_CONFIG_FILE     Path to the \`up\` configuration file
+                      (Default: $HOME/.config/up/up_settings.conf)
 
   PWD Navigation:
     _UP_ALWAYS_IGNORE_CASE  Enable case-insensitive regex by default (Default: false)
@@ -258,7 +260,7 @@ up::cd_by_int() {
 	local -r dir_pluralized=$(up::pluralize_dir "$jump_index")
 
 	# Attempt to change directory
-	if ! cd "$dotted_path"; then # perform `cd`; show error if `cd` fails
+	if ! cd -- "$dotted_path"; then # perform `cd`; show error if `cd` fails
 		up::print_msg "couldn't go up ${ERR_STYLE}$jump_index $dir_pluralized${RESET}..."
 		return "$ERR_ACCESS"
 	fi
@@ -294,7 +296,7 @@ up::cd_by_dir_exact() {
 	fi
 
 	# Attempt to change to the directory
-	if ! cd "${PWD%"${PWD##*/"$dir_name"/}"}"; then
+	if ! cd -- "${PWD%"${PWD##*/"$dir_name"/}"}"; then
 		up::print_msg "failed to navigate to directory: ${ERR_STYLE}'$dir_name'${RESET}"
 		return "$ERR_ACCESS"
 	elif [[ "$HIST_ENABLED" == true ]]; then
@@ -367,7 +369,7 @@ up::cd_by_dir_regex() {
 				local target_path=$(printf "/%s" "${basenames[@]:0:$i}")
 			fi
 
-			if cd "$target_path"; then
+			if cd -- "$target_path"; then
 				# Verbose mode output on successful directory change
 				if [[ "$verbose_mode" == true ]]; then
 					local dir_string=$(up::get_dirs_changed_string)
@@ -404,7 +406,7 @@ up::cd_by_dir_name() {
 			up::print_msg "already on the root..."
 			return "$ERR_NO_CHANGE"
 		fi
-		if ! cd "/"; then
+		if ! cd -- "/"; then
 			up::print_msg "failed to navigate to root"
 			return "$ERR_ACCESS"
 		elif [[ "$HIST_ENABLED" == true ]]; then
@@ -425,7 +427,7 @@ up::cd_by_dir_name() {
 			up::print_msg "already in the HOME directory"
 			return "$ERR_NO_CHANGE"
 		fi
-		if ! cd "$HOME"; then
+		if ! cd -- "$HOME"; then
 			up::print_msg "failed to navigate to HOME: ${ERR_STYLE}$HOME${RESET}"
 			return "$ERR_ACCESS"
 		elif [[ "$HIST_ENABLED" == true ]]; then
@@ -494,7 +496,7 @@ up::filter_ancestors_with_fzf() {
 	if [[ -d "$selected_path" ]]; then
 		local -r prejump_path="$PWD"
 		if [[ "$selected_path" != "$prejump_path" ]]; then
-			if cd "$selected_path" && [[ "$verbose_mode" == true ]]; then
+			if cd -- "$selected_path" && [[ "$verbose_mode" == true ]]; then
 				local -r dir_string=$(up::get_dirs_changed_string)
 				local -r msg="fzf: jumped ${DIR_CHANGE_STYLE}$dir_string${RESET}"
 				up::print_verbose VERBOSE_DEFAULT "$prejump_path" "$msg"

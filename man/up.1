@@ -176,7 +176,7 @@ Display completion list of ancestor directories.
 .B up -r src
 Jump to nearest directory matching 'src' (regex).
 .TP
-.B up -ir 'logs$'
+.B up -i 'logs$'
 Jump to nearest directory ending with 'logs' (ignore case).
 .TP
 .B up -eiv logs
@@ -202,13 +202,13 @@ Remove all history entries.
 .B up -c 2d
 Remove history entries older than 2 days.
 .SS EDGE CASES
-If the directory name is an integer or matches an option, append \fB/\fR.
-
-For example:
+When a directory name is an integer or matches a command option, append a trailing \fB/\fR to avoid ambiguity.
 .TP
-To jump to a directory named \fB0\fR, use \fBup 0/\fR.
+To navigate to a directory named \fB0\fR, use \fBup 0/\fR.
 .TP
-To jump to directories named \fB\-h\fR or \fB--help\fR, use \fB\-h/\fR or \fB--help/\fR.
+For directories named \fB\-h\fR or \fB\-\-help\fR, use \fBup \-h/\fR or \fBup \-\-help/\fR.
+.TP
+Directories that begin with a hyphen, such as \fB\-exampleDir\fR, are fully supported. This is because all instances of \fBcd\fR within the script use the form \fBcd -- <path>\fR, ensuring compatibility with such names.
 .SH DEPENDENCIES
 .TP
 .B eza, fzf, ls, stat, tree
@@ -218,7 +218,7 @@ If `eza` is not available, `ls` and `tree` are the default tools utilized by `fz
 
 The uutils coreutils (`ustat`) and GNU coreutils (`gstat`) versions of `stat` are preferred over BSD variants for readability.
 .TP
-.B awk, perl, sed, sort, tac, tr, uniq
+.B awk, cut, perl, sed, sort, tac, tr, uniq
 Standard tools used for processing history files and transforming text.
 .TP
 .B bat, less, more, most
@@ -264,8 +264,61 @@ Place environment variables within .bashrc, .zshrc, or .zshenv.
 Controls whether directory change information is always printed (Default: \fIfalse\fR).
 
 To enable persistent verbose output, add the following to your shell configuration file:
-.IP
+ 
 export _UP_ALWAYS_VERBOSE=true
+.TP
+.B _UP_CONFIG_FILE
+The path to the optional \fBup\fR configuration file, designed to reduce clutter in your shell configuration.
+
+Default location: \fB$HOME/.config/up/up_settings.conf\fR
+
+To simplify usage and eliminate the need for external parsers, the configuration file adopts a straightforward key-value format:
+
+\fB_UP_ENVIRONMENT_VARIABLE_NAME=value\fR
+
+For example,
+
+.nf
+# General Settings
+_UP_ALWAYS_VERBOSE=false
+
+# PWD Settings
+_UP_ALWAYS_IGNORE_CASE=false
+_UP_REGEX_DEFAULT=false
+
+# History Settings
+_UP_ENABLE_HIST=true
+_UP_HISTFILE=~/.cache/up/up_history.log
+_UP_HISTSIZE=1000
+_UP_FZF_HISTOPTS=(
+	--height=50%
+	--layout=reverse
+	--prompt="󰜊 Path: "
+	--header="󰌑 cd   ^P  󰮉^D   Missing Paths Omitted"
+	--preview="eza --color=always --icons --tree {}"
+	--bind="ctrl-p:toggle-preview"
+	--bind="ctrl-l:change-preview(eza --color=always --icons -laah {})"
+	--bind="ctrl-i:change-preview(echo '\`stat\` Information:'; ustat {})"
+	--bind="ctrl-t:change-preview(eza --color=always --icons --tree {})"
+	--bind="ctrl-d:execute(rmd -l {})" # Run custom `rm -rf` script
+	--preview-window=hidden
+	--bind="ctrl-j:preview-page-down,ctrl-k:preview-page-up"
+	--preview-window=70%,border-double,top
+	--preview-label="[ 󰈍 ^L   ^T   ^I   ^J   ^K ]"
+	--color="header:bright-blue,pointer:bright-magenta"
+)
+
+# Style Settings: Catppuccin Mocha theme
+_UP_NO_STYLES=false
+_UP_DIR_CHANGE_STYLE="\\033[38;2;249;226;175m"
+_UP_ERR_STYLE="\\033[48;2;243;160;168m\\033[38;2;30;30;46m"
+_UP_PWD_STYLE="\\033[38;2;166;227;161m"
+_UP_OLDPWD_STYLE="\\033[38;2;88;91;112m"
+_UP_REGEX_STYLE="\\033[38;2;116;199;236m"
+.fi
+
+Note: Environment variables explicitly defined in your shell configuration take precedence over values in the configuration file. If a variable is not defined in your shell configuration, the value from the configuration file is used. If neither is set, a sensible default is applied (refer to specific variables for default values).
+
 .TP
 .SS PWD ENVIRONMENT VARIABLES
 .TP
@@ -439,7 +492,11 @@ Set ANSI styling for regex patterns.
 .SH RELATED COMMANDS
 .TP
 .B ph
-A wrapper function for up, focusing on path history navigation.
+A wrapper function for \fBup\fR, designed specifically for navigating path history.
+
+This function provides a more intuitive interface than using \fBup\fR directly, enabling efficient directory jumps by leveraging global path tracking with \fBup_passthru\fR.
+
+For detailed usage information, see \fBph --help\fR.
 .TP
 .B up_passthru
 A background helper function that captures directory changes triggered by commands like `cd`, `zoxide`, `jump`, etc.
@@ -472,7 +529,7 @@ By enabling \fB_UP_REGEX_DEFAULT\fR, ancestor directories are matched using rege
 .TP
 .B Combine Options for Flexibility
 .IP \(bu 2
-Combine \fB\-i\fR and \fB\-r\fR for case-insensitive regex searches (e.g., \fBup \-ir 'src$'\fR).
+Combine \fB\-i\fR and \fB\-e\fR for case-insensitive regex searches (e.g., \fBup \-ie 'src'\fR).
 .IP \(bu 2
 Use \fB\-e\fR or \fB\-s\fR with \fB\-x\fR to jump directly to directories based on specific patterns.
 
@@ -481,11 +538,11 @@ Use \fB\-e\fR or \fB\-s\fR with \fB\-x\fR to jump directly to directories based 
 .IP \(bu 2
 Speed up navigation by defining aliases in your shell configuration file. For example:
 .IP
-\fBalias u="up -ri"\fR # Jump to regex match, ignore case
+\fBalias u="up -i"\fR             # Jump to regex match, ignore case
 .br
-\fBalias freq="up -m"\fR # Open most frequent paths in `fzf`
+\fBalias freq="up -m"\fR          # Open most frequent paths in `fzf`
 .br
-\fBalias recentdir="up -R 1d"\fR # List paths from the last day
+\fBalias recentdirs="up -R 1d"\fR # List paths from the last day
 
 .TP
 .B Debug Directory Selection

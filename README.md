@@ -25,6 +25,7 @@ Kiss tedious `cd ..` chains goodbye!
     - [Bash](#bash)
     - [Zsh](#zsh)
     - [Man Page (Optional)](#man-page-optional)
+- [Configuration](#-configuration)
 - [Usage](#-usage)
     - [Jump by Index](#jump-by-index)
     - [Jump to a Directory Name](#jump-to-a-directory-name)
@@ -165,6 +166,78 @@ export XDG_CONFIG_HOME="$HOME/.config" # Configuration files
 export XDG_DATA_HOME="$HOME/.local/share" # Persistent data storage
 export XDG_CACHE_HOME="$HOME/.cache" # Non-essential files such as shell command history, log files, etc.
 ```
+
+---
+
+## 🛠️ Configuration
+
+`up` offers two straightforward methods to configure environment variables: directly in your shell configuration or through an optional configuration file.
+
+For a complete list of available environment variables and their default values, refer to `up --help` or consult the optional man page.
+
+### **Option 1:** Add to Your Shell Configuration
+
+Define environment variables directly in your shell configuration file (`.bashrc`, `.zshrc`, or `.zshenv`). This approach integrates seamlessly into your existing shell setup:
+
+```bash
+export _UP_HISTFILE=$HOME/.cache/up/up_history.log
+export _UP_HISTSIZE=1000
+export _UP_ALWAYS_VERBOSE=true
+...
+```
+
+### **Option 2:** Specify a Configuration File
+
+You can centralize your environment variable definitions in a dedicated configuration file. By default, `up` looks for `~/.config/up/up_settings.conf`. To use a custom path, set the `_UP_CONFIG_FILE environment` variable:
+
+```bash
+export _UP_CONFIG_FILE=$HOME/.config/up/my_custom_config.conf
+```
+
+#### Configuration File Format
+
+The configuration file uses simple key-value pairs to define environment variables:
+
+```sh
+# Genenal Settings
+_UP_ALWAYS_VERBOSE=false
+
+# PWD Settings
+_UP_ALWAYS_IGNORE_CASE=false
+_UP_REGEX_DEFAULT=false
+
+# History Settings
+_UP_ENABLE_HIST=true
+_UP_HISTFILE=$XDG_CACHE_HOME/up/up_history.log
+_UP_HISTSIZE=1000
+_UP_FZF_HISTOPTS=(
+  --height=50%
+  --layout=reverse
+  --prompt="󰜊 Path: "
+  --header="󰌑 cd   ^P  󰮉^D   Missing Paths Omitted"
+  --preview="eza --color=always --icons --tree {}"
+  --bind="ctrl-p:toggle-preview"
+  --bind="ctrl-l:change-preview(eza --color=always --icons -laah {})"
+  --bind="ctrl-i:change-preview(echo '\`stat\` Information:'; ustat {})"
+  --bind="ctrl-t:change-preview(eza --color=always --icons --tree {})"
+  --bind="ctrl-d:execute(rmd -l {})" # Run custom `rm -rf` script
+  --preview-window=hidden
+  --bind="ctrl-j:preview-page-down,ctrl-k:preview-page-up"
+  --preview-window=70%,border-double,top
+  --preview-label="[ 󰈍 ^L   ^T   ^I   ^J   ^K ]"
+  --color="header:bright-blue,pointer:bright-magenta"
+)
+
+# Style Settings: Catppuccin Mocha theme
+_UP_NO_STYLES=false
+_UP_DIR_CHANGE_STYLE="\033[38;2;249;226;175m"
+_UP_ERR_STYLE="\033[48;2;243;160;168m\033[38;2;30;30;46m"
+_UP_PWD_STYLE="\033[38;2;166;227;161m"
+_UP_OLDPWD_STYLE="\033[38;2;88;91;112m"
+_UP_REGEX_STYLE="\033[38;2;116;199;236m"
+```
+
+Environment variables are expanded automatically (e.g., `$HOME` becomes `/home/user`). Variables defined in the shell configuration file take precedence over those in the configuration file, ensuring flexibility.
 
 ---
 

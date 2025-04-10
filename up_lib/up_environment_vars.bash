@@ -4,6 +4,38 @@
 # Constant definitions used by `up` including those defined by
 # environment variables, plus related helper functions.
 
+### Non-environment variable named constants: avoid magic values in logic #######
+
+VERSION="1.0.0"
+
+EXIT_SUCCESS=0
+EXIT_FAILURE=1
+
+# Error exit code constants
+ERR_BAD_ARG=2     # invalid argument passed
+ERR_ACCESS=127    # inaccessible directory or `cd` or other command
+ERR_NO_CHANGE=3   # no directory change
+
+# Verbose mode constants
+VERBOSE_TWO_LINES=2
+VERBOSE_DEFAULT=3
+
+# Match type constants: for named dirs
+MATCH_EXACT=1
+MATCH_REGEX=2
+MATCH_START=3
+MATCH_END=4
+
+# Flag processing constants for non-default behavior (0 or 1 args)
+FLAG_DEFAULT=0
+HIST_JUMP=1
+HIST_FZF=2
+RECENT_HIST_FZF=3
+PWD_FZF=4
+MOST_FREQ_FZF=5
+
+### Helpers for loading constants ###############################################
+
 # Assign empty string to all styling constants
 up::reset_styling() {
 	BOLD=""
@@ -79,10 +111,61 @@ up::initialize_fzf_options() {
 	FZF_PWDOPTS=("${_UP_FZF_PWDOPTS[@]:-${FZF_PWDOPTS_DEFAULT[@]}}")
 }
 
-VERSION="1.0.0"
+# Process key-value pairs in configuration file, if the file exists
+up::load_config_file() {
+	local -r config_file="${_UP_CONFIG_FILE:-${XDG_CONFIG_HOME:-$HOME/.config}/up/up_settings.conf}"
 
-EXIT_SUCCESS=0
-EXIT_FAILURE=1
+	if [ -f "$config_file" ]; then
+		declare -a current_array=()
+		inside_array=false
+
+		while IFS= read -r line || [ -n "$line" ]; do
+			# Skip empty lines and comments
+			if [ -z "$line" ] || [ "${line:0:1}" = "#" ]; then
+				continue
+			fi
+
+			# Detect the start of a multiline array
+			# NOTE: Use `command grep`, in the event grep is aliased to ripgrep (`rg`)
+			if echo "$line" | command grep -qE '^[a-zA-Z_][a-zA-Z0-9_]*=\($'; then
+				var_name=$(echo "$line" | cut -d'=' -f1)
+				current_array=()
+				inside_array=true
+				continue
+			fi
+
+			# Detect the end of the multiline array
+			if [ "$inside_array" = true ] && echo "$line" | command grep -qE '^\)$'; then
+				inside_array=false
+				eval "$var_name=(\"\${current_array[@]}\")" # Export array as variable
+				unset current_array
+				continue
+			fi
+
+			# Accumulate array elements
+			if [ "$inside_array" = true ]; then
+				current_array+=("$(eval echo "$line")") # Expand variables if needed
+				continue
+			fi
+
+			# Process regular key-value pairs
+			var_name=$(echo "$line" | cut -d'=' -f1)
+			var_value=$(echo "$line" | cut -d'=' -f2-)
+			if [[ "$var_value" == ~* ]]; then
+				var_value="${var_value/#\~/$HOME}" # Expand ~ to $HOME
+			fi
+			var_value=$(eval echo "$var_value") # Expand environment variables
+			eval current_value="\$$var_name"
+			if [ -z "$current_value" ]; then
+				export "$var_name"="$var_value"
+			fi
+		done < "$config_file"
+	fi
+}
+
+### Environment variable loading ################################################
+
+up::load_config_file # Load config settings first
 
 LOG_FILE="${_UP_HISTFILE:-${XDG_CACHE_HOME:-$HOME/.cache}/up_history.log}"
 
@@ -115,26 +198,3 @@ else
 	REGEX_STYLE="${_UP_REGEX_STYLE:-${CYAN:-\033[0;36m}}"
 	RESET="\033[0m"
 fi
-
-# Error exit code constants
-ERR_BAD_ARG=2     # invalid argument passed
-ERR_ACCESS=127    # inaccessible directory or `cd` or other command
-ERR_NO_CHANGE=3   # no directory change
-
-# Verbose mode constants
-VERBOSE_TWO_LINES=2
-VERBOSE_DEFAULT=3
-
-# Match type constants: for named dirs
-MATCH_EXACT=1
-MATCH_REGEX=2
-MATCH_START=3
-MATCH_END=4
-
-# Flag processing constants for non-default behavior (0 or 1 args)
-FLAG_DEFAULT=0
-HIST_JUMP=1
-HIST_FZF=2
-RECENT_HIST_FZF=3
-PWD_FZF=4
-MOST_FREQ_FZF=5
