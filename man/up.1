@@ -218,7 +218,7 @@ If `eza` is not available, `ls` and `tree` are the default tools utilized by `fz
 
 The uutils coreutils (`ustat`) and GNU coreutils (`gstat`) versions of `stat` are preferred over BSD variants for readability.
 .TP
-.B awk, cut, perl, sed, sort, tac, tr, uniq
+.B awk, cut, grep, perl, sed, sort, tac, tr, uniq
 Standard tools used for processing history files and transforming text.
 .TP
 .B bat, less, more, most
@@ -279,16 +279,39 @@ To simplify usage and eliminate the need for external parsers, the configuration
 For example,
 
 .nf
-# General Settings
+# ╻ ╻┏━┓   ┏━┓┏━╸╺┳╸╺┳╸╻┏┓╻┏━╸┏━┓ ┏━╸┏━┓┏┓╻┏━╸
+# ┃ ┃┣━┛   ┗━┓┣╸  ┃  ┃ ┃┃┗┫┃╺┓┗━┓ ┃  ┃ ┃┃┗┫┣╸
+# ┗━┛╹  ╺━╸┗━┛┗━╸ ╹  ╹ ╹╹ ╹┗━┛┗━┛╹┗━╸┗━┛╹ ╹╹
+# REF: `man up` or `up --help` for info on environent variables
+
+# Genenal Settings
 _UP_ALWAYS_VERBOSE=false
 
 # PWD Settings
 _UP_ALWAYS_IGNORE_CASE=false
 _UP_REGEX_DEFAULT=false
+_UP_FZF_PWDOPTS=(
+	--height=50%
+	--layout=reverse
+	--prompt=" Path: "
+	--header="󰌑 cd   ^P"
+	--preview="eza --color=always --icons --tree {}"
+	--bind="ctrl-p:toggle-preview"
+	--bind="ctrl-l:change-preview(eza --color=always --icons -laah {})"
+	--bind="ctrl-i:change-preview(echo '\`stat\`:'; ustat {})"
+	--bind="ctrl-t:change-preview(eza --color=always --icons --tree {})"
+	--bind="ctrl-j:preview-page-down,ctrl-k:preview-page-up"
+	--preview-window=70%,border-double,top
+	--preview-label="[ 󰈍 ^L   ^T   ^I   ^J   ^K ]"
+	# Catppuccin Mocha theme
+	--color="fg:#c6aad9,hl:#f5a97f"
+	--color="fg+:#f4dbd6,bg+:#272935,hl+:#94e2d5"
+	--color="info:#a6da95,prompt:#c6a0f6,pointer:#e28b83,marker:#94e2d5,spinner:#f5a97f,header:#e5c890"
+)
 
 # History Settings
 _UP_ENABLE_HIST=true
-_UP_HISTFILE=~/.cache/up/up_history.log
+_UP_HISTFILE=$XDG_CACHE_HOME/up_history.log
 _UP_HISTSIZE=1000
 _UP_FZF_HISTOPTS=(
 	--height=50%
@@ -298,23 +321,26 @@ _UP_FZF_HISTOPTS=(
 	--preview="eza --color=always --icons --tree {}"
 	--bind="ctrl-p:toggle-preview"
 	--bind="ctrl-l:change-preview(eza --color=always --icons -laah {})"
-	--bind="ctrl-i:change-preview(echo '\`stat\` Information:'; ustat {})"
+	--bind="ctrl-i:change-preview(echo '\`stat\`:'; ustat {})"
 	--bind="ctrl-t:change-preview(eza --color=always --icons --tree {})"
 	--bind="ctrl-d:execute(rmd -l {})" # Run custom `rm -rf` script
 	--preview-window=hidden
 	--bind="ctrl-j:preview-page-down,ctrl-k:preview-page-up"
 	--preview-window=70%,border-double,top
 	--preview-label="[ 󰈍 ^L   ^T   ^I   ^J   ^K ]"
-	--color="header:bright-blue,pointer:bright-magenta"
+	# Catppuccin Mocha theme
+	--color="fg:#b7bdf8,hl:#f4dbd6"
+	--color="fg+:#f4dbd6,bg+:#272935,hl+:#c6a0f6"
+	--color="info:#94e2d5,prompt:#f5c2e7,pointer:#f5a97f,marker:#94e2d5,spinner:#e28b83,header:#a6da95"
 )
 
 # Style Settings: Catppuccin Mocha theme
 _UP_NO_STYLES=false
-_UP_DIR_CHANGE_STYLE="\\033[38;2;249;226;175m"
-_UP_ERR_STYLE="\\033[48;2;243;160;168m\\033[38;2;30;30;46m"
-_UP_PWD_STYLE="\\033[38;2;166;227;161m"
-_UP_OLDPWD_STYLE="\\033[38;2;88;91;112m"
-_UP_REGEX_STYLE="\\033[38;2;116;199;236m"
+_UP_DIR_CHANGE_STYLE="\033[38;2;249;226;175m"
+_UP_ERR_STYLE="\033[48;2;243;160;168m\033[38;2;30;30;46m"
+_UP_PWD_STYLE="\033[38;2;166;227;161m"
+_UP_OLDPWD_STYLE="\033[38;2;88;91;112m"
+_UP_REGEX_STYLE="\033[38;2;116;199;236m"
 .fi
 
 Note: Environment variables explicitly defined in your shell configuration take precedence over values in the configuration file. If a variable is not defined in your shell configuration, the value from the configuration file is used. If neither is set, a sensible default is applied (refer to specific variables for default values).
@@ -434,9 +460,6 @@ FZF_HISTOPTS_DEFAULT=(
 .IP
 You can customize these options by defining the \fB_UP_FZF_HISTOPTS\fR array. For example:
 
-_UP_FZF_HISTOPTS=(
-)
-export _UP_FZF_HISTOPTS
 _UP_FZF_HISTOPTS=(
 .RS 10
 --height=40%

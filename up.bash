@@ -260,7 +260,7 @@ up::cd_by_int() {
 	local -r dir_pluralized=$(up::pluralize_dir "$jump_index")
 
 	# Attempt to change directory
-	if ! cd -- "$dotted_path"; then # perform `cd`; show error if `cd` fails
+	if ! builtin cd -- "$dotted_path"; then # perform `cd`; show error if `cd` fails
 		up::print_msg "couldn't go up ${ERR_STYLE}$jump_index $dir_pluralized${RESET}..."
 		return "$ERR_ACCESS"
 	fi
@@ -296,7 +296,7 @@ up::cd_by_dir_exact() {
 	fi
 
 	# Attempt to change to the directory
-	if ! cd -- "${PWD%"${PWD##*/"$dir_name"/}"}"; then
+	if ! builtin cd -- "${PWD%"${PWD##*/"$dir_name"/}"}"; then
 		up::print_msg "failed to navigate to directory: ${ERR_STYLE}'$dir_name'${RESET}"
 		return "$ERR_ACCESS"
 	elif [[ "$HIST_ENABLED" == true ]]; then
@@ -369,7 +369,7 @@ up::cd_by_dir_regex() {
 				local target_path=$(printf "/%s" "${basenames[@]:0:$i}")
 			fi
 
-			if cd -- "$target_path"; then
+			if builtin cd -- "$target_path"; then
 				# Verbose mode output on successful directory change
 				if [[ "$verbose_mode" == true ]]; then
 					local dir_string=$(up::get_dirs_changed_string)
@@ -406,7 +406,7 @@ up::cd_by_dir_name() {
 			up::print_msg "already on the root..."
 			return "$ERR_NO_CHANGE"
 		fi
-		if ! cd -- "/"; then
+		if ! builtin cd -- "/"; then
 			up::print_msg "failed to navigate to root"
 			return "$ERR_ACCESS"
 		elif [[ "$HIST_ENABLED" == true ]]; then
@@ -427,7 +427,7 @@ up::cd_by_dir_name() {
 			up::print_msg "already in the HOME directory"
 			return "$ERR_NO_CHANGE"
 		fi
-		if ! cd -- "$HOME"; then
+		if ! builtin cd -- "$HOME"; then
 			up::print_msg "failed to navigate to HOME: ${ERR_STYLE}$HOME${RESET}"
 			return "$ERR_ACCESS"
 		elif [[ "$HIST_ENABLED" == true ]]; then
@@ -496,7 +496,7 @@ up::filter_ancestors_with_fzf() {
 	if [[ -d "$selected_path" ]]; then
 		local -r prejump_path="$PWD"
 		if [[ "$selected_path" != "$prejump_path" ]]; then
-			if cd -- "$selected_path" && [[ "$verbose_mode" == true ]]; then
+			if builtin cd -- "$selected_path" && [[ "$verbose_mode" == true ]]; then
 				local -r dir_string=$(up::get_dirs_changed_string)
 				local -r msg="fzf: jumped ${DIR_CHANGE_STYLE}$dir_string${RESET}"
 				up::print_verbose VERBOSE_DEFAULT "$prejump_path" "$msg"

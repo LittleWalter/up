@@ -19,6 +19,10 @@ Maybe I'll get around to learning POSIX-compliant scripting for portability late
 
 ## April 2025
 
+### __[2025-04-10]__
+
+* __Fixes:__ Parsing comments in arrays (`up::load_config_file`).
+
 ### __[2025-04-09]__
 
 * __Fixes:__ Updated all instances of `cd` in `up.bash` and `up_lib/up_history.bash` to use `cd --`, ensuring compatibility with directory names that begin with a hyphen (e.g., `-exampleDir`). This change is now documented under the EDGE CASES subsection within the EXAMPLES section of the man page.

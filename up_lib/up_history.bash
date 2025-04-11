@@ -327,7 +327,7 @@ up::jump_from_history() {
 		return "$ERR_NO_CHANGE"
 	# Check if the directory exists, then jump to it
 	elif [[ -d "$dir" ]]; then
-		cd -- "$dir" || up::print_msg "failed to jump to ${ERR_STYLE}$dir${RESET}"
+		builtin cd -- "$dir" || up::print_msg "failed to jump to ${ERR_STYLE}$dir${RESET}"
 		up::validate_and_log_history "$prejump_path"
 		if [[ "$verbose_mode" == true ]]; then
 			local -r msg="jumped to ${DIR_CHANGE_STYLE}index $index${RESET} in history (line $reversed_index)"
@@ -373,7 +373,7 @@ up::filter_history_with_fzf() {
 			return "$ERR_NO_CHANGE"
 		elif [[ -n "$selected_path" ]]; then
 			if [[ -d "$selected_path" ]]; then
-				cd -- "$selected_path" || up::print_msg "fzf: failed to change directory to: ${ERR_STYLE}$selected_path${RESET}"
+				builtin cd -- "$selected_path" || up::print_msg "fzf: failed to change directory to: ${ERR_STYLE}$selected_path${RESET}"
 				if [[ "$verbose_mode" == true ]]; then
 					local -r msg="fzf: changed path in history"
 					up::print_verbose VERBOSE_DEFAULT "$prejump_path" "$msg"
@@ -491,7 +491,7 @@ up::filter_recent_history_with_fzf() {
 
 	if [[ -n "$selected_path" ]]; then
 		local -r prejump_path="$PWD"
-		cd -- "$selected_path" || { up::print_msg "failed to change path"; return "$ERR_BAD_ARG"; }
+		builtin cd -- "$selected_path" || { up::print_msg "failed to change path"; return "$ERR_BAD_ARG"; }
 		up::validate_and_log_history "$prejump_path"
 		if [[ "$verbose_mode" == true ]]; then
 			local -r msg="jumped to a path from history (${DIR_CHANGE_STYLE}within $timeframe_arg${RESET})"
@@ -538,7 +538,7 @@ up::filter_most_frequent_paths() {
 			return "$ERR_NO_CHANGE"
 		elif [[ -n "$selected_path" ]]; then
 			if [[ -d "$selected_path" ]]; then
-				cd -- "$selected_path" || up::print_msg "failed to change to: ${ERR_STYLE}$selected_path${RESET}"
+				builtin cd -- "$selected_path" || up::print_msg "failed to change to: ${ERR_STYLE}$selected_path${RESET}"
 				if [[ "$verbose_mode" == true ]]; then
 					local -r msg="fzf: changed to path in most frequently visited list"
 					up::print_verbose VERBOSE_DEFAULT "$prejump_path" "$msg"

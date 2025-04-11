@@ -111,22 +111,27 @@ up::initialize_fzf_options() {
 	FZF_PWDOPTS=("${_UP_FZF_PWDOPTS[@]:-${FZF_PWDOPTS_DEFAULT[@]}}")
 }
 
-# Process key-value pairs in configuration file, if the file exists
+# Parses and processes key-value pairs in configuration file, if the file exists
+# Comments and empty lines are skipped
 up::load_config_file() {
 	local -r config_file="${_UP_CONFIG_FILE:-${XDG_CONFIG_HOME:-$HOME/.config}/up/up_settings.conf}"
 
 	if [ -f "$config_file" ]; then
 		declare -a current_array=()
-		inside_array=false
+		local inside_array=false
 
 		while IFS= read -r line || [ -n "$line" ]; do
+			# Trim leading whitespace using parameter expansion
+			local trimmed_line="${line#"${line%%[![:space:]]*}"}"
+
 			# Skip empty lines and comments
-			if [ -z "$line" ] || [ "${line:0:1}" = "#" ]; then
+			if [ -z "$line" ] || [ "${trimmed_line:0:1}" = "#" ]; then
 				continue
 			fi
 
 			# Detect the start of a multiline array
 			# NOTE: Use `command grep`, in the event grep is aliased to ripgrep (`rg`)
+			# ripgrep does not have an `-E` flag
 			if echo "$line" | command grep -qE '^[a-zA-Z_][a-zA-Z0-9_]*=\($'; then
 				var_name=$(echo "$line" | cut -d'=' -f1)
 				current_array=()
@@ -139,6 +144,11 @@ up::load_config_file() {
 				inside_array=false
 				eval "$var_name=(\"\${current_array[@]}\")" # Export array as variable
 				unset current_array
+				continue
+			fi
+
+			# Skip comments within arrays
+			if [ "$inside_array" = true ] && [ "${trimmed_line:0:1}" = "#" ]; then
 				continue
 			fi
 
