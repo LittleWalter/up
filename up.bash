@@ -107,22 +107,29 @@ EOF
   Example: To jump to a directory named \`0\`, use \`up 0/\`.
   Example: To jump to directories named \`-h\` or \`--help\`, use \`-h/\` or \`--help/\`.
 EOF
+	# Determine whether user has config file
+	local config_path="Default: $HOME/.config/up/up_settings.conf"
+	if [ -f "$_UP_CONFIG_FILE" ]; then
+		config_path="Set as $_UP_CONFIG_FILE"
+	elif [ -f "$HOME/.config/up/up_settings.conf" ]; then
+		config_path="Set as $HOME/.config/up/up_settings.conf"
+	fi
 	up::print_help_label "ENVIRONMENT VARIABLES"
 	cat <<EOF
   _UP_ALWAYS_VERBOSE  Always print change directory information (Default: false)
-  _UP_CONFIG_FILE     Path to the \`up\` configuration file
-                      (Default: $HOME/.config/up/up_settings.conf)
+  _UP_CONFIG_FILE     Path to the optional \`up\` configuration file
+                      ($config_path)
 
   PWD Navigation:
     _UP_ALWAYS_IGNORE_CASE  Enable case-insensitive regex by default (Default: false)
-    _UP_FZF_PWDOPTS         Set \`fzf\` options for current working directory (as an array)
+    _UP_FZF_PWDOPTS         Set \`fzf\` options for current working directory as an array
     _UP_REGEX_DEFAULT       Use regex as default instead of exact matches (Default: false)
 
   Path History Management:
     _UP_ENABLE_HIST         Enable history file (Default: false)
-    _UP_FZF_HISTOPTS        Set \`fzf\` options for history (as an array)
-    _UP_HISTFILE            Path to the history file (set as: $LOG_FILE)
-    _UP_HISTSIZE            Maximum number of history entries (set as: $LOG_SIZE)
+    _UP_FZF_HISTOPTS        Set \`fzf\` options for history as an array
+    _UP_HISTFILE            Path to the history file (Set as: $LOG_FILE)
+    _UP_HISTSIZE            Maximum number of history entries (Set as: $LOG_SIZE)
 
   Output Styling:
     _UP_DIR_CHANGE_STYLE    Set ANSI styling for the number of directories jumped

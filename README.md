@@ -107,7 +107,7 @@ Download the git repo to your preferred destination. For example:
 git clone https://github.com/LittleWalter/up ~/.local/share/shell/up
 ```
 
-These scripts are fully compatible with Zsh using `bashcompinit` for seamless integration.
+These scripts are fully compatible with Zsh using `bashcompinit`.
 
 The `autoload` lines enable autocompletion modules.
 
@@ -169,7 +169,7 @@ export XDG_CACHE_HOME="$HOME/.cache" # Non-essential files such as shell command
 
 ---
 
-## 🛠️Configuration
+## ⚙ Configuration
 
 `up` offers two straightforward methods to configure environment variables: directly in your shell configuration or through an optional configuration file.
 
@@ -249,7 +249,10 @@ _UP_FZF_HISTOPTS=(
   --bind="ctrl-j:preview-page-down,ctrl-k:preview-page-up"
   --preview-window=70%,border-double,top
   --preview-label="[ 󰈍 ^L   ^T   ^I   ^J   ^K ]"
-  --color="header:bright-blue,pointer:bright-magenta"
+  # Catppuccin Mocha theme
+  --color="fg:#b7bdf8,hl:#f4dbd6"
+  --color="fg+:#f4dbd6,bg+:#272935,hl+:#c6a0f6"
+  --color="info:#94e2d5,prompt:#f5c2e7,pointer:#f5a97f,marker:#94e2d5,spinner:#e28b83,header:#a6da95"
 )
 
 # Style Settings: Catppuccin Mocha theme

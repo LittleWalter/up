@@ -70,15 +70,12 @@ List historic paths by frequency with pagination, descending order and frequency
 Open `fzf` to display recent valid paths filtered by \fI<integer>(min|h|d|m)\fR.
 
 Supported time units:
-.RS 10
-- \fBmin\fR: minutes
-.br
-- \fBh\fR: hours
-.br
-- \fBd\fR: days
-.br
-- \fBm\fR: months (approximately 30 days per month)
-.RE
+.nf
+  - \fBmin\fR: minutes
+  - \fBh\fR: hours
+  - \fBd\fR: days
+  - \fBm\fR: months (approximately 30 days per month)
+.fi
 .IP
 If no argument is provided, the default timeframe is '1h'. If only an integer is provided, the unit is assumed to be hours.
 
@@ -93,15 +90,12 @@ The total capacity is determined by the \fB_UP_HISTSIZE\fR environment variable,
 Clear history entries filtered by \fI<integer>(min|h|d|m)\fR.
 
 Supported time units:
-.RS 10
-- \fBmin\fR: minutes
-.br
-- \fBh\fR: hours
-.br
-- \fBd\fR: days
-.br
-- \fBm\fR: months (approximately 30 days per month)
-.RE
+.nf
+  - \fBmin\fR: minutes
+  - \fBh\fR: hours
+  - \fBd\fR: days
+  - \fBm\fR: months (approximately 30 days per month)
+.fi
 .IP
 If no argument is provided, all history entries will be removed.
 .TP
@@ -248,12 +242,33 @@ While most of the following terminal emulators have not been tested with these s
 Note: The default Terminal application on macOS does not support Nerd Fonts. To use Nerd Fonts, consider installing one of the terminal emulators above. For more details on configuring Nerd Fonts, visit:
 .IP
 \fBhttps://www.nerdfonts.com\fR
-.SH TAB COMPLETION SETUP
-To enable tab completion for \fBup\fR, source the \fBup_completion.bash\fR script in your shell configuration file.
+.SH INSTALLATION
+To install \fBup\fR, clone the repository to your preferred location and source the scripts in your shell configuration file. For example,
 
-Add the following line to your \fB.bashrc\fR or \fB.zshrc\fR file:
+git clone https://github.com/LittleWalter/up ~/.local/share/shell/up
 .TP
-source /path/to/up_completion.bash
+Add the following to your \fB.bashrc\fR or \fB.zshrc\fR file:
+
+.nf
+source ~/.local/share/shell/up/up.bash
+.fi
+.TP
+Reload your shell configuration by sourcing your shell configuration file, e.g., \fBsource ~/.bashrc\fR, or relaunch terminal.
+.SS TAB COMPLETION SETUP
+To enable tab completion for \fBup\fR, source the \fBup_completion.bash\fR script in your shell configuration file.
+.TP
+Add the following line to your \fB.bashrc\fR or \fB.zshrc\fR file:
+
+.nf
+source ~/.local/share/up/up_completion.bash
+.fi
+.TP
+For Zsh, add the following lines to your \fB.zshrc\fR before sourcing \fBup.bash\fR:
+
+.nf
+autoload -U +X compinit && compinit # Enable Zsh completion
+autoload -U +X bashcompinit && bashcompinit # Enable Bash completion compatibility
+.fi
 .TP
 Reload your shell configuration by sourcing your shell configuration file, e.g., `source ~/.bashrc`, or relaunch terminal.
 .SH ENVIRONMENT VARIABLES
@@ -358,59 +373,44 @@ export _UP_ALWAYS_IGNORE_CASE=true
 .B _UP_FZF_PWDOPTS
 Configure `fzf` options specifically for the current working directory. This environment variable, defined as an array, is utilized by the \fB-f, --fzf\fR option.
 
+.nf
 FZF_PWDOPTS_DEFAULT=(
-.RS 10
---height=50%
-.br
---layout=reverse
-.br
---prompt=" Path: "
-.br
---header="󰌑 cd   ^P"
-.br
---preview="tree -C {}"
-.br
---bind="ctrl-l:change-preview(ls --color=always -lAh {})"
-.br
---bind="ctrl-t:change-preview(tree -C {})"
-.br
---bind="ctrl-i:change-preview(echo '\`stat\`'; stat {})"
-.br
---bind="ctrl-p:toggle-preview"
-.br
---bind="ctrl-j:preview-page-down,ctrl-k:preview-page-up"
-.br
---preview-window=70%,border-double,top
-.br
---preview-label="[ 󰈍 ^L   ^T   ^I   ^J   ^K ]")
-.RE
+	--height=50%
+	--layout=reverse
+	--prompt=" Path: "
+	--header="󰌑 cd   ^P"
+	--preview="tree -C {}"
+	--bind="ctrl-l:change-preview(ls --color=always -lAh {})"
+	--bind="ctrl-t:change-preview(tree -C {})"
+	--bind="ctrl-i:change-preview(echo '\`stat\`'; stat {})"
+	--bind="ctrl-p:toggle-preview"
+	--bind="ctrl-j:preview-page-down,ctrl-k:preview-page-up"
+	--preview-window=70%,border-double,top
+	--preview-label="[ 󰈍 ^L   ^T   ^I   ^J   ^K ]"
+)
+.fi
 .IP
 You can customize these options by defining the \fB_UP_FZF_PWDOPTS\fR array. For example:
 .IP
+.nf
 _UP_FZF_PWDOPTS=(
-.RS 10
---height=50%
-.br
---layout=reverse
-.br
---prompt="Navigate > "
-.br
---preview="tree -C {}"
-.br
---header="󰌑 Current Directory Navigation |  Use Arrow Keys  Ctrl-L (List Details)  Ctrl-T (Tree View)"
-.br
---bind="ctrl-l:change-preview(ls --color=always -lAh {})"
-.br
---bind="ctrl-t:change-preview(tree -C {})"
-.br
---bind="ctrl-p:toggle-preview"
-.br
---color="header:bright-blue,pointer:bright-magenta,preview-bg:-1")
-.RE
+	--height=50%
+	--layout=reverse
+	--prompt="Navigate > "
+	--preview="tree -C {}"
+	--header="󰌑 Current Directory Navigation |  Use Arrow Keys  Ctrl-L (List Details)  Ctrl-T (Tree View)"
+	--bind="ctrl-l:change-preview(ls --color=always -lAh {})"
+	--bind="ctrl-t:change-preview(tree -C {})"
+	--bind="ctrl-p:toggle-preview"
+	--color="header:bright-blue,pointer:bright-magenta,preview-bg:-1"
+)
+.fi
 .IP
 Export the variable to make the changes effective:
 .IP
 export _UP_FZF_PWDOPTS
+.IP
+Note: A compatible terminal emulator with Nerd Fonts is required to render icons (see DEPENDENCIES).
 .TP
 .B _UP_REGEX_DEFAULT
 Use regex as default instead of exact matches (Default: false).
@@ -429,61 +429,45 @@ Configure `fzf` options specifically for history entries. This environment varia
 
 When `eza` in not available, the default options are defined as:
 
+.nf
 FZF_HISTOPTS_DEFAULT=(
-.RS 10
---height=50%
-.br
---layout=reverse
-.br
---prompt="󰜊 Path: "
-.br
---header="󰌑 cd   ^P   Missing Paths Omitted"
-.br
---preview-window=hidden
-.br
---preview="tree -C {}"
-.br
---bind="ctrl-l:change-preview(ls --color=always -lAh {})"
-.br
---bind="ctrl-t:change-preview(tree -C {})"
-.br
---bind="ctrl-i:change-preview(echo '\`stat\`'; stat {})"
-.br
---bind="ctrl-p:toggle-preview"
-.br
---bind="ctrl-j:preview-page-down,ctrl-k:preview-page-up"
-.br
---preview-window=70%,border-double,top
-.br
---preview-label="[ 󰈍 ^L   ^T   ^I   ^J   ^K ]")
-.RE
+	--height=50%
+	--layout=reverse
+	--prompt="󰜊 Path: "
+	--header="󰌑 cd   ^P   Missing Paths Omitted"
+	--preview-window=hidden
+	--preview="tree -C {}"
+	--bind="ctrl-l:change-preview(ls --color=always -lAh {})"
+	--bind="ctrl-t:change-preview(tree -C {})"
+	--bind="ctrl-i:change-preview(echo '\`stat\`'; stat {})"
+	--bind="ctrl-p:toggle-preview"
+	--bind="ctrl-j:preview-page-down,ctrl-k:preview-page-up"
+	--preview-window=70%,border-double,top
+	--preview-label="[ 󰈍 ^L   ^T   ^I   ^J   ^K ]"
+)
+.fi
 .IP
 You can customize these options by defining the \fB_UP_FZF_HISTOPTS\fR array. For example:
 
+.nf
 _UP_FZF_HISTOPTS=(
-.RS 10
---height=40%
-.br
---layout=reverse
-.br
---header="󰌑 History Navigation |  Ctrl-N (New Paths)  Ctrl-F (Frequent)  Ctrl-P (Preview)"
-.br
---prompt=" History > "
-.br
---preview-window=70%,wrap,border-rounded
-.br
---preview="ls --color=always -lhA {}"
-.br
---bind="ctrl-p:toggle-preview"
-.br
---bind="ctrl-n:reload(up -R),ctrl-f:reload(up -m)"
-.br
---color="header:bright-blue,pointer:bright-magenta")
-.RE
+	--height=40%
+	--layout=reverse
+	--header="󰌑 History Navigation |  Ctrl-N (New Paths)  Ctrl-F (Frequent)  Ctrl-P (Preview)"
+	--prompt=" History > "
+	--preview-window=70%,wrap,border-rounded
+	--preview="ls --color=always -lhA {}"
+	--bind="ctrl-p:toggle-preview"
+	--bind="ctrl-n:reload(up -R),ctrl-f:reload(up -m)"
+	--color="header:bright-blue,pointer:bright-magenta"
+)
+.fi
 .IP
 Export the variable to make the changes effective:
 
 export _UP_FZF_HISTOPTS
+.IP
+Note: A compatible terminal emulator with Nerd Fonts is required to render icons (see DEPENDENCIES).
 .TP
 .B _UP_HISTFILE
 Path to the history file (Default: $HOME/.cache/up_history.log).
@@ -552,7 +536,7 @@ By enabling \fB_UP_REGEX_DEFAULT\fR, ancestor directories are matched using rege
 .TP
 .B Combine Options for Flexibility
 .IP \(bu 2
-Combine \fB\-i\fR and \fB\-e\fR for case-insensitive regex searches (e.g., \fBup \-ie 'src'\fR).
+Combine \fB\-i\fR and \fB\-e\fR for case-insensitive regex searches (e.g., \fBup \-ie 'logs'\fR).
 .IP \(bu 2
 Use \fB\-e\fR or \fB\-s\fR with \fB\-x\fR to jump directly to directories based on specific patterns.
 
@@ -577,15 +561,15 @@ Use the \fB\-v\fR option with any navigation command to print additional path in
 .IP \(bu 2
 Enable tab completion for faster navigation. Source the provided \fBup_completion.bash\fR script in your shell configuration file (see TAB COMPLETION SETUP).
 .SH SEE ALSO
-\fBcd(1)\fR, \fBfzf(1)\fR, \fBeza(1)\fR, \fBstat(1)\fR, \fBtree(1)\fR
+\fBcd(1)\fR, \fBeza(1)\fR, \fBfzf(1)\fR, \fBstat(1)\fR, \fBtree(1)\fR, \fBzoxide(1)\fR
 
 For more information on related tools, visit:
-
+.nf
 https://github.com/eza-community/eza
-
 https://github.com/junegunn/fzf
-
 https://github.com/Old-Man-Programmer/tree
+https://github.com/ajeetdsouza/zoxide
+.fi
 .SH LICENSE
 This project is licensed under the MIT License.
 
@@ -594,9 +578,10 @@ https://opensource.org/licenses/MIT
 .SH BUGS AND KNOWN ISSUES
 The accompanying tab completion script lacks support for color formatting and consistent ordering due to limitations in shell completion frameworks.
 
+.nf
 Report issues or suggestions for improvement at:
-
 https://github.com/LittleWalter/up/issues
+.fi
 .SH AUTHOR
 LittleWalter
 

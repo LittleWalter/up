@@ -19,6 +19,12 @@ Maybe I'll get around to learning POSIX-compliant scripting for portability late
 
 ## April 2025
 
+### __[2025-04-11]__
+
+* __Documentation:__
+    - Added dynamic check for config file in `-h` / `--help` output.
+    - Fixed minor errors in man page.
+
 ### __[2025-04-10]__
 
 * __Fixes:__ Parsing comments in arrays (`up::load_config_file`).

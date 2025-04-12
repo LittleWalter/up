@@ -33,8 +33,8 @@ EOF
 	up::print_help_label "RELATED ENVIRONMENT VARIABLES"
 	cat <<EOF
   _UP_ENABLE_HIST  Enable history file (Default: false)
-  _UP_HISTFILE     Path to the history file (set as: $LOG_FILE)
-  _UP_HISTSIZE     Maximum number of history entries (set as: $LOG_SIZE)
+  _UP_HISTFILE     Path to the history file (Set as: $LOG_FILE)
+  _UP_HISTSIZE     Maximum number of history entries (Set as: $LOG_SIZE)
 EOF
 }
 
@@ -115,9 +115,9 @@ EOF
 	up::print_help_label "RELATED ENVIRONMENT VARIABLES"
 	cat <<EOF
   _UP_ENABLE_HIST   Enable history file (Default: false)
-  _UP_FZF_HISTOPTS  Set \`fzf\` options for history (as an array)
-  _UP_HISTFILE      Path to the history file (set as: $LOG_FILE)
-  _UP_HISTSIZE      Maximum number of history entries (set as: $LOG_SIZE)
+  _UP_FZF_HISTOPTS  Set \`fzf\` options for history as an array
+  _UP_HISTFILE      Path to the history file (Set as: $LOG_FILE)
+  _UP_HISTSIZE      Maximum number of history entries (Set as: $LOG_SIZE)
 EOF
 }
 
