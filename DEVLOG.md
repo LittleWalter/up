@@ -19,6 +19,14 @@ Maybe I'll get around to learning POSIX-compliant scripting for portability late
 
 ## April 2025
 
+### __[2025-04-12]__
+
+* __Fixes:__
+    - Changed `awk '{print $3}' "$LOG_FILE"` to `awk '{print substr($0, index($0, $3))}'` in `up::print_paths_by_frequency` and `up::filter_most_frequent_paths` within `up_history.bash`. `{print $3}` truncates path names with whitespace.
+    - Changed `awk '{print $3 " " $4 " " $5}')` to `cut -d' ' -f3-` to avoid truncating path names with whitespace in `up::jump_from_history` within `up_history.bash`.
+* __Documentation:__ Fixed improperly escaped characters in examples of `fzf` options.
+* __Features:__ Added verbose mode output to `-p`/`--prune` showing removed paths. Note: The verbose flag must be passed before the prune flag for this to work, e.g. `up -vp`.
+
 ### __[2025-04-11]__
 
 * __Documentation:__

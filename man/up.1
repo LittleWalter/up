@@ -1,9 +1,9 @@
-.TH up 1 "April 8, 2025" "Version 1.0.0" "General Commands Manual"
+.TH up 1 "April 12, 2025" "Version 1.0.0" "General Commands Manual"
 .SH NAME
 up — navigate ancestor directories and path histories with ease: a versatile companion to the built-in cd command
 .SH SYNOPSIS
 .B up
-[\fIOPTIONS\fR] [\fIindex|directory name/regex|$HOME\fR]
+[\fIOPTIONS\fR] [\fIindex|directory name|regex|$HOME\fR]
 .SH DESCRIPTION
 \fBup\fR is a shell script designed to simplify navigation through parent and ancestor directories.
 
@@ -114,6 +114,8 @@ Note: Visit counts are not displayed in this view. To see the visit counts, use 
 .TP
 .B \-p, --prune-hist
 Remove missing paths from history.
+
+Use the verbose mode option before the prune option to display the removed paths, e.g., \fB-vp\fR or \fB--verbose \-p\fR.
 .SH HISTORY LOG FILE
 The history log file is a plain text file that tracks recently accessed paths and their associated human-readable timestamps. Each entry in the log follows the format:
 .IP
@@ -211,6 +213,8 @@ Optional dependencies for interactive fuzzy finding.
 If `eza` is not available, `ls` and `tree` are the default tools utilized by `fzf` options for path inspection within the preview window.
 
 The uutils coreutils (`ustat`) and GNU coreutils (`gstat`) versions of `stat` are preferred over BSD variants for readability.
+
+Note: Default `fzf` options defined may not be supported with older versions. These scripts were tested with version 0.61.1. For example, the change-preview option is unavailable in 0.24 (devel).
 .TP
 .B awk, cut, grep, perl, sed, sort, tac, tr, uniq
 Standard tools used for processing history files and transforming text.
@@ -260,10 +264,10 @@ To enable tab completion for \fBup\fR, source the \fBup_completion.bash\fR scrip
 Add the following line to your \fB.bashrc\fR or \fB.zshrc\fR file:
 
 .nf
-source ~/.local/share/up/up_completion.bash
+source ~/.local/share/shell/up/up_completion.bash
 .fi
 .TP
-For Zsh, add the following lines to your \fB.zshrc\fR before sourcing \fBup.bash\fR:
+For Zsh, add the following lines to your \fB.zshrc\fR before sourcing \fBup.bash\fR and \fBup_completion.bash\fR:
 
 .nf
 autoload -U +X compinit && compinit # Enable Zsh completion
@@ -313,7 +317,7 @@ _UP_FZF_PWDOPTS=(
 	--preview="eza --color=always --icons --tree {}"
 	--bind="ctrl-p:toggle-preview"
 	--bind="ctrl-l:change-preview(eza --color=always --icons -laah {})"
-	--bind="ctrl-i:change-preview(echo '\`stat\`:'; ustat {})"
+	--bind="ctrl-i:change-preview(echo '\\`stat\\`:'; stat {})"
 	--bind="ctrl-t:change-preview(eza --color=always --icons --tree {})"
 	--bind="ctrl-j:preview-page-down,ctrl-k:preview-page-up"
 	--preview-window=70%,border-double,top
@@ -336,7 +340,7 @@ _UP_FZF_HISTOPTS=(
 	--preview="eza --color=always --icons --tree {}"
 	--bind="ctrl-p:toggle-preview"
 	--bind="ctrl-l:change-preview(eza --color=always --icons -laah {})"
-	--bind="ctrl-i:change-preview(echo '\`stat\`:'; ustat {})"
+	--bind="ctrl-i:change-preview(echo '\\`stat\\`:'; stat {})"
 	--bind="ctrl-t:change-preview(eza --color=always --icons --tree {})"
 	--bind="ctrl-d:execute(rmd -l {})" # Run custom `rm -rf` script
 	--preview-window=hidden
@@ -351,11 +355,11 @@ _UP_FZF_HISTOPTS=(
 
 # Style Settings: Catppuccin Mocha theme
 _UP_NO_STYLES=false
-_UP_DIR_CHANGE_STYLE="\033[38;2;249;226;175m"
-_UP_ERR_STYLE="\033[48;2;243;160;168m\033[38;2;30;30;46m"
-_UP_PWD_STYLE="\033[38;2;166;227;161m"
-_UP_OLDPWD_STYLE="\033[38;2;88;91;112m"
-_UP_REGEX_STYLE="\033[38;2;116;199;236m"
+_UP_DIR_CHANGE_STYLE="\\033[38;2;249;226;175m"
+_UP_ERR_STYLE="\\033[48;2;243;160;168m\\033[38;2;30;30;46m"
+_UP_PWD_STYLE="\\033[38;2;166;227;161m"
+_UP_OLDPWD_STYLE="\\033[38;2;88;91;112m"
+_UP_REGEX_STYLE="\\033[38;2;116;199;236m"
 .fi
 
 Note: Environment variables explicitly defined in your shell configuration take precedence over values in the configuration file. If a variable is not defined in your shell configuration, the value from the configuration file is used. If neither is set, a sensible default is applied (refer to specific variables for default values).
@@ -382,7 +386,7 @@ FZF_PWDOPTS_DEFAULT=(
 	--preview="tree -C {}"
 	--bind="ctrl-l:change-preview(ls --color=always -lAh {})"
 	--bind="ctrl-t:change-preview(tree -C {})"
-	--bind="ctrl-i:change-preview(echo '\`stat\`'; stat {})"
+	--bind="ctrl-i:change-preview(echo '\\`stat\\`'; stat {})"
 	--bind="ctrl-p:toggle-preview"
 	--bind="ctrl-j:preview-page-down,ctrl-k:preview-page-up"
 	--preview-window=70%,border-double,top
@@ -439,7 +443,7 @@ FZF_HISTOPTS_DEFAULT=(
 	--preview="tree -C {}"
 	--bind="ctrl-l:change-preview(ls --color=always -lAh {})"
 	--bind="ctrl-t:change-preview(tree -C {})"
-	--bind="ctrl-i:change-preview(echo '\`stat\`'; stat {})"
+	--bind="ctrl-i:change-preview(echo '\\`stat\\`'; stat {})"
 	--bind="ctrl-p:toggle-preview"
 	--bind="ctrl-j:preview-page-down,ctrl-k:preview-page-up"
 	--preview-window=70%,border-double,top

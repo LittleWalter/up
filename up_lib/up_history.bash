@@ -85,12 +85,16 @@ up::prune_history() {
 	# Perform pruning only if lock acquired
 	{
 		# Filter out invalid paths, preserve timestamps
-		awk '
+		awk -v verbose="$verbose_mode" '
 		{
 			path = substr($0, index($0, $3)) # Extract the path (skip timestamp)
 			gsub(/^ +| +$/, "", path)        # Trim whitespace
-			if (system("[ -d \"" path "\" ]") == 0) print $0
-		}' "$LOG_FILE" > "$temp_file"
+			if (system("[ -d \"" path "\" ]") == 0) {
+				print $0 >> "'"$temp_file"'" # Save valid paths to temp_file
+			} else if (verbose == "true") {
+				print path                   # Print invalid paths if verbose mode is enabled
+		}
+	}' "$LOG_FILE"
 
 		# Replace the log file with the pruned version
 		mv "$temp_file" "$LOG_FILE"
@@ -233,7 +237,7 @@ up::print_history_size() {
 # Print the paths visited by frequency w/ pagination
 up::print_paths_by_frequency() {
 	if [[ -f "$LOG_FILE" ]] && [[ "$(up::history_count)" -ne 0 ]]; then
-		local -r most_freq_command="up::print_help_label 'PATHS BY FREQUENCY'; awk '{print \$3}' $LOG_FILE | sort | uniq -c | sort -nr"
+		local -r most_freq_command="up::print_help_label 'PATHS BY FREQUENCY'; awk '{print substr(\$0, index(\$0, \$3))}' $LOG_FILE | sort | uniq -c | sort -nr"
 		up::run_with_pagination "$most_freq_command"
 	elif [[ "$(up::history_count)" -eq 0 ]]; then
 		up::print_msg "history file is empty..."
@@ -317,7 +321,7 @@ up::jump_from_history() {
 	local -r reversed_index=$(up::reverse_history_index "$index")
 
 	# Extract the directory path from the history file
-	local dir="$(sed "${reversed_index}q;d" "$LOG_FILE" | awk '{print $3 " " $4 " " $5}')"
+	local dir="$(sed "${reversed_index}q;d" "$LOG_FILE" | cut -d' ' -f3-)" # log is space delimited
 
 	# Ensure that only valid directory paths are handled
 	dir=$(echo "$dir" | sed -e 's/^ *//;s/ *$//') # Trim extra whitespace
@@ -516,7 +520,7 @@ up::filter_most_frequent_paths() {
 	if [[ -f "$LOG_FILE" ]]; then
 		# Extract and count occurrences of paths
 		local frequent_paths
-		frequent_paths=$(awk '{print $3}' "$LOG_FILE" | sort | uniq -c | sort -nr | awk '{print $2}')
+		frequent_paths=$(awk '{print substr(\$0, index(\$0, \$3))}' "$LOG_FILE" | sort | uniq -c | sort -nr | awk '{print $2}')
 
 		# Check if there are any paths
 		if [[ -z "$frequent_paths" ]]; then

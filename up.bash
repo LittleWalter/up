@@ -18,7 +18,7 @@
 #-----------------------------------------------------------------------
 
 # Get the absolute path of this file; avoids problems of relative paths
-# NOTE: Using `builtin cd -- <path>` to avoid additional line in history 
+# NOTE: Using `builtin cd -- <path>` to avoid additional line in history
 # if using `up_passthru`
 if [ -n "${BASH_SOURCE[0]}" ]; then
 	UP_ABS_PATH="$(builtin cd -- "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
