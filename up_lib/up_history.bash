@@ -520,7 +520,7 @@ up::filter_most_frequent_paths() {
 	if [[ -f "$LOG_FILE" ]]; then
 		# Extract and count occurrences of paths
 		local frequent_paths
-		frequent_paths=$(awk '{print substr(\$0, index(\$0, \$3))}' "$LOG_FILE" | sort | uniq -c | sort -nr | awk '{print $2}')
+		frequent_paths=$(awk '{print substr($0, index($0, $3))}' "$LOG_FILE" | sort | uniq -c | sort -nr | awk '{print $2}')
 
 		# Check if there are any paths
 		if [[ -z "$frequent_paths" ]]; then
