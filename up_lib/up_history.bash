@@ -99,7 +99,7 @@ up::prune_history() {
 				}
 				print NR ": " path # Print line number and invalid path
 			}
-	}' "$LOG_FILE"
+		}' "$LOG_FILE"
 
 		# Replace the log file with the pruned version
 		mv "$temp_file" "$LOG_FILE"
@@ -524,12 +524,9 @@ up::filter_most_frequent_paths() {
 	fi
 
 	if [[ -f "$LOG_FILE" ]]; then
-
-	# Extract and count occurrences of paths, preserving whitespace
+		# Extract and count occurrences of paths, preserving whitespace
 		local frequent_paths
 		frequent_paths=$(awk '{print substr($0, index($0, $3))}' "$LOG_FILE" | sort | uniq -c | sort -nr | awk '{print substr($0, index($0, $2))}')
-echo "$frequent_paths"
-           # gsub(/^ +| +$/, "", path);
 
 		# Check if there are any paths
 		if [[ -z "$frequent_paths" ]]; then
