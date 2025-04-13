@@ -19,13 +19,20 @@ Maybe I'll get around to learning POSIX-compliant scripting for portability late
 
 ## April 2025
 
+### __[2025-04-13]__
+
+* __Fixes:__
+    - Tab completion properly escapes multiple whitespace characters in a row, e.g., `a dir_name  2 spaces` should be `a\ dir_name\ \2\ spaces/`. Directory names with more than one space were collapsed.
+    - Properly handle paths with multiple whitespace characters in a row for `-m`/`--fzf-freq`, `-F`/`--fzf-hist`, and `-R`/`--fzf-recent` flags, i.e., options using `fzf`. Paths with spaces were not being shown; mostly incorrect `awk` invocations.
+* __Changes:__ Added header and history line numbers of removed paths for verbose mode output with the `-p`/`--prune` flag.
+
 ### __[2025-04-12]__
 
 * __Fixes:__
     - Changed `awk '{print $3}' "$LOG_FILE"` to `awk '{print substr($0, index($0, $3))}'` in `up::print_paths_by_frequency` and `up::filter_most_frequent_paths` within `up_history.bash`. `{print $3}` truncates path names with whitespace.
     - Changed `awk '{print $3 " " $4 " " $5}')` to `cut -d' ' -f3-` to avoid truncating path names with whitespace in `up::jump_from_history` within `up_history.bash`.
-* __Documentation:__ Fixed improperly escaped characters in examples of `fzf` options.
-* __Features:__ Added verbose mode output to `-p`/`--prune` showing removed paths. Note: The verbose flag must be passed before the prune flag for this to work, e.g. `up -vp`.
+* __Documentation:__ Fixed improperly escaped characters of examples of `fzf` options in man page.
+* __Features:__ Added verbose mode output to `-p`/`--prune` showing removed paths. Note: that the verbose flag must be passed before the prune flag for this to work, e.g. `up -vp`.
 
 ### __[2025-04-11]__
 

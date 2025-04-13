@@ -108,8 +108,8 @@ assert_contains() {
 	! assert_contains burger/ "${COMPREPLY[@]}"
 }
 
-@test '_up should autocomplete the parent directory name containing whitespace of \"burger king\"' {
-	local -r path=${BATS_TEST_TMPDIR}/big/kahuna/burger\ king/whopper
+@test '_up should autocomplete the parent directory name containing whitespace of \"burger  king\"' {
+	local -r path=${BATS_TEST_TMPDIR}/big/kahuna/burger\ \ king/whopper
 	mkdir -p "$path"
 	cd "$path"
 
@@ -117,7 +117,7 @@ assert_contains() {
 	COMP_CWORD=1
 	_up
 
-	assert_contains "burger\ king/" "${COMPREPLY[@]}"
+	assert_contains "burger\ \ king/" "${COMPREPLY[@]}"
 }
 
 @test '_up should autocomplete the parent directory containing special ASCII characters of \"[burger*king&|]\"' {

@@ -24,11 +24,12 @@
 # source ~/path/to/up-completion.bash
 #-----------------------------------------------------------------------
 
+# Removes extra forward slashes and leading slash
 _up::normalize_pwd() {
 	# Replace multiple slashes with a single slash
-	local -r normalized_pwd=${PWD//\/\//\/}
+	local -r normalized_pwd="${PWD//\/\//\/}"
 	# Remove leading slash
-	echo ${normalized_pwd:1}
+	echo "${normalized_pwd#/}"
 }
 
 # Escapes special ASCII characters (e.g., `/`, `$`, `*`, etc.) of a given
@@ -36,11 +37,14 @@ _up::normalize_pwd() {
 _up::escape_dir_name() {
 	local dir_name="$1"
 	local escaped_dir_name
-	local -r sed_accessible=$(up::is_command_available "sed")
-	if $sed_available; then
-		# Allow Unicode characters to pass thru unescaped
-		escaped_dir_name=$(printf '%s' "$dir_name" | sed -E 's/([][{}()<>*?|&^$!~`"\\[:space:]])/\\\1/g')
-	else # Fallback escaping
+	if up::is_command_available "sed"; then
+		# Allow Unicode characters to pass thru unescaped and catch multiple
+		# space characters in a row
+		escaped_dir_name=$(printf '%s' "$dir_name" | sed -E '
+			s/([][{}()<>*?|&^$!~`"\\])/\\\1/g;
+			s/ /\\ /g
+		')
+	else # Fallback escaping: should not get here...
 		# WARN: This approach causes problems w/ Unicode characters
 		# like Japanese, Cyrillic, emojis, etc.
 		printf -v escaped_dir_name '%q' "$dir_name"
@@ -48,6 +52,30 @@ _up::escape_dir_name() {
 	echo "$escaped_dir_name"
 }
 
+# Extract base directory names from PWD and append a trailing slash to each
+_up::parse_basename_dirs() {
+	local pwd_without_leading_slash="$1"
+	local dir_name=""  # Buffer for directory segment
+	local basenames=() # Array to store directory names
+
+	# Iterate through PWD, respecting all characters; final directory skipped
+	for ((i = 0; i < ${#pwd_without_leading_slash}; i++)); do
+		char=$(echo "$pwd_without_leading_slash" | cut -c$((i+1))) # Extract character
+
+		if [[ "$char" == "/" ]]; then
+			# Append the accumulated directory name with a trailing slash
+			basenames+=("$dir_name/")
+			dir_name="" # Reset for next segment
+		else
+			dir_name+="$char" # Append character to buffer
+		fi
+	done
+
+	# Output results line by line
+	printf '%s\n' "${basenames[@]}"
+}
+
+# The completion function for `up`
 _up() {
 	# Edge case: root directory
 	[[ "$PWD" == "/" ]] && { COMPREPLY=("/"); return 0; }
@@ -55,12 +83,11 @@ _up() {
 	local -r current_word=${COMP_WORDS[COMP_CWORD]}
 	local -r pwd_without_leading_slash=$(_up::normalize_pwd)
 
-	local basenames=()
-
 	# Extract base directory names from PWD and append a trailing slash
-	while IFS= read -r -d/; do
-		basenames+=("$REPLY/")
-	done <<<"$pwd_without_leading_slash"
+	# Capture the output of the function line by line
+	while IFS= read -r dir; do
+		basenames+=("$dir")
+	done < <(_up::parse_basename_dirs "$pwd_without_leading_slash")
 
 	# Add the root directory since PWD is not `/`
 	basenames+=(/)

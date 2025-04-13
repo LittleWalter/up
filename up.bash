@@ -64,7 +64,7 @@ EOF
 	up::print_help_label "FLAGS"
 	cat <<EOF
   -h, --help     Print help
-  -v, --verbose  Print additional information about directory changes
+  -v, --verbose  Print additional information about directory changes, etc.
 
     PWD Navigation:
       -e, --ends-with    Jump to nearest directory regex that ends with <string>

@@ -86,14 +86,19 @@ up::prune_history() {
 	{
 		# Filter out invalid paths, preserve timestamps
 		awk -v verbose="$verbose_mode" '
+		BEGIN { header_printed = 0 } # Flag to track if header is printed
 		{
 			path = substr($0, index($0, $3)) # Extract the path (skip timestamp)
 			gsub(/^ +| +$/, "", path)        # Trim whitespace
 			if (system("[ -d \"" path "\" ]") == 0) {
-				print $0 >> "'"$temp_file"'" # Save valid paths to temp_file
+				print $0 >> "'"$temp_file"'"   # Save valid paths to temp_file
 			} else if (verbose == "true") {
-				print path                   # Print invalid paths if verbose mode is enabled
-		}
+				if (header_printed == 0) {
+					print "History Line: Invalid Path";
+					header_printed = 1; # Set flag to prevent duplicate header
+				}
+				print NR ": " path # Print line number and invalid path
+			}
 	}' "$LOG_FILE"
 
 		# Replace the log file with the pruned version
@@ -108,6 +113,7 @@ up::prune_history() {
 	if [[ "$count_diff" -eq 0 ]]; then
 		up::print_msg "nothing pruned: all ${DIR_CHANGE_STYLE}$original_count${RESET} entries are valid paths (max: $LOG_SIZE)"
 	else
+		[[ "$verbose_mode" == true ]] && echo "" # Whitespace to separate removed paths list
 		up::print_msg "pruned history: removed ${ERR_STYLE}$count_diff invalid paths${RESET} (${DIR_CHANGE_STYLE}$new_count remaining${RESET}, max: $LOG_SIZE)"
 	fi
 }
@@ -359,7 +365,7 @@ up::filter_history_with_fzf() {
 
 	if [[ -f "$LOG_FILE" ]]; then
 		# Filter out missing paths from the history file
-		local valid_paths=$(tac "$LOG_FILE" | awk '{$1=$2=""; print substr($0, 3)}' | while read -r path; do
+		local valid_paths=$(tac "$LOG_FILE" | awk '{print substr($0, index($0, $3))}' | while IFS= read -r path; do
 			[[ -d "$path" ]] && echo "$path"
 		done)
 
@@ -464,7 +470,7 @@ up::filter_recent_history_with_fzf() {
 	fi
 
 	# Filter out missing paths from the timeframe
-	recent_paths=$(echo "$recent_paths" | awk '{$1=$2=""; sub(/^ +/, ""); print}' | while read -r path; do
+	recent_paths=$(echo "$recent_paths" | awk '{print substr($0, index($0, $3))}' | while IFS= read -r path; do
 		[[ -d "$path" ]] && echo "$path"
 	done)
 
@@ -518,9 +524,12 @@ up::filter_most_frequent_paths() {
 	fi
 
 	if [[ -f "$LOG_FILE" ]]; then
-		# Extract and count occurrences of paths
+
+	# Extract and count occurrences of paths, preserving whitespace
 		local frequent_paths
-		frequent_paths=$(awk '{print substr($0, index($0, $3))}' "$LOG_FILE" | sort | uniq -c | sort -nr | awk '{print $2}')
+		frequent_paths=$(awk '{print substr($0, index($0, $3))}' "$LOG_FILE" | sort | uniq -c | sort -nr | awk '{print substr($0, index($0, $2))}')
+echo "$frequent_paths"
+           # gsub(/^ +| +$/, "", path);
 
 		# Check if there are any paths
 		if [[ -z "$frequent_paths" ]]; then
@@ -529,8 +538,8 @@ up::filter_most_frequent_paths() {
 		fi
 
 		# Filter out missing paths from the frequency list
-		frequent_paths=$(echo "$frequent_paths" | while read -r path; do
-			[[ -d "$path" ]] && echo "$path"
+		frequent_paths=$(echo "$frequent_paths" | while IFS= read -r path; do
+			[[ -d $path ]] && echo "$path"
 		done)
 
 		# Use fzf to let the user select from the most frequent paths

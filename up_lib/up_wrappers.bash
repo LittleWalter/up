@@ -100,7 +100,7 @@ EOF
   -p, --prune        Remove missing paths from history
   -r, --recent       Open \`fzf\` for recent valid paths by <integer>(min|h|d|m)
   -s, --size         Display the current history size
-  -v, --verbose      Print additional information directory changes
+  -v, --verbose      Print additional information about directory changes, etc.
 EOF
 	up::print_help_label "EXAMPLES"
 	cat <<EOF

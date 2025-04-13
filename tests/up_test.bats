@@ -189,14 +189,14 @@ teardown() {
 
 # Character-related tests ##############################################
 
-@test 'up should jump to directory with whitespace name of \"big kahuna burger\"' {
-	local -r path=${BATS_TEST_TMPDIR}/dir1/big\ kahuna\ burger/dir2/dir3
+@test 'up should jump to directory with whitespace name of \"big  kahuna burger\"' {
+	local -r path=${BATS_TEST_TMPDIR}/dir1/big\ \ kahuna\ burger/dir2/dir3
 	mkdir -p "$path"
 	cd "$path"
 
-	up big\ kahuna\ burger
+	up big\ \ kahuna\ burger
 
-	[[ $PWD == "${BATS_TEST_TMPDIR}/dir1/big kahuna burger" ]]
+	[[ $PWD == "${BATS_TEST_TMPDIR}/dir1/big  kahuna burger" ]]
 }
 
 @test 'up should jump to directory with special ASCII characters of \"[burger*king&|]\"' {
