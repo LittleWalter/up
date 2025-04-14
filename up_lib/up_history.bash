@@ -114,7 +114,8 @@ up::prune_history() {
 		up::print_msg "nothing pruned: all ${DIR_CHANGE_STYLE}$original_count${RESET} entries are valid paths (max: $LOG_SIZE)"
 	else
 		[[ "$verbose_mode" == true ]] && echo "" # Whitespace to separate removed paths list
-		up::print_msg "pruned history: removed ${ERR_STYLE}$count_diff invalid paths${RESET} (${DIR_CHANGE_STYLE}$new_count remaining${RESET}, max: $LOG_SIZE)"
+		local -r pluralized_path=$(up::pluralize "path" "$count_diff")
+		up::print_msg "pruned history: removed ${ERR_STYLE}$count_diff invalid $pluralized_path${RESET} (${DIR_CHANGE_STYLE}$new_count remaining${RESET}, max: $LOG_SIZE)"
 	fi
 }
 
@@ -125,6 +126,7 @@ up::clear_history() {
 	local -r original_count=$(up::history_count)
 	local new_count
 	local diff_count
+	local pluralized_entries
 
 	# Attempt to acquire the lock
 	for ((i=1; i<=retries; i++)); do
@@ -155,7 +157,8 @@ up::clear_history() {
 		: > "$LOG_FILE" # Truncate the log file
 		new_count=$(up::history_count)
 		diff_count=$((original_count - new_count))
-		up::print_msg "history file cleared ${DIR_CHANGE_STYLE}$diff_count entries${RESET}: $LOG_FILE."
+		pluralized_entries=$(up::pluralize "entry" "$diff_count")
+		up::print_msg "history file cleared ${DIR_CHANGE_STYLE}$diff_count $pluralized_entries${RESET}: $LOG_FILE."
 		return 0
 	elif [[ "$original_count" -eq 0 ]]; then
 		up::print_msg "no history entries to clear..."
@@ -214,7 +217,8 @@ up::clear_history() {
 	if [[ "$count_diff" -eq 0 ]]; then
 		up::print_msg "did not clear any history entries older than $timeframe..."
 	else
-		up::print_msg "cleared ${DIR_CHANGE_STYLE}$count_diff history entries${RESET} older than $timeframe: $LOG_FILE"
+		pluralized_entries=$(up::pluralize "entry" "$diff_count")
+		up::print_msg "cleared ${DIR_CHANGE_STYLE}$count_diff history $pluralized_entries${RESET} older than $timeframe: $LOG_FILE"
 	fi
 }
 

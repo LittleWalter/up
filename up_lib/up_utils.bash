@@ -22,11 +22,37 @@ up::remove_leading_zeros() {
 	fi
 }
 
+# Pluralizes most file system terms.
+# $1=<base word to pluralize> $2=<count>
+# NOTE: Many exceptions in English not correctly pluralized such as mouse to mice,
+# child to children, criterion to criteria, sheep to sheep, foot to feet, etc.
+up::pluralize() {
+	local word_base="$1"  # Input word to pluralize
+	local count="$2"      # Count of items
+
+	# Default to singular unless count > 1 or count == 0
+	local word_result="$word_base"
+	if [[ "$count" -gt 1 || "$count" -eq 0 ]]; then
+		if [[ "$word_base" != "key" ]] && [[ "$word_base" =~ y$ ]]; then
+			# Words ending in "y" become "ies" (e.g., "directory" -> "directories")
+			word_result="${word_base:0:-1}ies"
+		elif [[ "$word_base" =~ s$ ]]; then
+			# Singular words ending in "s" pluralize with "es" (e.g., "class" -> "classes")
+			word_result="${word_base}es"
+		else
+			# Most common pluralization: add "s" (e.g., "file" -> "files")
+			word_result="${word_base}s"
+		fi
+	fi
+
+	echo "$word_result" # Output the pluralized word
+}
+
 # Non-default behavior flag processing. `up` and `ph` have default behavior
 # when no args and exactly 1 arg is passed; this deals w/ arbitrary flag
 # combinations passed that don't immediately pass return values.
 up::secondary_processing_flags() {
-	local -r hist_arg="${1:-1}" # defaults to "1", if no arg
+local -r hist_arg="${1:-1}" # defaults to "1", if no arg
 	case "$flag_type" in
 		HIST_JUMP)
 			up::jump_from_history "$hist_arg" # Arg should be a jump index

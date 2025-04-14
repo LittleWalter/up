@@ -24,7 +24,9 @@ Maybe I'll get around to learning POSIX-compliant scripting for portability late
 * __Fixes:__
     - Tab completion properly escapes multiple whitespace characters in a row, e.g., `a dir_name  2 spaces` should be `a\ dir_name\ \2\ spaces/`. Directory names with more than one space were collapsed.
     - Properly handle paths with multiple whitespace characters in a row for `-m`/`--fzf-freq`, `-F`/`--fzf-hist`, and `-R`/`--fzf-recent` flags, i.e., options using `fzf`. Paths with spaces were not being shown; mostly incorrect `awk` invocations.
-* __Changes:__ Added header and history line numbers of removed paths for verbose mode output with the `-p`/`--prune` flag.
+* __Changes:__ 
+    - Added header and history line numbers of removed paths for verbose mode output with the `-p`/`--prune` flag.
+    - Generalized `up::pluralize_dir` to `up::pluralize`; moved from `up.bash` to `up_lib/up_utils.bash`
 
 ### __[2025-04-12]__
 

@@ -11,13 +11,13 @@ Kiss tedious `cd ..` chains goodbye!
 
 ![vhs animation showing the up script in action](assets/up_vhs_demo_animation.gif "See `up` in action using charmbracelet's `vhs` tool in Bash!")
 
-*`up` animated GIF created programmatically with [`vhs`](https://github.com/charmbracelet/vhs)*
+*Animated GIF generated programmatically with [`vhs`](https://github.com/charmbracelet/vhs)*
 
 ## Zsh Demo
 
 ![Manually recorded animation of the up script in action](assets/up_example_use_animation.gif "See `up` in action with a handcrafted screengrab using Zsh!")
 
-*`up` animated GIF created manually with [LICEcap](https://www.cockos.com/licecap/)*
+*Animated GIF captured manually with [LICEcap](https://www.cockos.com/licecap/)*
 
 ## 📜 Table of Contents
 - [Key Features](#-key-features)

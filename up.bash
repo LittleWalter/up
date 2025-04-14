@@ -150,16 +150,6 @@ EOF
 EOF
 }
 
-# Helper: Return "dir" or "dirs", depending on count: $1=<number of dirs>
-up::pluralize_dir() {
-	local -r count="$1"
-	if [ "$count" -gt 1 ]; then
-		echo "dirs"
-	else
-		echo "dir"
-	fi
-}
-
 # REF: https://unix.stackexchange.com/questions/419837/how-to-count-the-number-of-apparitions-of-a-character-in-a-string
 up::get_num_of_slashes() {
 	# Counting the number of slashes in the directory path
@@ -183,7 +173,7 @@ up::num_of_dirs_changed() {
 up::get_dirs_changed_string() {
 	# Determine the number of dirs jumped
 	local -r dirs_changed=$(up::num_of_dirs_changed)
-	local -r dir_pluralized=$(up::pluralize_dir "$dirs_changed")
+	local -r dir_pluralized=$(up::pluralize "dir" "$dirs_changed")
 	echo "$dirs_changed $dir_pluralized"
 }
 
@@ -264,7 +254,7 @@ up::cd_by_int() {
 	local -r dotted_path=$(up::construct_dotted_path "$jump_index")
 
 	local -r prejump_path="$PWD"
-	local -r dir_pluralized=$(up::pluralize_dir "$jump_index")
+	local -r dir_pluralized=$(up::pluralize "dir" "$jump_index")
 
 	# Attempt to change directory
 	if ! builtin cd -- "$dotted_path"; then # perform `cd`; show error if `cd` fails
