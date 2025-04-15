@@ -4,23 +4,23 @@
 # `up` wrapper function definitions: `up_passthru`, `ph` (path history)
 
 # Display help message for `up_passthru` function
-up::print_passthru_help() {
-	up::print_help_label "up_passthru for up $VERSION" true
+_up::print_passthru_help() {
+	_up::print_help_label "up_passthru for up $VERSION" true
 	cat <<EOF
 Tracks and captures path changes triggered by directory navigation commands
 (cd, etc.), enhancing history management. By default, path histories are
 only logged by invoking \`up\` directly.
 EOF
-	up::print_help_label "USAGE"
+	_up::print_help_label "USAGE"
 	cat <<EOF
 up_passthru <FLAGS|command name>
 EOF
-	up::print_help_label "FLAGS"
+	_up::print_help_label "FLAGS"
 	cat <<EOF
   -H, --hist-status  Display the status of history logging
   -h, --help         Print help
 EOF
-	up::print_help_label "EXAMPLES"
+	_up::print_help_label "EXAMPLES"
 	cat <<EOF
   To track directory changes with \`cd\`, add to your Bash/Zsh configuration:
   alias cd='up_passthru cd'
@@ -30,7 +30,7 @@ EOF
   For zoxide support, add:
   alias z='up_passthru z'
 EOF
-	up::print_help_label "RELATED ENVIRONMENT VARIABLES"
+	_up::print_help_label "RELATED ENVIRONMENT VARIABLES"
 	cat <<EOF
   _UP_ENABLE_HIST  Enable history file (Default: false)
   _UP_HISTFILE     Path to the history file (Set as: $LOG_FILE)
@@ -45,11 +45,11 @@ EOF
 up_passthru() {
 	# Process flags or print help if no args passed
 	if [[ "$1" =~ ^(-h|--help)$ ]] || [[ "$#" -eq 0 ]]; then
-		up::print_passthru_help
+		_up::print_passthru_help
 		return 0
 	fi
 	if [[ "$1" =~ ^(-H|--hist-status)$ ]]; then
-		up::print_history_status
+		_up::print_history_status
 		return 0
 	fi
 
@@ -58,8 +58,8 @@ up_passthru() {
 	shift # Consume the dir change command name
 
 	# Check if the command exists
-	if ! up::is_command_available "$main_command"; then
-		up::print_msg "command ${ERR_STYLE}'$main_command'${RESET} not valid for directory changes"
+	if ! _up::is_command_available "$main_command"; then
+		_up::print_msg "command ${ERR_STYLE}'$main_command'${RESET} not valid for directory changes"
 		return "$ERR_ACCESS"
 	fi
 
@@ -70,24 +70,24 @@ up_passthru() {
 		"$main_command" "${@}" # Change to specified directory
 	fi
 
-	up::validate_and_log_history "$prejump_path"
+	_up::validate_and_log_history "$prejump_path"
 	return "$?"
 }
 
 # Display help information for `ph` function
-up::print_ph_help() {
-	up::print_help_label "ph for up $VERSION" true
+_up::print_ph_help() {
+	_up::print_help_label "ph for up $VERSION" true
 	cat <<EOF
 \`ph\` acts as a wrapper around \`up\`, focusing on path history navigation.
 Use this function for streamlined directory jumps based on previous paths.
 This function is particularly useful in conjunction with \`up_passthru\` to
 track global path history.
 EOF
-	up::print_help_label "USAGE"
+	_up::print_help_label "USAGE"
 	cat <<EOF
 ph <FLAGS> [index|timeframe abbrev.]
 EOF
-	up::print_help_label "FLAGS"
+	_up::print_help_label "FLAGS"
 	cat <<EOF
   -H, --hist-status  Display the status of history logging
   -L, --list-freq    List historic paths by frequency w/ pagination, descending
@@ -102,7 +102,7 @@ EOF
   -s, --size         Display the current history size
   -v, --verbose      Print additional information about directory changes, etc.
 EOF
-	up::print_help_label "EXAMPLES"
+	_up::print_help_label "EXAMPLES"
 	cat <<EOF
   ph         Opens interactive \`fzf\` for all valid history, if available
   ph --fzf   Same as example above but using optional flag
@@ -112,7 +112,7 @@ EOF
   ph -r 2h   Opens \`fzf\` for valid paths accessed in the last 2 hours
   ph -r      Opens \`fzf\` for valid paths accessed in the last hour (default)
 EOF
-	up::print_help_label "RELATED ENVIRONMENT VARIABLES"
+	_up::print_help_label "RELATED ENVIRONMENT VARIABLES"
 	cat <<EOF
   _UP_ENABLE_HIST   Enable history file (Default: false)
   _UP_FZF_HISTOPTS  Set \`fzf\` options for history as an array
@@ -131,7 +131,7 @@ ph() {
 	while [[ "$1" =~ ^- ]]; do
 		case "$1" in
 			-h|--help)
-				up::print_ph_help
+				_up::print_ph_help
 				return 0 # Don't bother shifting args, just exit
 				;;
 			-l|--list)
@@ -144,19 +144,19 @@ ph() {
 				;;
 			-c|--clear)
 				shift
-				up::clear_history "$1"
+				_up::clear_history "$1"
 				return 0
 				;;
 			-p|--prune)
-				up::prune_history
+				_up::prune_history
 				return $?
 				;;
 			-s|--size)
-				up::print_history_size
+				_up::print_history_size
 				return 0
 				;;
 			-H|--hist-status)
-				up::print_history_status
+				_up::print_history_status
 				return 0
 				;;
 			-j|--jump)
@@ -187,11 +187,11 @@ ph() {
 					char=$(echo "$combined_flags" | cut -c $((i + 1)))
 					case "$char" in
 						h) # Help nested in the shortened flags
-							up::print_ph_help
+							_up::print_ph_help
 							return 0
 							;;
 						l)
-							up::show_history
+							_up::show_history
 							return 0
 							;;
 						L)
@@ -200,11 +200,11 @@ ph() {
 							;;
 						c)
 							shift
-							up::clear_history "$1"
+							_up::clear_history "$1"
 							return 0
 							;;
 						p)
-							up::prune_history
+							_up::prune_history
 							return $?
 							;;
 						j)
@@ -220,18 +220,18 @@ ph() {
 							flag_type=RECENT_HIST_FZF
 							;;
 						s)
-							up::print_history_size
+							_up::print_history_size
 							return 0
 							;;
 						H)
-							up::print_history_status
+							_up::print_history_status
 							return 0
 							;;
 						v)
 							verbose_mode=true
 							;;
 						*)
-							up::print_msg "ph: unknown flag: ${ERR_STYLE}-$char${RESET}"
+							_up::print_msg "ph: unknown flag: ${ERR_STYLE}-$char${RESET}"
 							return $ERR_BAD_ARG
 							;;
 					esac
@@ -243,7 +243,7 @@ ph() {
 	done
 
 	if [[ "$flag_type" -ne $FLAG_DEFAULT ]]; then
-		up::secondary_processing_flags "$1"
+		_up::secondary_processing_flags "$1"
 	elif [ -n "$1" ]; then
 		# Jump to specified history index
 		[[ "$verbose_mode" == true ]] && up -vj "$1" && return $?

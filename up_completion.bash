@@ -25,7 +25,7 @@
 #-----------------------------------------------------------------------
 
 # Removes extra forward slashes and leading slash
-_up::normalize_pwd() {
+__up::normalize_pwd() {
 	# Replace multiple slashes with a single slash
 	local -r normalized_pwd="${PWD//\/\//\/}"
 	# Remove leading slash
@@ -34,10 +34,10 @@ _up::normalize_pwd() {
 
 # Escapes special ASCII characters (e.g., `/`, `$`, `*`, etc.) of a given
 # directory name: $1=<dir name>
-_up::escape_dir_name() {
+__up::escape_dir_name() {
 	local dir_name="$1"
 	local escaped_dir_name
-	if up::is_command_available "sed"; then
+	if _up::is_command_available "sed"; then
 		# Allow Unicode characters to pass thru unescaped and catch multiple
 		# space characters in a row
 		escaped_dir_name=$(printf '%s' "$dir_name" | sed -E '
@@ -53,7 +53,7 @@ _up::escape_dir_name() {
 }
 
 # Extract base directory names from PWD and append a trailing slash to each
-_up::parse_basename_dirs() {
+__up::parse_basename_dirs() {
 	local pwd_without_leading_slash="$1"
 	local dir_name=""  # Buffer for directory segment
 	local basenames=() # Array to store directory names
@@ -81,13 +81,25 @@ _up() {
 	[[ "$PWD" == "/" ]] && { COMPREPLY=("/"); return 0; }
 
 	local -r current_word=${COMP_WORDS[COMP_CWORD]}
-	local -r pwd_without_leading_slash=$(_up::normalize_pwd)
+	local -r previous_word="${COMP_WORDS[COMP_CWORD-1]}"
+	local -r pwd_without_leading_slash=$(__up::normalize_pwd)
+
+	# List of flags (and combos) that should not trigger completions
+	local no_completion_flags=(-h --help -f --fzf -F --fzf-hist -H --hist-status -L --list-freq -R --fzf-recent -S --size -c --clear -j --jump-hist -l --list-hist -m --fzf-freq -p --prune-hist -vc -vp)
+
+	# If the previous word is a flag from the no_completion_flags list, skip completions
+	for flag in "${no_completion_flags[@]}"; do
+		if [[ "$previous_word" == "$flag" ]]; then
+			COMPREPLY=()
+			return 0
+		fi
+	done
 
 	# Extract base directory names from PWD and append a trailing slash
 	# Capture the output of the function line by line
 	while IFS= read -r dir; do
 		basenames+=("$dir")
-	done < <(_up::parse_basename_dirs "$pwd_without_leading_slash")
+	done < <(__up::parse_basename_dirs "$pwd_without_leading_slash")
 
 	# Add the root directory since PWD is not `/`
 	basenames+=(/)
@@ -96,7 +108,7 @@ _up() {
 	local candidate
 	for basename in "${basenames[@]}"; do
 		if [[ $basename == "$current_word"* ]]; then
-			candidate=$(_up::escape_dir_name "$basename")
+			candidate=$(__up::escape_dir_name "$basename")
 			COMPREPLY+=("$candidate")
 		fi
 	done
@@ -104,3 +116,11 @@ _up() {
 
 # Attach completion function to `up` w/o space
 complete -o nospace -F _up up
+
+# Hide sub-functions, i.e., anything that starts with `_up::` and `__up::`,
+# from autocomplete
+# NOTE: Only able to remove these from Zsh, couldn't figure out how to do this
+# in Bash 3.2.
+if [[ -n "$ZSH_VERSION" ]]; then
+	zstyle ':completion:*' ignored-patterns '_up::*|__up::*'
+fi

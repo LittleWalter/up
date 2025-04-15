@@ -37,7 +37,7 @@ MOST_FREQ_FZF=5
 ### Helpers for loading constants ###############################################
 
 # Assign empty string to all styling constants
-up::reset_styling() {
+_up::reset_styling() {
 	BOLD=""
 	UNDERLINE=""
 	LABEL_STYLE=""
@@ -54,13 +54,13 @@ up::reset_styling() {
 # Ctrl-L displays `ls` as a long list, in human-readable sizes, and in color
 # Ctrl-T displays dir tree in color (dependency: might need to install `tree` or `eza`)
 # Ctrl-I displays `stat` information in preview
-up::initialize_fzf_options() {
+_up::initialize_fzf_options() {
 	local tree_option="tree -C {}"
 	local ls_option="ls --color=always -lAh {}"
 	local stat_option="echo '\`stat\`:'; stat {}"
 
 	# Check for `eza` availability
-	if up::is_command_available "eza"; then
+	if _up::is_command_available "eza"; then
 		tree_option="eza --color=always --tree --icons {}"
 		ls_option="eza --color=always --icons -laah {}"
 	fi
@@ -68,9 +68,9 @@ up::initialize_fzf_options() {
 	# Check for Rust-based `ustat` availability
   # NOTE: Added in case there's a GNU coreutils vs. uutils-coreutils linking conflict in
   # Homebrew, etc. The one-line BSD version of `stat` is harder to read.
-	if up::is_command_available "ustat"; then
+	if _up::is_command_available "ustat"; then
 		stat_option="echo '\`stat\`:'; ustat {}"
-	elif up::is_command_available "gstat"; then
+	elif _up::is_command_available "gstat"; then
 		stat_option="echo '\`stat\`:'; gstat {}" # GNU coreutils are prefixed with "g" when using brew
 	fi
 
@@ -113,7 +113,7 @@ up::initialize_fzf_options() {
 
 # Parses and processes key-value pairs in configuration file, if the file exists
 # Comments and empty lines are skipped
-up::load_config_file() {
+_up::load_config_file() {
 	local -r config_file="${_UP_CONFIG_FILE:-${XDG_CONFIG_HOME:-$HOME/.config}/up/up_settings.conf}"
 
 	if [ -f "$config_file" ]; then
@@ -175,7 +175,7 @@ up::load_config_file() {
 
 ### Environment variable loading ################################################
 
-up::load_config_file # Load config settings first
+_up::load_config_file # Load config settings first
 
 LOG_FILE="${_UP_HISTFILE:-${XDG_CACHE_HOME:-$HOME/.cache}/up_history.log}"
 
@@ -191,11 +191,11 @@ LOG_SIZE_DEFAULT=250
 LOG_SIZE=${_UP_HISTSIZE:-$LOG_SIZE_DEFAULT}
 
 # `fzf` (interactive fuzzy finder)
-up::initialize_fzf_options
+_up::initialize_fzf_options
 
 # Set styling constants: colors displayed for `up`, mostly for verbose mode
 if [[ "${_UP_NO_STYLES:-false}" == true ]]; then
-	up::reset_styling
+	_up::reset_styling
 else
 	# REF: For fallback color definitions see https://gist.github.com/jonsuh/3c89c004888dfc7352be
 	BOLD="\033[1m"

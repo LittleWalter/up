@@ -98,6 +98,8 @@ Supported time units:
 .fi
 .IP
 If no argument is provided, all history entries will be removed.
+
+Use the verbose mode option (\fB-v\fR or \fB--verbose\fR) before the clear option (\fB-c\fR) to display and confirm the removed paths. For example, \fB-vc\fR or \fB--verbose \-c\fR.
 .TP
 .B \-j, --jump-hist <index>
 Jump to a path in history by its most recent index.
@@ -115,7 +117,7 @@ Note: Visit counts are not displayed in this view. To see the visit counts, use 
 .B \-p, --prune-hist
 Remove missing paths from history.
 
-Use the verbose mode option before the prune option to display the removed paths, e.g., \fB-vp\fR or \fB--verbose \-p\fR.
+Use the verbose mode option before the prune option to display the removed paths. For example, \fB-vp\fR or \fB--verbose \-p\fR.
 .SH HISTORY LOG FILE
 The history log file is a plain text file that tracks recently accessed paths and their associated human-readable timestamps. Each entry in the log follows the format:
 .IP

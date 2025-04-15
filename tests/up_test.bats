@@ -32,7 +32,7 @@ setup() {
 	export LC_ALL=en_US.UTF-8
 
 	# Disable color and other styling for testing purposes
-	up::reset_styling
+	_up::reset_styling
 }
 
 teardown() {
