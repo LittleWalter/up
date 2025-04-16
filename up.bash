@@ -98,8 +98,8 @@ EOF
   up -eiv logs   Equivalent to previous example but with verbose output
   up -R 10min    Open \`fzf\` for valid paths accessed in the last 10 minutes
   up -R 1h       Open \`fzf\` for valid paths accessed in the last hour
-  up --clear     Clear all history entries
-  up -c 2d       Clear all history entries older than 2 days
+  up --clear     Clear all history entries without confirmation
+  up -vc 2d      List history entries older than 2 days, confirm before clearing
 EOF
 	_up::print_help_label "EDGE CASES"
 	cat <<EOF

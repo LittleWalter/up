@@ -85,7 +85,7 @@ _up() {
 	local -r pwd_without_leading_slash=$(__up::normalize_pwd)
 
 	# List of flags (and combos) that should not trigger completions
-	local no_completion_flags=(-h --help -f --fzf -F --fzf-hist -H --hist-status -L --list-freq -R --fzf-recent -S --size -c --clear -j --jump-hist -l --list-hist -m --fzf-freq -p --prune-hist -vc -vp)
+	local no_completion_flags=(-h --help -f -vf -fv --fzf -F -vF -Fv --fzf-hist -H --hist-status -L --list-freq -R -vR -Rv --fzf-recent -S --size -c -vc --clear -j --jump-hist -l --list-hist -m -vm -mv --fzf-freq -p -vp --prune-hist -vc)
 
 	# If the previous word is a flag from the no_completion_flags list, skip completions
 	for flag in "${no_completion_flags[@]}"; do

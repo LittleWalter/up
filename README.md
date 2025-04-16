@@ -68,7 +68,7 @@ Kiss tedious `cd ..` chains goodbye!
 
 7. **Compatibility**
     - Supports both Bash and Zsh, with minimal, standard tool dependencies ensuring fast performance.
-    - Optional integration with the fuzzy finder [`fzf`](https://github.com/junegunn/fzf), featuring [`tree`](https://oldmanprogrammer.net/source.php?dir=projects/tree), `ls`, and `stat` previews. (Or [`eza`](https://github.com/eza-community/eza) for `tree` and `ls`, if available.)
+    - Optional integration with the fuzzy finder [`fzf`](https://github.com/junegunn/fzf), featuring [`tree`](https://oldmanprogrammer.net/source.php?dir=projects/tree), `ls`, and `stat` previews. (Or [`eza`](https://github.com/eza-community/eza) for `tree` and `ls` output, if available.)
 
 ---
 
@@ -339,17 +339,6 @@ $ pwd
 /Volumes/WD_SSD_1TB
 ```
 
-##### Alias Tip
-
-Simplify your workflow by setting up an alias for case-insensitive regex jumps. Add to `.bashrc` or `.zshrc`:
-
-```sh
-alias u='up -ri'
-```
-
-Once added, you'll only need to type `u <regex>` to leverage case-insensitive regex jumps with the default up behavior intact.
-
-(Use `command -v u` to see if `u` is not already in use.)
 
 #### `_UP_REGEX_DEFAULT` Environment Variable
 
@@ -369,6 +358,18 @@ $ up -x Volumes
 $ pwd
 /Volumes
 ```
+
+##### Alias Tip
+
+Simplify your workflow by setting up aliases while preserving default behavior. Add to `.bashrc` or `.zshrc`:
+
+```sh
+alias u='up -i'         # Jump to the nearest regex match, ignore case
+alias m='up -m'         # Open most frequently visited paths in `fzf`
+alias recent='up -R 1d' # List paths accessed in the last day
+```
+
+Check for conflicts using `command -v <alias>`.
 
 ### Jump by [`fzf` (Fuzzy Finder)](https://github.com/junegunn/fzf)
 
@@ -602,6 +603,30 @@ To clear all history, pass no timeframe argument:
 ```sh
 $ up -c
 up: history file cleared: /home/mrpink/.cache/up_history.log
+```
+
+Use the verbose flag (`-v`) before `-c` / `--clear` to display and confirm the removed paths.
+
+```sh
+$ up -vc 12h
+Removing 14 Entries:
+  2025-04-13 22:58:09 /home/dietpi
+  2025-04-13 23:34:30 /home/dietpi/.cache
+  2025-04-13 23:36:25 /home/dietpi
+  2025-04-14 01:51:14 /home/dietpi/.local
+  2025-04-14 01:51:19 /home/dietpi/.local/share
+  2025-04-14 01:51:24 /home/dietpi/.local/share/bin
+  2025-04-14 01:51:36 /home/dietpi
+  2025-04-14 01:52:39 /home/dietpi/bin
+  2025-04-14 01:54:11 /home/dietpi
+  2025-04-14 01:59:55 /home/dietpi/.local/share/bin
+  2025-04-14 02:00:06 /home/dietpi/.local/share/bin/.fzf
+  2025-04-14 02:00:14 /home/dietpi/.local/share/bin/.fzf/bin
+  2025-04-14 02:00:38 /home/dietpi
+  2025-04-14 02:07:08 /home/dietpi/.config
+  2025-04-14 02:07:15 /home/dietpi
+Confirm clear of path history entries older than 12h (Y/n): y
+up: cleared 14 history entries older than 12h: /home/dietpi/.cache/up_history.log
 ```
 
 Prune missing paths in history file with `-p` / `--prune-hist`:

@@ -185,7 +185,7 @@ _up::clear_history() {
 		*h) seconds=$(( ${timeframe%h} * 3600 )) ;;    # Hours
 		*d) seconds=$(( ${timeframe%d} * 86400 )) ;;   # Days
 		*m) seconds=$(( ${timeframe%m} * 2592000 )) ;; # Months (~30 days/month)
-		*) _up::print_msg "Invalid timeframe format: use '15min', '1h', '2d', '6m', etc." && return "$ERR_BAD_ARG" ;;
+		*) _up::print_msg "invalid timeframe format: use <integer>(min|h|d|m), e.g., '15min', '5h', '2d', etc." && return "$ERR_BAD_ARG" ;;
 	esac
 
 	# Current time and cutoff time (in UNIX seconds)
@@ -246,7 +246,7 @@ _up::clear_history() {
 		_up::print_msg "did not clear any history entries older than $timeframe..."
 	else
 		pluralized_entries=$(_up::pluralize "entry" "$diff_count")
-		_up::print_msg "cleared ${DIR_CHANGE_STYLE}$count_diff history $pluralized_entries${RESET} older than $timeframe: $LOG_FILE"
+		_up::print_msg "cleared ${DIR_CHANGE_STYLE}$removed_count history $pluralized_entries${RESET} older than $timeframe: $LOG_FILE"
 	fi
 }
 
@@ -453,7 +453,7 @@ _up::recent_paths() {
 		*h) seconds=$(( ${timeframe%h} * 3600 )) ;;    # Hours
 		*d) seconds=$(( ${timeframe%d} * 86400 )) ;;   # Days
 		*m) seconds=$(( ${timeframe%m} * 2592000 )) ;; # Months (approx. 30 days per month)
-		*) _up::print_msg "invalid timeframe format: use '1h', '2d', '3m'" && return "$ERR_BAD_ARG" ;;
+		*) _up::print_msg "invalid timeframe format: use <integer>(min|h|d|m), e.g., '10min', '2h', '1d', etc." && return "$ERR_BAD_ARG" ;;
 	esac
 
 	# Current time and cutoff time (in UNIX seconds)
