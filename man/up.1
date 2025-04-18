@@ -145,6 +145,8 @@ The following environment variables control how the history log behaves:
 .IP
 export _UP_ENABLE_HIST=true
 .IP \(bu 2
+\fB_UP_EXCLUDED_PATHS\fR: Specifies excluded paths from history logging, defined as an array.
+.IP \(bu 2
 \fB_UP_HISTFILE\fR: Specifies the path to the history log file. Defaults to \fB~/.cache/up_history.log\fR.
 .IP \(bu 2
 \fB_UP_HISTSIZE\fR: Determines the maximum number of entries that can be stored in the log file. Once the limit is reached, the oldest entries are removed to make space for new ones. Defaults to 250 entries/lines.
@@ -600,16 +602,16 @@ Dynamically source and define aliases based on your current shell setup to grace
 
 .nf
 # Source the `up` function, if available
-local up_script_path="$HOME/.local/share/shell/up/up.bash"
-if [[ -f "$up_script_path" ]]; then
-  source "$up_script_path"
+_UP_SCRIPT_PATH="$HOME/.local/share/shell/up/up.bash"
+if [[ -f "$_UP_SCRIPT_PATH" ]]; then
+  source "$_UP_SCRIPT_PATH"
 fi
 # Only source the completion script and define aliases if `up` is available
 if command -v up &>/dev/null; then
   # Source the `up` completion function, if available
-  local up_completion_path="$HOME/.local/share/shell/up/up_completion.bash"
-  if [[ -f "$up_completion_path" ]]; then
-    source "$up_completion_path"
+  _UP_COMPLETION_PATH="$HOME/.local/share/shell/up/up_completion.bash"
+  if [[ -f "$_UP_COMPLETION_PATH" ]]; then
+    source "$_UP_COMPLETION_PATH"
   fi
   # Path navigation aliases for convenience
   alias u="up -i"             # Jump to nearest regex match, case-insensitive

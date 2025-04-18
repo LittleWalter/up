@@ -567,6 +567,7 @@ _UP_EXCLUDED_PATHS=(
   "/tmp"
   "/var/log"
 )
+export _UP_EXCLUDED_PATHS
 ```
 
 #### List All History Entries
