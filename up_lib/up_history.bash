@@ -10,29 +10,30 @@ _up::print_history_status() {
 }
 
 _up::log_history() {
-    local -r log_entry="$1"
-    local -r timestamp="$(date '+%Y-%m-%d %H:%M:%S')"
-    # Process exclusion patterns directly without expanding them prematurely
-    for excluded in "${_UP_EXCLUDED_PATHS[@]}"; do
-       # echo "Processing pattern: $excluded, Log Entry: $log_entry"
+	local -r log_entry="$1"
+	local -r timestamp="$(date '+%Y-%m-%d %H:%M:%S')"
 
-        # Handle wildcard matching directly
-        if [[ "$log_entry" == $excluded ]]; then
-            echo "Match found! Excluding: $excluded"
-            if [[ "$verbose_mode" == true ]]; then
-                echo ""
-                _up::print_msg "Path excluded from history log..."
-            fi
-            # Skip logging if the entry matches an excluded pattern
-            return 0
-        fi
-    done
+	# Process exclusion patterns directly without expanding them prematurely
+	for excluded in "${_UP_EXCLUDED_PATHS[@]}"; do
 
-    # Append log entry to the log file, if not excluded
-    echo "$timestamp $log_entry" >> "$LOG_FILE"
+		# Handle wildcard matching directly
+		# FIXME: Wildcard matching not working as expected/desired, maybe circle back to this.
+		# For example, "*\.git*". Works for exact matches, though.
+		if [[ "$log_entry" == $excluded ]]; then
+			if [[ "$verbose_mode" == true ]]; then
+				echo ""
+				_up::print_msg "path excluded from history log..."
+			fi
+		# Skip logging if the entry matches an excluded pattern
+		return 0
+		fi
+	done
 
-    # Trim the log file
-    tail -n "$LOG_SIZE" "$LOG_FILE" > "$LOG_FILE.tmp" && mv "$LOG_FILE.tmp" "$LOG_FILE"
+	# Append log entry to the log file, if not excluded
+	echo "$timestamp $log_entry" >> "$LOG_FILE"
+
+	# Trim the log file
+	tail -n "$LOG_SIZE" "$LOG_FILE" > "$LOG_FILE.tmp" && mv "$LOG_FILE.tmp" "$LOG_FILE"
 }
 
 # Checks to see if path changed before adding line to history
