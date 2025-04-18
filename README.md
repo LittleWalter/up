@@ -254,6 +254,9 @@ _UP_FZF_HISTOPTS=(
   --color="fg+:#f4dbd6,bg+:#272935,hl+:#c6a0f6"
   --color="info:#94e2d5,prompt:#f5c2e7,pointer:#f5a97f,marker:#94e2d5,spinner:#e28b83,header:#a6da95"
 )
+_UP_EXCLUDED_PATHS=(
+  "$HOME"
+)
 
 # Style Settings: Catppuccin Mocha theme
 _UP_NO_STYLES=false
@@ -552,6 +555,18 @@ Export the `_UP_HISTFILE` and `_UP_HISTSIZE` to your preferred path and maximum 
 ```bash
 export _UP_HISTFILE="$XDG_CACHE_HOME/up/up_path_history.log"
 export _UP_HISTSIZE=1000
+```
+
+Exclude paths from history logging with the `_UP_EXCLUDED_PATHS` environent variable in `.bashrc`, `.zshrc`, or `.zshenv`:
+
+```bash
+_UP_EXCLUDED_PATHS=(
+  "$HOME"
+  "$HOME/.Trash"
+  "$HOME/.ssh"
+  "/tmp"
+  "/var/log"
+)
 ```
 
 #### List All History Entries

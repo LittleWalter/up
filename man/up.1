@@ -354,6 +354,9 @@ _UP_FZF_HISTOPTS=(
 	--color="fg+:#f4dbd6,bg+:#272935,hl+:#c6a0f6"
 	--color="info:#94e2d5,prompt:#f5c2e7,pointer:#f5a97f,marker:#94e2d5,spinner:#e28b83,header:#a6da95"
 )
+_UP_EXCLUDED_PATHS=(
+	"$HOME"
+)
 
 # Style Settings: Catppuccin Mocha theme
 _UP_NO_STYLES=false
@@ -429,6 +432,32 @@ To enable regex searches for ancestor directory names, use: export _UP_REGEX_DEF
 Enable history file (Default: \fBfalse\fR).
 
 To enable history logging, use: export _UP_ENABLE_HIST=true
+.TP
+.B _UP_EXCLUDED_PATHS
+An array of exact paths to exclude from the history log.
+
+You can define this array in your shell configuration file to prevent specific paths from being logged. Paths listed in the array are matched directly against potential log entries. Wildcard expansion is not guaranteed to work correctly.
+
+For example:
+
+.nf
+_UP_EXCLUDED_PATHS=(
+	"$HOME"
+	"$HOME/.Trash"
+	"$HOME/.ssh"
+	"/tmp"
+	"/var/log"
+)
+.fi
+
+Export the array to make the exclusions effective:
+.IP
+export _UP_EXCLUDED_PATHS
+
+.IP
+This variable accepts full paths only; relative paths and glob patterns are not supported. Ensure that all entries are formatted correctly and represent valid directories or files to avoid unexpected behavior.
+
+Default: Empty array, which logs all paths without exclusions.
 .TP
 .B _UP_FZF_HISTOPTS
 Configure \fBfzf\fR options specifically for history entries. This environment variable, defined as an array, is utilized by the \fB-F, --fzf-hist\fR and \fB-m, --fzf-freq\fR options.
@@ -547,6 +576,11 @@ Combine \fB\-i\fR and \fB\-e\fR for case-insensitive regex searches (e.g., \fBup
 Use \fB\-e\fR or \fB\-s\fR with \fB\-x\fR to jump directly to directories based on specific patterns.
 
 .TP
+.B Debug Directory Selection
+.IP \(bu 2
+Use the \fB\-v\fR option with any navigation command to print additional path information about the matching process.
+
+.TP
 .B Create Aliases for Common Tasks
 .IP \(bu 2
 Simplify navigation by adding aliases to your shell configuration file. Examples:
@@ -558,10 +592,35 @@ Simplify navigation by adding aliases to your shell configuration file. Examples
 \fBalias recent="up -R 1d"\fR     # List paths accessed in the last day
 
 Check for conflicts using \fBcommand -v <alias>\fR.
+
 .TP
-.B Debug Directory Selection
+.B Advanced Shell Configuration Ideas
 .IP \(bu 2
-Use the \fB\-v\fR option with any navigation command to print additional path information about the matching process.
+Dynamically source and define aliases based on your current shell setup to gracefully handle errors, such as missing or inaccessible scripts.
+
+.nf
+# Source the `up` function, if available
+local up_script_path="$HOME/.local/share/shell/up/up.bash"
+if [[ -f "$up_script_path" ]]; then
+  source "$up_script_path"
+fi
+# Only source the completion script and define aliases if `up` is available
+if command -v up &>/dev/null; then
+  # Source the `up` completion function, if available
+  local up_completion_path="$HOME/.local/share/shell/up/up_completion.bash"
+  if [[ -f "$up_completion_path" ]]; then
+    source "$up_completion_path"
+  fi
+  # Path navigation aliases for convenience
+  alias u="up -i"             # Jump to nearest regex match, case-insensitive
+  # Check if path history logging is enabled
+  if [[ "$(up -H)" =~ enabled ]]; then
+    alias cd="up_passthru cd" # Track path history with `cd`
+    alias m="up -m"           # Open most frequently visited paths in `fzf`
+    alias recent="up -R 1d"   # List paths accessed in the last 24 hours
+  fi
+fi
+.fi
 
 .TP
 .B Tab Completion

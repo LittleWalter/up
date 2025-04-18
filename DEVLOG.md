@@ -19,6 +19,11 @@ Maybe I'll get around to learning POSIX-compliant scripting for portability late
 
 ## April 2025
 
+### __[2025-04-17]__
+
+* __Features:__ `_UP_EXCLUDED_PATHS` environment variable that defines an array of exact paths to exclude from history log.
+* __Other:__ Feature complete, minus minor changes such as adding `_UP_PAGER` environment variable.
+
 ### __[2025-04-14]__
 
 * __Refactoring:__ Changed sub-function names from `up::` and `_up::` to `_up::` and `__up::` to obscure from Bash completion. `_up::` denotes sub-functions for `up` and `__up::` for `_up` tab completion.
